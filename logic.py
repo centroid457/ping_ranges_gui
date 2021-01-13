@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.42.0", "192.168.43.255")]}
+ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.43.0", "192.168.43.255")]}
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default):
@@ -134,12 +134,14 @@ class Logic:
         if type(ip_or_name) == str:
             return None
 
-        sp_mac = subprocess.Popen(f"arp -a {str(ip_or_name)}", text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        arp_line = sp_mac.stdout.readlines()[1:]
-        if str(ip_or_name) in arp_line:
-            print(line)
-            mac = line.rsplit(" ", maxsplit=2)[-2]
-            return mac
+        sp_mac = subprocess.Popen(f"arp -a {str(ip_or_name)}", text=True, stdout=subprocess.PIPE, encoding="cp866")
+        arp_lines = sp_mac.stdout.readlines()
+        for line in arp_lines:
+            # print(line)
+            match = re.search(r"[0-9a-fA-F]{2}(?:[:-][0-9a-fA-F]{2}){5}", line)
+            if match is not None:
+                return match[0]
+        return
 
 if __name__ == '__main__':
     access_this_module_as_import = False
