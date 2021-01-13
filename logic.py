@@ -13,12 +13,15 @@ from time import sleep
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_ranges_default = [("::1",), ("::2",), ("192.168.43.207",), ("192.168.43.255", ), ("192.168.43.1", "192.168.43.255")]
+ip_ranges_default = [("::1",), ("192.168.42.0", "192.168.43.255")]
 
 class Logic:
     def __init__(self, ip_find_ranges_tuples_list=ip_ranges_default):
-        self.ip_concurrent_ping_limit = 50      # if 0 - unlimited!
-        self.ip_ping_timewait_limit_ms = 10      # if 0 - unlimited!
+        self.ip_ping_timewait_limit_ms = 15
+        self.ip_concurrent_ping_limit = 100
+
+        self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
+        self.count_not_blocked_threads = 0
 
         self.apply_ranges(ip_find_ranges_tuples_list)
         return
@@ -64,15 +67,21 @@ class Logic:
         return
 
     def ping_ip_start_thread(self, ip=None):
-        threading.Thread(target=self.ping_ip, args=(ip,), daemon=True).start()
+        threading.Thread(target=self.ping_ip, args=(ip,), daemon=False).start()
         return
 
     def ping_ip(self, ip=None):
         # print(ip)
         cmd_list = ["ping", str(ip), "-n", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
         # print(cmd_list)
-        sp = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+
+        self.lock_maxconnections.acquire()
+        self.count_not_blocked_threads += 1
+        print(f"\n***{self.count_not_blocked_threads}*****{ip}******\n")
+        sp = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE)
         sp.wait()
+        self.lock_maxconnections.release()
+
         # print(sp.communicate()[0].decode("cp866"))
         print(ip, sp.returncode)
         if sp.returncode == 0:
