@@ -8,6 +8,7 @@ import sys
 import subprocess
 import threading
 import time
+import platform
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
@@ -95,6 +96,7 @@ class Logic:
                     mac = adapter_data["mac"]
                     self._dict_add_item(self.ip_found_info_dict, ip, {})
                     self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
+                    self._dict_add_item(self.ip_found_info_dict[ip], "host", platform.node())
 
 
     def ping_ip_range(self, ip_range):
