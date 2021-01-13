@@ -79,23 +79,34 @@ class Logic:
         threading.Thread(target=self.ping_ip, args=(ip_or_name,), daemon=False).start()
         return
 
-    def ping_ip(self, ip=None):
+    def ping_ip(self, ip_or_name=None):
         # print(ip)
-        cmd_list = ["ping", str(ip), "-n", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
+        cmd_list = ["ping", str(ip_or_name), "-n", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
         # print(cmd_list)
 
         with self.lock_maxconnections:
             # print(f"\n******{ip}******\n")
-            sp = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE)
-            sp.wait()
+            sp_ping = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE)
+            sp_ping.wait()
 
         # print(sp.communicate()[0].decode("cp866"))
         # print(ip, sp.returncode)
-        if sp.returncode == 0:
-            self.ip_found_info_dict[ip] = {}
+        if sp_ping.returncode == 0:
+            mac = self._get_mac(ip_or_name)
+            self.ip_found_info_dict[ip_or_name] = {"mac": mac}
             self.count_found_ip += 1
         return
 
+    def _get_mac(self, ip_or_name):
+        if type(ip_or_name) == str:
+            return None
+
+        sp_mac = subprocess.Popen(f"arp -a {str(ip_or_name)}", text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        arp_line = sp_mac.stdout.readlines()[1:]
+        if str(ip_or_name) in arp_line:
+            print(line)
+            mac = line.rsplit(" ", maxsplit=2)[-2]
+            return mac
 
 if __name__ == '__main__':
     access_this_module_as_import = False
