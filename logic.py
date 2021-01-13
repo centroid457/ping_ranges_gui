@@ -5,11 +5,9 @@ import ipaddress
 import re
 import os
 import sys
-import pkgutil
-import fileinput
 import subprocess
 import threading
-from time import sleep
+import time
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
@@ -18,10 +16,9 @@ ip_ranges_default = [("::1",), ("192.168.42.0", "192.168.43.255")]
 class Logic:
     def __init__(self, ip_find_ranges_tuples_list=ip_ranges_default):
         self.ip_ping_timewait_limit_ms = 15
-        self.ip_concurrent_ping_limit = 100
+        self.ip_concurrent_ping_limit = 256
 
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
-        self.count_not_blocked_threads = 0
 
         self.apply_ranges(ip_find_ranges_tuples_list)
         return
@@ -47,6 +44,8 @@ class Logic:
         for ip_range in self.ip_find_ranges_tuples_list:
             self.ping_ip_range(ip_range)
 
+        while threading.active_count() > 1:
+            time.sleep(0.5)
         print(self.ip_found_info_dict)
         return
 
@@ -75,15 +74,13 @@ class Logic:
         cmd_list = ["ping", str(ip), "-n", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
         # print(cmd_list)
 
-        self.lock_maxconnections.acquire()
-        self.count_not_blocked_threads += 1
-        print(f"\n***{self.count_not_blocked_threads}*****{ip}******\n")
-        sp = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE)
-        sp.wait()
-        self.lock_maxconnections.release()
+        with self.lock_maxconnections:
+            # print(f"\n******{ip}******\n")
+            sp = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE)
+            sp.wait()
 
         # print(sp.communicate()[0].decode("cp866"))
-        print(ip, sp.returncode)
+        # print(ip, sp.returncode)
         if sp.returncode == 0:
             self.ip_found_info_dict[ip] = {}
 
