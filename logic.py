@@ -68,11 +68,13 @@ class Logic:
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         for line in sp_ipconfig.stdout.readlines():
-            if len(line.split(" :")) == 1:
+            line_striped = line.strip()
+            line_striped_splited = line_striped.split(":")
+            if len(line_striped_splited) == 1 or line_striped_splited[1] == "":
                 continue
 
-            key_part = line.split(" ", maxsplit=4)[3]
-            part_result = line.split(": ")[1][:-1]   # without last simbol "\n"
+            key_part = line_striped.split(" ", maxsplit=2)[0]
+            part_result = line_striped.split(": ")[1]
 
             # print(part_result)
             # print(line.split(" ", maxsplit=4))
