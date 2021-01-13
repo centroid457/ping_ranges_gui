@@ -88,9 +88,14 @@ class Logic:
                 ip = part_result
                 self.detected_local_adapters[adapter]["ip"] = ip.split("(")[0]
         else:
-            for i in self.detected_local_adapters:
-                print(i, self.detected_local_adapters[i])
-            print()
+            for adapter_data in self.detected_local_adapters.values():
+                #  print(adapter_data)
+                if adapter_data["ip"] is not None:
+                    ip = ipaddress.ip_address(adapter_data["ip"])
+                    mac = adapter_data["mac"]
+                    self._dict_add_item(self.ip_found_info_dict, ip, {})
+                    self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
+
 
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
@@ -134,6 +139,7 @@ class Logic:
     def _dict_add_item(self, dict, key, val):
         if dict.get(key, None) == None:
             dict[key] = val
+            print(dict)
 
     def _get_mac(self, ip_or_name):
         if type(ip_or_name) == str:
