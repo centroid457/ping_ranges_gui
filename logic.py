@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("::1",), ("192.168.42.0", "192.168.43.255")]}
+ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.42.0", "192.168.43.255")]}
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default):
@@ -46,6 +46,8 @@ class Logic:
         return
 
     def create_data(self):
+        self.detect_local_adapters()
+
         for ip_hostname in self.ip_explore_hosts_list:
             self.ping_ip_start_thread(ip_hostname)
 
@@ -58,6 +60,35 @@ class Logic:
         self.explore_is_finished = True
         print(self.ip_found_info_dict)
         return
+
+    def detect_local_adapters(self):
+        adapter = None
+        self.detected_local_adapters = {}
+
+        sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
+
+        for line in sp_ipconfig.stdout.readlines():
+            if len(line.split(" :")) == 1:
+                continue
+
+            key_part = line.split(" ", maxsplit=4)[3]
+            part_result = line.split(": ")[1][:-1]   # without last simbol "\n"
+
+            # print(part_result)
+            # print(line.split(" ", maxsplit=4))
+            if key_part in ["Описание."]:
+                adapter = part_result
+                self.detected_local_adapters[adapter] = {"mac": None, "ip": None}
+            elif key_part in ["Физический"]:
+                mac = part_result
+                self.detected_local_adapters[adapter]["mac"] = mac
+            elif key_part in ["IPv4-адрес."]:
+                ip = part_result
+                self.detected_local_adapters[adapter]["ip"] = ip.split("(")[0]
+        else:
+            for i in self.detected_local_adapters:
+                print(i, self.detected_local_adapters[i])
+            print()
 
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
