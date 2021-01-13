@@ -122,13 +122,18 @@ class Logic:
             sp_ping = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE)
             sp_ping.wait()
 
-        # print(sp.communicate()[0].decode("cp866"))
-        # print(ip, sp.returncode)
         if sp_ping.returncode == 0:
+            self._dict_add_item(self.ip_found_info_dict, ip_or_name, {})
+
             mac = self._get_mac(ip_or_name)
-            self.ip_found_info_dict[ip_or_name] = {"mac": mac}
+            self._dict_add_item(self.ip_found_info_dict[ip_or_name], "mac", mac)
+
             self.count_found_ip += 1
         return
+
+    def _dict_add_item(self, dict, key, val):
+        if dict.get(key, None) == None:
+            dict[key] = val
 
     def _get_mac(self, ip_or_name):
         if type(ip_or_name) == str:
