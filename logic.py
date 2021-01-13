@@ -13,12 +13,12 @@ from time import sleep
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_ranges_default = [("::1",), ("::2",), ("192.168.43.207",)]
+ip_ranges_default = [("::1",), ("::2",), ("192.168.43.207",), ("192.168.43.255", ), ("192.168.43.1", "192.168.43.255")]
 
 class Logic:
     def __init__(self, ip_find_ranges_tuples_list=ip_ranges_default):
         self.ip_concurrent_ping_limit = 50      # if 0 - unlimited!
-        self.ip_ping_timewait_limit_ms = 3      # if 0 - unlimited!
+        self.ip_ping_timewait_limit_ms = 10      # if 0 - unlimited!
 
         self.apply_ranges(ip_find_ranges_tuples_list)
         return
@@ -42,34 +42,39 @@ class Logic:
 
     def create_data(self):
         for ip_range in self.ip_find_ranges_tuples_list:
-            if len(ip_range) == 2:
-                self.ping_ip_range(ip_range)
-            elif len(ip_range) == 1:
-                self.ping_ip(ip_range[0])
+            self.ping_ip_range(ip_range)
 
         print(self.ip_found_info_dict)
         return
 
-    def ping_ip_range(self, ip_range_tuple):
-        ip_start = ipaddress.ip_address(ip_range_tuple[0])
-        ip_finish = ipaddress.ip_address(ip_range_tuple[1])
+    def ping_ip_range(self, ip_range):
+        ip_start = ipaddress.ip_address(ip_range[0])
         ip_current = ip_start
-        while ip_current <= ip_finish:
-            if not ip_current.is_multicast:
-                threading.Thread(target=self.ping_ip, args=(ip_current,), daemon=True).start()
-                # self.ping_ip(ip_current)
-            ip_current = ip_current + 1
+
+        if len(ip_range) == 1:
+            self.ping_ip_start_thread(ip=ip_current)
+        elif len(ip_range) == 2:
+            ip_finish = ipaddress.ip_address(ip_range[1])
+            while ip_current <= ip_finish:
+                if not ip_current.is_multicast:
+                    self.ping_ip_start_thread(ip=ip_current)
+                    # self.ping_ip(ip_current)
+                ip_current = ip_current + 1
 
         return
 
+    def ping_ip_start_thread(self, ip=None):
+        threading.Thread(target=self.ping_ip, args=(ip,), daemon=True).start()
+        return
+
     def ping_ip(self, ip=None):
-        print(ip)
+        # print(ip)
         cmd_list = ["ping", str(ip), "-n", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
         # print(cmd_list)
         sp = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         sp.wait()
         # print(sp.communicate()[0].decode("cp866"))
-        # print(sp.returncode)
+        print(ip, sp.returncode)
         if sp.returncode == 0:
             self.ip_found_info_dict[ip] = {}
 
