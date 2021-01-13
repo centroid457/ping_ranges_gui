@@ -32,6 +32,8 @@ class Logic:
         return
 
     def clear_data(self):
+        self.search_is_finished = False
+
         # SETS/DICTS/LISTS
         self.ip_find_ranges_tuples_list = []
         self.ip_found_info_dict = {}       # {"ip": {"mac": None, "os": None, "host": None}}
@@ -46,6 +48,8 @@ class Logic:
 
         while threading.active_count() > 1:
             time.sleep(0.5)
+
+        self.search_is_finished = True
         print(self.ip_found_info_dict)
         return
 
@@ -83,7 +87,7 @@ class Logic:
         # print(ip, sp.returncode)
         if sp.returncode == 0:
             self.ip_found_info_dict[ip] = {}
-
+            self.count_found_ip += 1
         return
 
 
