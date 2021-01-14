@@ -40,6 +40,7 @@ class Logic:
         # SETS/DICTS/LISTS
         self.ip_explore_hosts_list = []
         self.ip_explore_ranges_tuple_list = []
+
         self.ip_found_info_dict = {}       # {"ip": {"mac": None, "os": None, "host": None}}
 
         # COUNTERS
@@ -69,6 +70,7 @@ class Logic:
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         for line in sp_ipconfig.stdout.readlines():
+            # find out data
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
             if len(line_striped_splited) == 1 or line_striped_splited[1] == "":
@@ -89,6 +91,7 @@ class Logic:
                 ip = part_result
                 self.detected_local_adapters[adapter]["ip"] = ip.split("(")[0]
         else:
+            # fill results
             for adapter_data in self.detected_local_adapters.values():
                 #  print(adapter_data)
                 if adapter_data["ip"] is not None:
