@@ -12,12 +12,12 @@ import platform
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.43.0", "192.168.43.255")]}
+ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.1.0", "192.168.1.10"), ("192.168.43.0", "192.168.43.255")]}
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default):
-        self.ip_ping_timewait_limit_ms = 10
-        self.ip_concurrent_ping_limit = 30
+        self.ip_ping_timewait_limit_ms = 2
+        self.ip_concurrent_ping_limit = 20
 
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
 
@@ -130,6 +130,7 @@ class Logic:
             sp_ping.wait()
 
         if sp_ping.returncode == 0:
+            print("***************ip hit")
             print(ip_or_name)
             # IP+HOST
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
