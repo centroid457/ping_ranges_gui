@@ -16,8 +16,8 @@ ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.43.
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default):
-        self.ip_ping_timewait_limit_ms = 15
-        self.ip_concurrent_ping_limit = 100
+        self.ip_ping_timewait_limit_ms = 10
+        self.ip_concurrent_ping_limit = 30
 
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
 
@@ -133,6 +133,7 @@ class Logic:
             print(ip_or_name)
             # IP+HOST
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
+            match = False
             for line in sp_ping.stdout.readlines():
                 match = re.search(mask, line)
                 # print(match, ip_or_name, line)
@@ -143,8 +144,13 @@ class Logic:
                     self._dict_add_item(self.ip_found_info_dict[ip], "host", host)
                     break
 
+            if not match:
+                ip = ip_or_name
+                self._dict_add_item(self.ip_found_info_dict, ip, {})
+                self._dict_add_item(self.ip_found_info_dict[ip], "host", "NoName")
+
             # MAC
-            mac = self._get_mac(ip_or_name)
+            mac = self._get_mac(ip)
             self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
 
             # count
