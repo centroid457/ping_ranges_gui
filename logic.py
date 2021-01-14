@@ -17,7 +17,7 @@ ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.43.
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default):
         self.ip_ping_timewait_limit_ms = 15
-        self.ip_concurrent_ping_limit = 256
+        self.ip_concurrent_ping_limit = 100
 
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
 
@@ -99,7 +99,7 @@ class Logic:
                     mac = adapter_data["mac"]
                     self._dict_add_item(self.ip_found_info_dict, ip, {})
                     self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
-                    self._dict_add_item(self.ip_found_info_dict[ip], "host", platform.node())
+                    self._dict_add_item(self.ip_found_info_dict[ip], "host", platform.node() + "*")
 
 
     def ping_ip_range(self, ip_range):
@@ -123,26 +123,36 @@ class Logic:
         return
 
     def ping_ip(self, ip_or_name=None):
-        # print(ip)
-        cmd_list = ["ping", str(ip_or_name), "-n", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
-        # print(cmd_list)
+        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-l", "1", "-i", "3", "-w", str(self.ip_ping_timewait_limit_ms)]
 
         with self.lock_maxconnections:
-            # print(f"\n******{ip}******\n")
-            sp_ping = subprocess.Popen(cmd_list, text=False, stdout=subprocess.PIPE)
+            sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
 
         if sp_ping.returncode == 0:
-            self._dict_add_item(self.ip_found_info_dict, ip_or_name, {})
+            print(ip_or_name)
+            # IP+HOST
+            mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
+            for line in sp_ping.stdout.readlines():
+                match = re.search(mask, line)
+                # print(match, ip_or_name, line)
+                if match:
+                    host = match[1]
+                    ip = ipaddress.ip_address(match[2])
+                    self._dict_add_item(self.ip_found_info_dict, ip, {})
+                    self._dict_add_item(self.ip_found_info_dict[ip], "host", host)
+                    break
 
+            # MAC
             mac = self._get_mac(ip_or_name)
-            self._dict_add_item(self.ip_found_info_dict[ip_or_name], "mac", mac)
+            self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
 
+            # count
             self.count_found_ip += 1
         return
 
     def _dict_add_item(self, dict, key, val):
-        if dict.get(key, None) == None:
+        if val is not None and dict.get(key, None) == None:
             dict[key] = val
             print(dict)
 
