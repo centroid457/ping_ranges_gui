@@ -46,16 +46,12 @@ class Logic:
                 self.start_scan()
         return
 
-    def start_scan(self):
-        self.scan()
-        return
-
     def clear_data(self):
         self.flag_explore_is_finished = False
 
         # SETS/DICTS/LISTS
         self.detected_local_adapters_dict = {}
-        self.nets_valid_list = []
+        self.nets_local_valid_list = []
 
         self.ip_input_hosts_list = []
         self.ip_input_range_tuples_list = []
@@ -68,6 +64,10 @@ class Logic:
 
         # EXECUTIONS
         self.detect_local_adapters()
+        return
+
+    def start_scan(self):
+        self.scan()
         return
 
     def scan(self):
@@ -89,14 +89,14 @@ class Logic:
         print(self.ip_found_dict_key_list)
         return
 
+    def scan_loop(self):
+        pass
+
     def _sort_dict_by_keys(self, the_dict):
         # sorting dict by keys
         sorted_dict_keys_list = sorted(the_dict)
         sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
         return sorted_dict
-
-    def scan_loop(self):
-        pass
 
     def detect_local_adapters(self):
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
@@ -142,10 +142,11 @@ class Logic:
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
                     adapter_data["_net"] = net
-                    self.nets_valid_list.append(net)
+                    self.nets_local_valid_list.append(net)
 
             print(self.detected_local_adapters_dict)
-
+            print(self.nets_local_valid_list)
+            print("*"*80)
 
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
