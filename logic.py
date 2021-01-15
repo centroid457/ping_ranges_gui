@@ -17,9 +17,10 @@ ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.1.0
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default):
         self.ip_ping_timewait_limit_ms = 2
-        self.ip_concurrent_ping_limit = 20
+        self.ip_concurrent_ping_limit = 10
 
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
+        self.lock = threading.Lock()
 
         self.apply_ranges(ip_explore_dict)
         return
@@ -128,6 +129,7 @@ class Logic:
         with self.lock_maxconnections:
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
+            time.sleep(0.001)
 
         if sp_ping.returncode == 0:
             print("***************ip hit")
@@ -146,6 +148,7 @@ class Logic:
                     break
 
             if not match:
+                # some devises don't have hostname! and "ping -a" can't resolve it!
                 ip = ip_or_name
                 self._dict_add_item(self.ip_found_info_dict, ip, {})
                 self._dict_add_item(self.ip_found_info_dict[ip], "host", "NoName")
@@ -159,9 +162,10 @@ class Logic:
         return
 
     def _dict_add_item(self, dict, key, val):
-        if val is not None and dict.get(key, None) == None:
-            dict[key] = val
-            print(dict)
+        with self.lock:
+            if val is not None and dict.get(key, None) == None:
+                dict[key] = val
+                print(dict)
 
     def _get_mac(self, ip_or_name):
         if type(ip_or_name) == str:
