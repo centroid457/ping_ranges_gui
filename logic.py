@@ -55,6 +55,7 @@ class Logic:
 
         # SETS/DICTS/LISTS
         self.detected_local_adapters_dict = {}
+        self.nets_valid_list = []
 
         self.ip_input_hosts_list = []
         self.ip_input_range_tuples_list = []
@@ -140,6 +141,7 @@ class Logic:
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
                     adapter_data["_net"] = net
+                    self.nets_valid_list.append(net)
 
             print(self.detected_local_adapters_dict)
 
