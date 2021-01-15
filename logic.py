@@ -15,24 +15,30 @@ access_this_module_as_import = True  # at first need true to correct assertions!
 ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.1.0", "192.168.1.10"), ("192.168.43.0", "192.168.43.255")]}
 
 class Logic:
-    def __init__(self, ip_explore_dict=ip_explore_dict_default):
+    def __init__(self, ip_explore_dict=ip_explore_dict_default, start_now=True):
         self.ip_ping_timewait_limit_ms = 2
         self.ip_concurrent_ping_limit = 10
 
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
         self.lock = threading.Lock()
 
-        self.apply_ranges(ip_explore_dict)
+        self.apply_ranges(ip_explore_dict, start_now=start_now)
         return
 
-    def apply_ranges(self, ip_data=None):
+    def apply_ranges(self, ip_data=None, start_now=True):
         # print(ip_data)
         if ip_data is not None:
             self.clear_data()
 
             self.ip_explore_hosts_list = ip_data["hosts"]
             self.ip_explore_ranges_tuple_list = ip_data["addresses"]
-            self.create_data()
+
+            if start_now:
+                self.create_data()
+        return
+
+    def start_now(self):
+        self.create_data()
         return
 
     def clear_data(self):
