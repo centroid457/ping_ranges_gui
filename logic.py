@@ -103,7 +103,7 @@ class Logic:
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         for line in sp_ipconfig.stdout.readlines():
-            # find out data
+            # find out data = generate detected_local_adapters
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
             if len(line_striped_splited) == 1 or line_striped_splited[1] == "":
@@ -114,6 +114,7 @@ class Logic:
 
             # print(part_result)
             # print(line.split(" ", maxsplit=4))
+            # cumulative usage of variables
             if key_part in ["Описание."]:
                 adapter = part_result
                 self.detected_local_adapters[adapter] = {"mac": None, "ip": None}
@@ -123,8 +124,11 @@ class Logic:
             elif key_part in ["IPv4-адрес."]:
                 ip = part_result
                 self.detected_local_adapters[adapter]["ip"] = ip.split("(")[0]
+            elif key_part in ["Маска"]:
+                mask = part_result
+                self.detected_local_adapters[adapter]["mask"] = mask
         else:
-            # fill results
+            # copy data from found active adapters to general result dict = ip_found_info_dict
             for adapter_data in self.detected_local_adapters.values():
                 #  print(adapter_data)
                 if adapter_data["ip"] is not None:
@@ -133,7 +137,7 @@ class Logic:
                     self._dict_add_item(self.ip_found_info_dict, ip, {})
                     self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
                     self._dict_add_item(self.ip_found_info_dict[ip], "host", platform.node() + "*")
-
+                    self._dict_add_item(self.ip_found_info_dict[ip], "mask", mask)
 
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
