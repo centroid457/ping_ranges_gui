@@ -177,7 +177,7 @@ class Logic:
                 # some devises don't have hostname! and "ping -a" can't resolve it!
                 ip = ip_or_name
                 self._dict_add_item(self.ip_found_info_dict, ip, {})
-                self._dict_add_item(self.ip_found_info_dict[ip], "host", "NoName")
+                self._dict_add_item(self.ip_found_info_dict[ip], "host", "NoNameDevice")
 
             # MAC
             mac = self._get_mac(ip)
