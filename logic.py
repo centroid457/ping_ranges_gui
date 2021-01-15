@@ -65,11 +65,12 @@ class Logic:
 
         # COUNTERS
         self.count_found_ip = 0
+
+        # EXECUTIONS
+        self.detect_local_adapters()
         return
 
     def scan(self):
-        self.detect_local_adapters()
-
         for ip_hostname in self.ip_input_hosts_list:
             self.ping_ip_start_thread(ip_hostname)
 
