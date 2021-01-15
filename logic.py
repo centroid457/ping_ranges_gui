@@ -158,7 +158,7 @@ class Logic:
             time.sleep(0.001)   # very necessary
 
         if sp_ping.returncode == 0:
-            print("***************ip hit")
+            print("***************ip hit=", self.count_found_ip + 1)
             print(ip_or_name)
             # IP+HOST
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
