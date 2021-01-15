@@ -21,7 +21,7 @@ ip_explore_dict_default = {
     ]}
 
 class Logic:
-    def __init__(self, ip_explore_dict=ip_explore_dict_default, start_now=True):
+    def __init__(self, ip_explore_dict=ip_explore_dict_default, start_scan=True):
         self.ip_ping_timewait_limit_ms = 2
         self.ip_concurrent_ping_limit = 300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
@@ -31,10 +31,10 @@ class Logic:
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
         self.lock = threading.Lock()
 
-        self.apply_ranges(ip_explore_dict, start_now=start_now)
+        self.apply_ranges(ip_explore_dict, start_scan=start_scan)
         return
 
-    def apply_ranges(self, ip_data=None, start_now=True):
+    def apply_ranges(self, ip_data=None, start_scan=True):
         # print(ip_data)
         if ip_data is not None:
             self.clear_data()
@@ -44,12 +44,12 @@ class Logic:
             self.ip_explore_hosts_list = ip_data["hosts"]
             self.ip_explore_ranges_tuple_list = ip_data["ranges"]
 
-            if start_now:
-                self.start_now()
+            if start_scan:
+                self.start_scan()
         return
 
-    def start_now(self):
-        self.create_data()
+    def start_scan(self):
+        self.scan()
         return
 
     def clear_data(self):
@@ -65,7 +65,7 @@ class Logic:
         self.count_found_ip = 0
         return
 
-    def create_data(self):
+    def scan(self):
         self.detect_local_adapters()
 
         for ip_hostname in self.ip_explore_hosts_list:
