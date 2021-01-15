@@ -96,12 +96,12 @@ class Logic:
 
     def detect_local_adapters(self):
         adapter = None
-        self.detected_local_adapters = {}
+        self.detected_local_adapters_dict = {}
 
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         for line in sp_ipconfig.stdout.readlines():
-            # find out data = generate detected_local_adapters
+            # find out data = generate detected_local_adapters_dict
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
             if len(line_striped_splited) == 1 or line_striped_splited[1] == "":
@@ -114,23 +114,22 @@ class Logic:
             # print(line.split(" ", maxsplit=4))
             if key_part in ["Описание."]:
                 adapter = part_result
-                self.detected_local_adapters[adapter] = {"mac": None, "ip": None}
-                mac, ip, mask = None, None, None
+                self.detected_local_adapters_dict[adapter] = {}
+                mac, ip, mask = None, None, None    # reset if detected new adaprer line
             elif key_part in ["Физический"]:
                 mac = part_result
-                self.detected_local_adapters[adapter]["mac"] = mac
+                self.detected_local_adapters_dict[adapter]["mac"] = mac
             elif key_part in ["IPv4-адрес."]:
                 ip = part_result
-                self.detected_local_adapters[adapter]["ip"] = ip.split("(")[0]
+                self.detected_local_adapters_dict[adapter]["ip"] = ip.split("(")[0]
             elif key_part in ["Маска"]:
                 mask = part_result
-                self.detected_local_adapters[adapter]["mask"] = mask
+                self.detected_local_adapters_dict[adapter]["mask"] = mask
         else:
-            # print(self.detected_local_adapters)
             # copy data from found active adapters to general result dict = ip_found_info_dict
-            for adapter_data in self.detected_local_adapters.values():
+            for adapter_data in self.detected_local_adapters_dict.values():
                 #  print(adapter_data)
-                if adapter_data["ip"] is not None:
+                if adapter_data.get("ip", None) is not None:
                     ip = ipaddress.ip_address(adapter_data["ip"])
                     mac = adapter_data["mac"]
                     mask = adapter_data["mask"]
@@ -138,6 +137,11 @@ class Logic:
                     self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
                     self._dict_add_item(self.ip_found_info_dict[ip], "host", platform.node() + "*")
                     self._dict_add_item(self.ip_found_info_dict[ip], "mask", mask)
+
+                    net = ipaddress.ip_network((str(ip), mask), strict=False)
+                    adapter_data["net"] = net
+
+            print(self.detected_local_adapters_dict)
 
 
     def ping_ip_range(self, ip_range):
