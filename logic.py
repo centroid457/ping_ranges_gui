@@ -167,8 +167,7 @@ class Logic:
             time.sleep(0.001)   # very necessary
 
         if sp_ping.returncode == 0:
-            print("***************ip hit=", self.count_found_ip + 1)
-            print(ip_or_name)
+            print("***************ip hit=", ip_or_name)
             # IP+HOST
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
             match = False
@@ -191,9 +190,6 @@ class Logic:
             # MAC
             mac = self._get_mac(ip)
             self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
-
-            # count
-            self.count_found_ip += 1
         return
 
     def _dict_add_item(self, dict, key, val):
@@ -204,6 +200,7 @@ class Logic:
 
                 if dict is self.ip_found_info_dict:
                     self.ip_found_info_dict_key_list.append(key)
+                    self.count_found_ip += 1
 
     def _get_mac(self, ip_or_name):
         if type(ip_or_name) == str:
