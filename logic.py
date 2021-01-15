@@ -17,7 +17,7 @@ ip_explore_dict_default = {
     "ranges": [
         ("192.1.1.0", "192.1.1.10"),
         ("192.168.1.0", "192.168.1.10"),
-        ("192.168.42.0", "192.168.43.255"),
+        ("192.168.43.0", "192.168.43.255"),
     ]}
 
 class Logic:
@@ -80,15 +80,21 @@ class Logic:
 
         self.explore_is_finished = True
 
-        # sorting dict by keys
-        the_dict = self.ip_found_info_dict
-        sorted_dict_keys_list = sorted(the_dict)
-        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
-        self.ip_found_info_dict = sorted_dict
+        self.ip_found_info_dict = self._sort_dict_by_keys(self.ip_found_info_dict)
 
+        print("*"*80)
         print(self.ip_found_info_dict)
         print(self.ip_found_info_dict_key_list)
         return
+
+    def _sort_dict_by_keys(self, the_dict):
+        # sorting dict by keys
+        sorted_dict_keys_list = sorted(the_dict)
+        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
+        return sorted_dict
+
+    def scan_loop(self):
+        pass
 
     def detect_local_adapters(self):
         adapter = None
@@ -167,7 +173,7 @@ class Logic:
             time.sleep(0.001)   # very necessary
 
         if sp_ping.returncode == 0:
-            print("***************ip hit=", ip_or_name)
+            print(f"***************hit=[{ip_or_name}]")
             # IP+HOST
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
             match = False
