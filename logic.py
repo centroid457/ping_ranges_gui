@@ -34,24 +34,13 @@ class Logic:
         self.apply_ranges(ip_explore_dict, start_scan=start_scan)
         return
 
-    def apply_ranges(self, ip_data=None, start_scan=True):
-        # print(ip_data)
-        if ip_data is not None:
-            self.clear_data()
-
-            self.ip_input_hosts_list = ip_data["hosts"]
-            self.ip_input_range_tuples_list = ip_data["ranges"]
-
-            if start_scan:
-                self.start_scan()
-        return
-
     def clear_data(self):
         self.flag_explore_is_finished = False
 
         # SETS/DICTS/LISTS
         self.detected_local_adapters_dict = {}
         self.nets_local_valid_list = []
+        self.nets_input_valid_list = []
 
         self.ip_input_hosts_list = []
         self.ip_input_range_tuples_list = []
@@ -64,6 +53,18 @@ class Logic:
 
         # EXECUTIONS
         self.detect_local_adapters()
+        return
+
+    def apply_ranges(self, ip_data=None, start_scan=True):
+        # print(ip_data)
+        if ip_data is not None:
+            self.clear_data()
+
+            self.ip_input_hosts_list = ip_data["hosts"]
+            self.ip_input_range_tuples_list = ip_data["ranges"]
+
+            if start_scan:
+                self.start_scan()
         return
 
     def start_scan(self):
@@ -144,9 +145,31 @@ class Logic:
                     adapter_data["_net"] = net
                     self.nets_local_valid_list.append(net)
 
+            self.generate_nets_input_valid_list()
+
             print(self.detected_local_adapters_dict)
             print(self.nets_local_valid_list)
             print("*"*80)
+
+    def generate_nets_input_valid_list(self):
+        # self.nets_input_valid_list
+
+        # =1= GEN INDEPENDENT NETS LIST
+
+        # =2= COLLAPSE NETS
+
+        # =3= LEAVE VALID to active local adapters nets
+
+        return
+        input_taples_list = self.ip_input_range_tuples_list
+        for range_tuple in input_taples_list:
+            if len(range_tuple) == 1:
+                i_net = ipaddress.ip_network(range_tuple + "/32")
+                self.nets_input_valid_list.append(i_net)
+
+    def _nets_input_valid_append(self, ):
+        self.nets_input_valid_list
+        return
 
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
