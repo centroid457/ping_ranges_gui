@@ -22,13 +22,13 @@ ip_explore_dict_default = {
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default, start_scan=True):
-        self.ip_ping_timewait_limit_ms = 4
-        self.ip_concurrent_ping_limit = 300
+        self.ping_timewait_limit_ms = 4
+        self.ping_concurrent_limit = 300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
-        self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
+        self.lock_maxconnections = threading.BoundedSemaphore(value=self.ping_concurrent_limit)
         self.lock = threading.Lock()
 
         self.apply_ranges(ip_explore_dict, start_scan=start_scan)
@@ -39,8 +39,8 @@ class Logic:
         if ip_data is not None:
             self.clear_data()
 
-            self.ip_explore_hosts_list = ip_data["hosts"]
-            self.ip_explore_ranges_tuple_list = ip_data["ranges"]
+            self.ip_input_hosts_list = ip_data["hosts"]
+            self.ip_input_range_tuples_list = ip_data["ranges"]
 
             if start_scan:
                 self.start_scan()
@@ -51,14 +51,16 @@ class Logic:
         return
 
     def clear_data(self):
-        self.explore_is_finished = False
+        self.flag_explore_is_finished = False
 
         # SETS/DICTS/LISTS
-        self.ip_explore_hosts_list = []
-        self.ip_explore_ranges_tuple_list = []
+        self.detected_local_adapters_dict = {}
 
-        self.ip_found_info_dict = {}       # {"ip": {"mac": , "os": , "host": }}
-        self.ip_found_info_dict_key_list = []
+        self.ip_input_hosts_list = []
+        self.ip_input_range_tuples_list = []
+
+        self.ip_found_dict = {}
+        self.ip_found_dict_key_list = []
 
         # COUNTERS
         self.count_found_ip = 0
@@ -67,22 +69,22 @@ class Logic:
     def scan(self):
         self.detect_local_adapters()
 
-        for ip_hostname in self.ip_explore_hosts_list:
+        for ip_hostname in self.ip_input_hosts_list:
             self.ping_ip_start_thread(ip_hostname)
 
-        for ip_range in self.ip_explore_ranges_tuple_list:
+        for ip_range in self.ip_input_range_tuples_list:
             self.ping_ip_range(ip_range)
 
         while threading.active_count() > 1:
             time.sleep(0.5)
 
-        self.ip_found_info_dict = self._sort_dict_by_keys(self.ip_found_info_dict)
+        self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
 
-        self.explore_is_finished = True
+        self.flag_explore_is_finished = True
 
         print("*"*80)
-        print(self.ip_found_info_dict)
-        print(self.ip_found_info_dict_key_list)
+        print(self.ip_found_dict)
+        print(self.ip_found_dict_key_list)
         return
 
     def _sort_dict_by_keys(self, the_dict):
@@ -95,11 +97,9 @@ class Logic:
         pass
 
     def detect_local_adapters(self):
-        adapter = None
-        self.detected_local_adapters_dict = {}
-
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
+        adapter = None  # cumulative var!
         for line in sp_ipconfig.stdout.readlines():
             # find out data = generate detected_local_adapters_dict
             line_striped = line.strip()
@@ -114,32 +114,32 @@ class Logic:
             # print(line.split(" ", maxsplit=4))
             if key_part in ["Описание."]:
                 adapter = part_result
-                self.detected_local_adapters_dict[adapter] = {}
+                self._dict_safely_update(self.detected_local_adapters_dict, adapter, {})
                 mac, ip, mask = None, None, None    # reset if detected new adaprer line
             elif key_part in ["Физический"]:
                 mac = part_result
-                self.detected_local_adapters_dict[adapter]["mac"] = mac
+                self._dict_safely_update(self.detected_local_adapters_dict[adapter], "mac", mac)
             elif key_part in ["IPv4-адрес."]:
-                ip = part_result
-                self.detected_local_adapters_dict[adapter]["ip"] = ip.split("(")[0]
+                ip = part_result.split("(")[0]
+                self._dict_safely_update(self.detected_local_adapters_dict[adapter], "ip", ip)
             elif key_part in ["Маска"]:
                 mask = part_result
-                self.detected_local_adapters_dict[adapter]["mask"] = mask
+                self._dict_safely_update(self.detected_local_adapters_dict[adapter], "mask", mask)
         else:
-            # copy data from found active adapters to general result dict = ip_found_info_dict
+            # copy data from found active adapters to general result dict = ip_found_dict
             for adapter_data in self.detected_local_adapters_dict.values():
                 #  print(adapter_data)
                 if adapter_data.get("ip", None) is not None:
                     ip = ipaddress.ip_address(adapter_data["ip"])
                     mac = adapter_data["mac"]
                     mask = adapter_data["mask"]
-                    self._dict_add_item(self.ip_found_info_dict, ip, {})
-                    self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
-                    self._dict_add_item(self.ip_found_info_dict[ip], "host", platform.node() + "*")
-                    self._dict_add_item(self.ip_found_info_dict[ip], "mask", mask)
+                    self._dict_safely_update(self.ip_found_dict, ip, {})
+                    self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
+                    self._dict_safely_update(self.ip_found_dict[ip], "host", platform.node() + "*")
+                    self._dict_safely_update(self.ip_found_dict[ip], "mask", mask)
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
-                    adapter_data["net"] = net
+                    adapter_data["_net"] = net
 
             print(self.detected_local_adapters_dict)
 
@@ -165,7 +165,7 @@ class Logic:
         return
 
     def ping_ip(self, ip_or_name=None):
-        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
+        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ping_timewait_limit_ms)]
         """
         -4 = ipv4
         -n = requests count
@@ -192,29 +192,29 @@ class Logic:
                 if match:
                     host = match[1]
                     ip = ipaddress.ip_address(match[2])
-                    self._dict_add_item(self.ip_found_info_dict, ip, {})
-                    self._dict_add_item(self.ip_found_info_dict[ip], "host", host)
+                    self._dict_safely_update(self.ip_found_dict, ip, {})
+                    self._dict_safely_update(self.ip_found_dict[ip], "host", host)
                     break
 
             if not match:
                 # some devises don't have hostname! and "ping -a" can't resolve it!
                 ip = ip_or_name
-                self._dict_add_item(self.ip_found_info_dict, ip, {})
-                self._dict_add_item(self.ip_found_info_dict[ip], "host", "NoNameDevice")
+                self._dict_safely_update(self.ip_found_dict, ip, {})
+                self._dict_safely_update(self.ip_found_dict[ip], "host", "NoNameDevice")
 
             # MAC
             mac = self._get_mac(ip)
-            self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
+            self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
         return
 
-    def _dict_add_item(self, dict, key, val):
+    def _dict_safely_update(self, dict, key, val):
         with self.lock:
             if val is not None and dict.get(key, None) == None:
                 dict[key] = val
                 print(dict)
 
-                if dict is self.ip_found_info_dict:
-                    self.ip_found_info_dict_key_list.append(key)
+                if dict is self.ip_found_dict:
+                    self.ip_found_dict_key_list.append(key)
                     self.count_found_ip += 1
 
     def _get_mac(self, ip_or_name):
