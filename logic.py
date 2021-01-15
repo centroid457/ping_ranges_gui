@@ -43,7 +43,7 @@ class Logic:
             self.ip_explore_ranges_tuple_list = ip_data["ranges"]
 
             if start_now:
-                self.create_data()
+                self.start_now()
         return
 
     def start_now(self):
