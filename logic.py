@@ -130,11 +130,11 @@ class Logic:
         return
 
     def ping_ip(self, ip_or_name=None):
-        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-l", "1", "-i", "3", "-w", str(self.ip_ping_timewait_limit_ms)]
+        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-l", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
         # -4 = ipv4
         # -n = requests count
         # -l = request load size
-        # -i = TTL
+        # -i = TTL = if add "-i 3" it will get all ghosts when ping ip from outOfHomeNet
         # -w = waiting time
 
         with self.lock_maxconnections:
