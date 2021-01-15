@@ -22,7 +22,7 @@ ip_explore_dict_default = {
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default, start_scan=True):
-        self.ip_ping_timewait_limit_ms = 2
+        self.ip_ping_timewait_limit_ms = 4
         self.ip_concurrent_ping_limit = 300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
@@ -38,8 +38,6 @@ class Logic:
         # print(ip_data)
         if ip_data is not None:
             self.clear_data()
-
-            self.detect_local_adapters()
 
             self.ip_explore_hosts_list = ip_data["hosts"]
             self.ip_explore_ranges_tuple_list = ip_data["ranges"]
@@ -114,10 +112,10 @@ class Logic:
 
             # print(part_result)
             # print(line.split(" ", maxsplit=4))
-            # cumulative usage of variables
             if key_part in ["Описание."]:
                 adapter = part_result
                 self.detected_local_adapters[adapter] = {"mac": None, "ip": None}
+                mac, ip, mask = None, None, None
             elif key_part in ["Физический"]:
                 mac = part_result
                 self.detected_local_adapters[adapter]["mac"] = mac
@@ -128,16 +126,19 @@ class Logic:
                 mask = part_result
                 self.detected_local_adapters[adapter]["mask"] = mask
         else:
+            # print(self.detected_local_adapters)
             # copy data from found active adapters to general result dict = ip_found_info_dict
             for adapter_data in self.detected_local_adapters.values():
                 #  print(adapter_data)
                 if adapter_data["ip"] is not None:
                     ip = ipaddress.ip_address(adapter_data["ip"])
                     mac = adapter_data["mac"]
+                    mask = adapter_data["mask"]
                     self._dict_add_item(self.ip_found_info_dict, ip, {})
                     self._dict_add_item(self.ip_found_info_dict[ip], "mac", mac)
                     self._dict_add_item(self.ip_found_info_dict[ip], "host", platform.node() + "*")
                     self._dict_add_item(self.ip_found_info_dict[ip], "mask", mask)
+
 
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
