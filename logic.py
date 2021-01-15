@@ -14,7 +14,7 @@ from pathlib import Path
 access_this_module_as_import = True  # at first need true to correct assertions!
 ip_explore_dict_default = {
     "hosts": ["localhost", ],
-    "addresses": [
+    "ranges": [
         ("192.1.1.0", "192.1.1.10"),
         ("192.168.1.0", "192.168.1.10"),
         ("192.168.40.0", "192.168.43.255"),
@@ -40,7 +40,7 @@ class Logic:
             self.clear_data()
 
             self.ip_explore_hosts_list = ip_data["hosts"]
-            self.ip_explore_ranges_tuple_list = ip_data["addresses"]
+            self.ip_explore_ranges_tuple_list = ip_data["ranges"]
 
             if start_now:
                 self.create_data()
