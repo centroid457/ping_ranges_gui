@@ -78,6 +78,13 @@ class Logic:
             time.sleep(0.5)
 
         self.explore_is_finished = True
+
+        # sorting dict by keys
+        the_dict = self.ip_found_info_dict
+        sorted_dict_keys_list = sorted(the_dict)
+        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
+        self.ip_found_info_dict = sorted_dict
+
         print(self.ip_found_info_dict)
         return
 
