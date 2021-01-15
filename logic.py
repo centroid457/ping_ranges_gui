@@ -78,9 +78,9 @@ class Logic:
         while threading.active_count() > 1:
             time.sleep(0.5)
 
-        self.explore_is_finished = True
-
         self.ip_found_info_dict = self._sort_dict_by_keys(self.ip_found_info_dict)
+
+        self.explore_is_finished = True
 
         print("*"*80)
         print(self.ip_found_info_dict)
