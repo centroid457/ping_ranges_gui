@@ -39,6 +39,8 @@ class Logic:
         if ip_data is not None:
             self.clear_data()
 
+            self.detect_local_adapters()
+
             self.ip_explore_hosts_list = ip_data["hosts"]
             self.ip_explore_ranges_tuple_list = ip_data["ranges"]
 
