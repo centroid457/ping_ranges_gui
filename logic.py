@@ -15,7 +15,7 @@ access_this_module_as_import = True  # at first need true to correct assertions!
 ip_explore_dict_default = {
     "hosts": ["localhost", ],
     "ranges": [
-        ("192.1.1.0", "192.1.1.10"),
+        ("192.1.1.0",),
         ("192.168.1.0", "192.168.1.10"),
         ("192.168.43.0", "192.168.43.255"),
     ]}
@@ -42,11 +42,11 @@ class Logic:
         self.nets_local_valid_list = []
         self.nets_input_valid_list = []
 
-        self.ip_input_hosts_list = []
-        self.ip_input_range_tuples_list = []
-
         self.ip_found_dict = {}
         self.ip_found_dict_key_list = []
+
+        # self.ip_input_hosts_list = []         # DO NOT CLEAR IT!!!
+        # self.ip_input_range_tuples_list = []  # DO NOT CLEAR IT!!!
 
         # COUNTERS
         self.count_found_ip = 0
@@ -58,10 +58,10 @@ class Logic:
     def apply_ranges(self, ip_data=None, start_scan=True):
         # print(ip_data)
         if ip_data is not None:
-            self.clear_data()
-
             self.ip_input_hosts_list = ip_data["hosts"]
             self.ip_input_range_tuples_list = ip_data["ranges"]
+
+            self.clear_data()
 
             if start_scan:
                 self.start_scan()
@@ -145,30 +145,42 @@ class Logic:
                     adapter_data["_net"] = net
                     self.nets_local_valid_list.append(net)
 
-            self.generate_nets_input_valid_list()
-
             print(self.detected_local_adapters_dict)
             print(self.nets_local_valid_list)
             print("*"*80)
+            self.generate_nets_input_valid_list()
 
     def generate_nets_input_valid_list(self):
         # self.nets_input_valid_list
+        nets_input_gen_list = []
 
-        # =1= GEN INDEPENDENT NETS LIST
+        # =1= GEN NETS LIST
+        print("self.ip_input_range_tuples_list", self.ip_input_range_tuples_list)
+        for range_tuple in self.ip_input_range_tuples_list:
+            if len(range_tuple) == 1:
+                i_net = ipaddress.ip_network(range_tuple[0])
+                nets_input_gen_list.append(i_net)
+
+            elif len(range_tuple) == 2:
+                ip_range_start = ipaddress.ip_address(range_tuple[0])
+                ip_range_finish = ipaddress.ip_address(range_tuple[1])
+                if ip_range_start > ip_range_finish:
+                    continue
+                else:
+                    i_net = ipaddress.summarize_address_range(ip_range_start, ip_range_finish)
+                    self.nets_input_valid_list.append(i_net)
 
         # =2= COLLAPSE NETS
-
+        self.nets_input_valid_list = ipaddress.collapse_addresses(self.nets_input_valid_list)
+        print(self.nets_input_valid_list)
+        for i in self.nets_input_valid_list:
+            print(i)
+        exit()
         # =3= LEAVE VALID to active local adapters nets
+        for net_input in self.nets_input_valid_list:
+            if net_input:
+                pass
 
-        return
-        input_taples_list = self.ip_input_range_tuples_list
-        for range_tuple in input_taples_list:
-            if len(range_tuple) == 1:
-                i_net = ipaddress.ip_network(range_tuple + "/32")
-                self.nets_input_valid_list.append(i_net)
-
-    def _nets_input_valid_append(self, ):
-        self.nets_input_valid_list
         return
 
     def ping_ip_range(self, ip_range):
@@ -238,7 +250,7 @@ class Logic:
         with self.lock:
             if val is not None and dict.get(key, None) == None:
                 dict[key] = val
-                print(dict)
+                # print(dict)
 
                 if dict is self.ip_found_dict:
                     self.ip_found_dict_key_list.append(key)
