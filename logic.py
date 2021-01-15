@@ -12,7 +12,7 @@ import platform
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.168.1.0", "192.168.1.10"), ("192.168.43.0", "192.168.43.255")]}
+ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.1.1.0", "192.1.1.10"), ("192.168.1.0", "192.168.1.10"), ("192.168.43.0", "192.168.43.255")]}
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default, start_now=True):
@@ -131,6 +131,11 @@ class Logic:
 
     def ping_ip(self, ip_or_name=None):
         cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-l", "1", "-i", "3", "-w", str(self.ip_ping_timewait_limit_ms)]
+        # -4 = ipv4
+        # -n = requests count
+        # -l = request load size
+        # -i = TTL
+        # -w = waiting time
 
         with self.lock_maxconnections:
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
