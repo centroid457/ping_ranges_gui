@@ -17,7 +17,7 @@ ip_explore_dict_default = {
     "ranges": [
         ("192.1.1.0", "192.1.1.10"),
         ("192.168.1.0", "192.168.1.10"),
-        ("192.168.40.0", "192.168.43.255"),
+        ("192.168.42.0", "192.168.43.255"),
     ]}
 
 class Logic:
@@ -59,7 +59,8 @@ class Logic:
         self.ip_explore_hosts_list = []
         self.ip_explore_ranges_tuple_list = []
 
-        self.ip_found_info_dict = {}       # {"ip": {"mac": None, "os": None, "host": None}}
+        self.ip_found_info_dict = {}       # {"ip": {"mac": , "os": , "host": }}
+        self.ip_found_info_dict_key_list = []
 
         # COUNTERS
         self.count_found_ip = 0
@@ -86,6 +87,7 @@ class Logic:
         self.ip_found_info_dict = sorted_dict
 
         print(self.ip_found_info_dict)
+        print(self.ip_found_info_dict_key_list)
         return
 
     def detect_local_adapters(self):
@@ -199,6 +201,9 @@ class Logic:
             if val is not None and dict.get(key, None) == None:
                 dict[key] = val
                 print(dict)
+
+                if dict is self.ip_found_info_dict:
+                    self.ip_found_info_dict_key_list.append(key)
 
     def _get_mac(self, ip_or_name):
         if type(ip_or_name) == str:
