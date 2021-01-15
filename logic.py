@@ -12,12 +12,21 @@ import platform
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_explore_dict_default = {"hosts": ["localhost", ], "addresses": [("192.1.1.0", "192.1.1.10"), ("192.168.1.0", "192.168.1.10"), ("192.168.43.0", "192.168.43.255")]}
+ip_explore_dict_default = {
+    "hosts": ["localhost", ],
+    "addresses": [
+        ("192.1.1.0", "192.1.1.10"),
+        ("192.168.1.0", "192.168.1.10"),
+        ("192.168.40.0", "192.168.43.255"),
+    ]}
 
 class Logic:
     def __init__(self, ip_explore_dict=ip_explore_dict_default, start_now=True):
         self.ip_ping_timewait_limit_ms = 2
-        self.ip_concurrent_ping_limit = 10
+        self.ip_concurrent_ping_limit = 300
+        # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
+        # but it can overload you CPU!
+        # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ip_concurrent_ping_limit)
         self.lock = threading.Lock()
@@ -130,17 +139,21 @@ class Logic:
         return
 
     def ping_ip(self, ip_or_name=None):
-        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-l", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
-        # -4 = ipv4
-        # -n = requests count
-        # -l = request load size
-        # -i = TTL = if add "-i 3" it will get all ghosts when ping ip from outOfHomeNet
-        # -w = waiting time
+        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ip_ping_timewait_limit_ms)]
+        """
+        -4 = ipv4
+        -n = requests count
+        -l = request load size
+        -i = TTL 
+            if add "-i 3" it will get all ghosts when ping ip from outOfHomeNet
+            but if "-i 2" it will OK!!!))
+        -w = waiting time
+        """
 
         with self.lock_maxconnections:
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
-            time.sleep(0.001)
+            time.sleep(0.001)   # very necessary
 
         if sp_ping.returncode == 0:
             print("***************ip hit")
