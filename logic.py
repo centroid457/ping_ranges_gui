@@ -136,26 +136,23 @@ class Logic:
                 mask = part_result
                 self._dict_safely_update(self.detected_local_adapters_dict[adapter], "mask", mask)
         else:
-            # copy data from found active adapters to general result dict = ip_found_dict
+            # use data from found active adapters
             for adapter_data in self.detected_local_adapters_dict.values():
-                #  print(adapter_data)
                 if adapter_data.get("ip", None) is not None:
                     ip = ipaddress.ip_address(adapter_data["ip"])
-                    mac = adapter_data["mac"]
                     mask = adapter_data["mask"]
-                    self._dict_safely_update(self.ip_found_dict, ip, {})
-                    self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
-                    self._dict_safely_update(self.ip_found_dict[ip], "host", platform.node() + "*")
-                    self._dict_safely_update(self.ip_found_dict[ip], "mask", mask)
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
-                    adapter_data["_net"] = net
+                    adapter_data["net"] = net
                     self.nets_local_valid_list.append(net)
 
             print(self.detected_local_adapters_dict)
             print(self.nets_local_valid_list)
             print("*"*80)
             self.generate_nets_input_valid_list()
+
+    def add_adapters_ip_to_result(self):
+        pass
 
     def generate_nets_input_valid_list(self):
         # self.nets_input_valid_list
