@@ -257,7 +257,6 @@ class Logic:
         adapter_ip_data = self.adapter_ip_dict.get(ip, None)
         if adapter_ip_data is not None:
             return adapter_ip_data.get("mac", None)
-
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
