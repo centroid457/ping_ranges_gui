@@ -229,6 +229,9 @@ class Logic:
                 # get MAC
                 mac = self._get_mac(ip)
                 self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
+
+            # mark as active
+            self._dict_safely_update(self.ip_found_dict[ip], "active", True)
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
