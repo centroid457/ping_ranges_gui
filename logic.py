@@ -124,42 +124,6 @@ class Logic:
             self.start_scan()
         return
 
-    def generate_nets_input_valid_list(self):
-        # self.nets_input_valid_list
-        nets_input_gen_list = []
-
-        # =1= GEN NETS LIST
-        print("self.ip_input_ranges_list", self.ip_input_ranges_list)
-        for range_tuple in self.ip_input_ranges_list:
-            if len(range_tuple) == 1:
-                i_net = ipaddress.ip_network(range_tuple[0])
-                nets_input_gen_list.append(i_net)
-
-            elif len(range_tuple) == 2:
-                ip_range_start = ipaddress.ip_address(range_tuple[0])
-                ip_range_finish = ipaddress.ip_address(range_tuple[1])
-                if ip_range_start > ip_range_finish:
-                    continue
-                else:
-                    i_net = ipaddress.summarize_address_range(ip_range_start, ip_range_finish)
-                    self.nets_input_valid_list.append(i_net)
-
-        # =2= COLLAPSE NETS
-        # DONT NEED!!! Just use all given!
-        '''
-        self.nets_input_valid_list = ipaddress.collapse_addresses(self.nets_input_valid_list)
-        print(self.nets_input_valid_list)
-        for i in self.nets_input_valid_list:
-            print(i)
-        exit()
-        '''
-
-        # =3= LEAVE VALID to active local adapters nets
-        for net_input in self.nets_input_valid_list:
-            if net_input:
-                pass
-        return
-
     # ###########################################################
     # SCAN
     def start_scan(self):
