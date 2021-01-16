@@ -87,6 +87,7 @@ class Logic:
                 self._dict_safely_update(self.adapter_dict[adapter], "gateway", gateway)
                 if gateway != "":
                     self.gateway = ipaddress.ip_address(gateway)
+                    self.start_daemon_sensor_gateway()
 
         else:
             # use data from found active adapters
@@ -143,7 +144,7 @@ class Logic:
 
     # ###########################################################
     # SCAN
-    def start_sensor_gateway(self):
+    def start_daemon_sensor_gateway(self):
         if self.gateway != None:
             threading.Thread(target=self._sensor_gateway, daemon=True).start()
         return
