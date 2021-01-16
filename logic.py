@@ -132,6 +132,7 @@ class Logic:
     # ###########################################################
     # SCAN
     def scan_onсe(self):
+        self.flag_stop_scan = False
         for ip_range in self.ip_input_ranges_list:
             if isinstance(ip_range, tuple):
                 self.ping_ip_range(ip_range)
@@ -151,6 +152,7 @@ class Logic:
         return
 
     def scan_loop(self):
+        self.flag_stop_scan = False
         while not self.flag_stop_scan:
             self.scan_onсe()
             self.rescan_found()
