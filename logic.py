@@ -24,7 +24,7 @@ ip_tuples_list_default = [
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
     def __init__(self, ip_tuples_list=None, start_scan=True):
-        self.ping_timewait_limit_ms = 4
+        self.ping_timewait_limit_ms = 5
         self.ping_concurrent_limit = 200
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
@@ -209,16 +209,23 @@ class Logic:
             time.sleep(0.001)   # very necessary
 
         if sp_ping.returncode != 0 and ip in self.ip_found_dict:
-            # mark as INactive
-            self._dict_safely_update(self.ip_found_dict[ip], "active", False)
-            # mark as WasLost
-            self._dict_safely_update(self.ip_found_dict[ip], "was_lost", True)  # can be cleared only by clear found data!
+            for mac in self.ip_found_dict[ip]:
+                # mark as None-Active
+                self._dict_safely_update(self.ip_found_dict[ip][mac], "active", False)
+                # mark as WasLost
+                self._dict_safely_update(self.ip_found_dict[ip][mac], "was_lost", True)  # can be cleared only by clear found data!
 
-        if sp_ping.returncode == 0:
+        elif sp_ping.returncode == 0:
             print(f"***************hit=[{ip}]")
             self.ip_last_answered = ip
 
-            if ip not in self.ip_found_dict:
+            self._dict_safely_update(self.ip_found_dict, ip, {})
+
+            # get MAC
+            mac = self._get_mac(ip)
+            self._dict_safely_update(self.ip_found_dict[ip], mac, {})
+
+            if ip not in self.ip_found_dict and self.ip_found_dict[ip][mac] != {}:
                 # get IP+HOST
                 mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
                 match = False
@@ -227,9 +234,7 @@ class Logic:
                     # print(match, ip, line)
                     if match:
                         host = match[1]
-                        # ip = ipaddress.ip_address(match[2])
-                        self._dict_safely_update(self.ip_found_dict, ip, {})
-                        self._dict_safely_update(self.ip_found_dict[ip], "host", host)
+                        self._dict_safely_update(self.ip_found_dict[ip][mac], "host", host)
                         break
 
                 if not match:
@@ -237,12 +242,8 @@ class Logic:
                     self._dict_safely_update(self.ip_found_dict, ip, {})
                     self._dict_safely_update(self.ip_found_dict[ip], "host", "NoNameDevice")
 
-                # get MAC
-                mac = self._get_mac(ip)
-                self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
-
             # mark as active
-            self._dict_safely_update(self.ip_found_dict[ip], "active", True)
+            self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
