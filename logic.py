@@ -115,7 +115,7 @@ class Logic:
     # ###########################################################
     # RANGES
     def apply_ranges(self, ip_ranges=None, start_scan=True):
-        if ip_ranges is None:
+        if ip_ranges is None:   # if none - use all Local!
             self.ip_input_ranges_list = self.adapter_net_list
         else:
             self.ip_input_ranges_list = ip_ranges
