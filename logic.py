@@ -26,6 +26,7 @@ class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
     def __init__(self, ip_tuples_list=None, start_scan=True):
         self.ping_timewait_limit_ms = 5
+        self.ping_thread_limit = 10
         self.ping_concurrent_limit = 200
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
@@ -80,6 +81,9 @@ class Logic:
             elif key_part in ["Маска"]:
                 mask = part_result
                 self._dict_safely_update(self.adapter_dict[adapter], "mask", mask)
+            elif key_part in ["Основной"]:
+                gateway = part_result
+                self._dict_safely_update(self.adapter_dict[adapter], "gateway", gateway)
         else:
             # use data from found active adapters
             for adapter_data in self.adapter_dict.values():
@@ -192,6 +196,9 @@ class Logic:
 
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip_start_thread(self, ip):
+        while threading.active_count() > self.ping_thread_limit:
+            print(threading.active_count())
+            time.sleep(0.01)
         threading.Thread(target=self.ping_ip, args=(ip,), daemon=False).start()
         return
 
@@ -213,7 +220,7 @@ class Logic:
             self.ip_last_scanned = ip
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
-            time.sleep(0.001)   # very necessary
+            time.sleep(0.001)   # very necessary =0.001 was good!
 
         if sp_ping.returncode != 0 and ip in self.ip_found_dict:
             self._mark_nonactive_mac(ip=ip)
