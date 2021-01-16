@@ -23,7 +23,7 @@ class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
     def __init__(self, ip_tuples_list=None, start_scan=True):
         self.ping_timewait_limit_ms = 4
-        self.ping_concurrent_limit = 300
+        self.ping_concurrent_limit = 200
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
@@ -105,7 +105,8 @@ class Logic:
         # SETS/DICTS/LISTS
         self.ip_found_dict = {}
         self.ip_found_dict_key_list = []    # you can see found ips in found order
-        self.ip_last_scan = None         # IP was actually last running in all threads
+        self.ip_last_scaned = None          # IP was actually last running in all threads
+        self.ip_last_answered = None
 
         # self.ip_input_ranges_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
@@ -153,8 +154,9 @@ class Logic:
     def scan_loop(self):
         self.flag_stop_scan = False
         while not self.flag_stop_scan:
-            self.scan_onсe()
             self.rescan_found()
+            self.scan_onсe()
+            time.sleep(1)
 
     def scan_stop(self):
         self.flag_stop_scan = True
@@ -199,7 +201,7 @@ class Logic:
         """
 
         with self.lock_maxconnections:
-            self.ip_last_scan = ip
+            self.ip_last_scaned = ip
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
             time.sleep(0.001)   # very necessary
@@ -212,6 +214,7 @@ class Logic:
 
         if sp_ping.returncode == 0:
             print(f"***************hit=[{ip}]")
+            self.ip_last_answered = ip
 
             if ip not in self.ip_found_dict:
                 # get IP+HOST
