@@ -187,6 +187,7 @@ class Logic:
 
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip(self, ip):
+        # DONT START DIRECTLY!!! USE ONLY THROUGH THREADING!
         cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ping_timewait_limit_ms)]
         """
         -4 = ipv4
