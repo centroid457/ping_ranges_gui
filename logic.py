@@ -13,16 +13,14 @@ import platform
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_explore_dict_default = {
-    "hosts": ["localhost", ],
-    "ranges": [
+ip_explore_tuples_list_default = [
         ("192.1.1.0",),
         ("192.168.1.0", "192.168.1.10"),
         ("192.168.43.0", "192.168.43.255"),
-    ]}
+    ]
 
 class Logic:
-    def __init__(self, ip_explore_dict=ip_explore_dict_default, start_scan=True, use_adapter_nets=True):
+    def __init__(self, ip_explore_tuples_list=ip_explore_tuples_list_default, start_scan=True, use_adapter_nets=True):
         self.ping_timewait_limit_ms = 4
         self.ping_concurrent_limit = 300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
@@ -32,7 +30,7 @@ class Logic:
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ping_concurrent_limit)
         self.lock = threading.Lock()
 
-        self.apply_ranges(ip_explore_dict, start_scan=start_scan)
+        self.apply_ranges(ip_explore_tuples_list, start_scan=start_scan)
         return
 
     # ###########################################################
@@ -48,7 +46,6 @@ class Logic:
         self.ip_found_dict = {}
         self.ip_found_dict_key_list = []
 
-        # self.ip_input_hosts_list = []         # DO NOT CLEAR IT!!! update it in apply_ranges
         # self.ip_input_range_tuples_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
         # COUNTERS
@@ -61,8 +58,7 @@ class Logic:
     def apply_ranges(self, ip_data=None, start_scan=True):
         # print(ip_data)
         if ip_data is not None:
-            self.ip_input_hosts_list = ip_data["hosts"]
-            self.ip_input_range_tuples_list = ip_data["ranges"]
+            self.ip_input_range_tuples_list = ip_data
 
             self.clear_data()
 
@@ -77,9 +73,6 @@ class Logic:
         return
 
     def scan(self):
-        for ip_hostname in self.ip_input_hosts_list:
-            self.ping_ip_start_thread(ip_hostname)
-
         for ip_range in self.ip_input_range_tuples_list:
             self.ping_ip_range(ip_range)
 
