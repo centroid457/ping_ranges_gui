@@ -106,8 +106,8 @@ class Logic:
 
         # SETS/DICTS/LISTS
         self.ip_found_dict = {}
-        self.ip_found_dict_key_list = []    # you can see found ips in found order
-        self.ip_last_scaned = None          # IP was actually last running in all threads
+        self.ip_found_list = []         # you can see found ips in found order
+        self.ip_last_scanned = None
         self.ip_last_answered = None
 
         # self.ip_input_ranges_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
@@ -150,7 +150,7 @@ class Logic:
 
         print("*"*80)
         print("ip_found_dict", self.ip_found_dict)
-        print("ip_found_dict_key_list", self.ip_found_dict_key_list)
+        print("ip_found_list", self.ip_found_list)
         return
 
     def scan_loop(self):
@@ -203,7 +203,7 @@ class Logic:
         """
 
         with self.lock_maxconnections:
-            self.ip_last_scaned = ip
+            self.ip_last_scanned = ip
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
             time.sleep(0.001)   # very necessary
@@ -272,7 +272,7 @@ class Logic:
                 # print(dict)
 
                 if the_dict is self.ip_found_dict:      # increase counter for found ip
-                    self.ip_found_dict_key_list.append(key)
+                    self.ip_found_list.append(key)
                     self.count_found_ip += 1
 
     @contracts.contract(the_dict=dict)
