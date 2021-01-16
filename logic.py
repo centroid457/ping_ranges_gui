@@ -204,6 +204,12 @@ class Logic:
             sp_ping.wait()
             time.sleep(0.001)   # very necessary
 
+        if sp_ping.returncode != 0 and ip in self.ip_found_dict:
+            # mark as INactive
+            self._dict_safely_update(self.ip_found_dict[ip], "active", False)
+            # mark as WasLost
+            self._dict_safely_update(self.ip_found_dict[ip], "was_lost", True)  # can be cleared only by clear found data!
+
         if sp_ping.returncode == 0:
             print(f"***************hit=[{ip}]")
 
