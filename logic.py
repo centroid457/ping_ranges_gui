@@ -2,6 +2,7 @@
 
 import contracts
 import ipaddress
+import itertools
 import re
 import os
 import sys
@@ -21,7 +22,7 @@ ip_explore_dict_default = {
     ]}
 
 class Logic:
-    def __init__(self, ip_explore_dict=ip_explore_dict_default, start_scan=True):
+    def __init__(self, ip_explore_dict=ip_explore_dict_default, start_scan=True, use_adapter_nets=True):
         self.ping_timewait_limit_ms = 4
         self.ping_concurrent_limit = 300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
@@ -34,6 +35,8 @@ class Logic:
         self.apply_ranges(ip_explore_dict, start_scan=start_scan)
         return
 
+    # ###########################################################
+    # RESET
     def clear_data(self):
         self.flag_explore_is_finished = False
 
@@ -45,8 +48,8 @@ class Logic:
         self.ip_found_dict = {}
         self.ip_found_dict_key_list = []
 
-        # self.ip_input_hosts_list = []         # DO NOT CLEAR IT!!!
-        # self.ip_input_range_tuples_list = []  # DO NOT CLEAR IT!!!
+        # self.ip_input_hosts_list = []         # DO NOT CLEAR IT!!! update it in apply_ranges
+        # self.ip_input_range_tuples_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
         # COUNTERS
         self.count_found_ip = 0
@@ -67,6 +70,8 @@ class Logic:
                 self.start_scan()
         return
 
+    # ###########################################################
+    # SCAN
     def start_scan(self):
         self.scan()
         return
@@ -99,6 +104,8 @@ class Logic:
         sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
         return sorted_dict
 
+    # ###########################################################
+    # DETERMINE nets
     def detect_local_adapters(self):
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
@@ -171,18 +178,23 @@ class Logic:
                     self.nets_input_valid_list.append(i_net)
 
         # =2= COLLAPSE NETS
+        # DONT NEED!!! Just use all given!
+        '''
         self.nets_input_valid_list = ipaddress.collapse_addresses(self.nets_input_valid_list)
         print(self.nets_input_valid_list)
         for i in self.nets_input_valid_list:
             print(i)
         exit()
+        '''
+
         # =3= LEAVE VALID to active local adapters nets
         for net_input in self.nets_input_valid_list:
             if net_input:
                 pass
-
         return
 
+    # ###########################################################
+    # PING
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
         ip_current = ip_start
