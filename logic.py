@@ -20,6 +20,7 @@ ip_tuples_list_default = [
     ]
 
 class Logic:
+    @contracts.contract(ip_tuples_list="None|(list(tuple))")
     def __init__(self, ip_tuples_list=None, start_scan=True):
         self.ping_timewait_limit_ms = 4
         self.ping_concurrent_limit = 300
@@ -115,6 +116,7 @@ class Logic:
 
     # ###########################################################
     # RANGES
+    @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, start_scan=True):
         if ip_ranges is None:   # if none - use all Local!
             self.ip_input_ranges_list = self.adapter_net_list
@@ -144,19 +146,25 @@ class Logic:
         self.flag_scan_is_finished = True
 
         print("*"*80)
-        print(self.ip_found_dict)
-        print(self.ip_found_dict_key_list)
+        print("ip_found_dict", self.ip_found_dict)
+        print("ip_found_dict_key_list", self.ip_found_dict_key_list)
         return
 
     def scan_loop(self):
-        pass
+        while not self.flag_stop_scan:
+            self.scan_onсe()
+            self.rescan_found()
 
     def scan_stop(self):
         self.flag_stop_scan = True
-        pass
+
+    def rescan_found(self):
+        for ip in self.ip_found_dict:
+            self.ping_ip_start_thread(ip)
 
     # ###########################################################
     # PING
+    @contracts.contract(ip_range=tuple)
     def ping_ip_range(self, ip_range):
         ip_start = ipaddress.ip_address(ip_range[0])
         ip_current = ip_start
@@ -170,11 +178,13 @@ class Logic:
                 ip_current = ip_current + 1
         return
 
-    def ping_ip_start_thread(self, ip=None):
+    @contracts.contract(ip=ipaddress.IPv4Address)
+    def ping_ip_start_thread(self, ip):
         threading.Thread(target=self.ping_ip, args=(ip,), daemon=False).start()
         return
 
-    def ping_ip(self, ip=None):
+    @contracts.contract(ip=ipaddress.IPv4Address)
+    def ping_ip(self, ip):
         cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ping_timewait_limit_ms)]
         """
         -4 = ipv4
@@ -193,29 +203,32 @@ class Logic:
 
         if sp_ping.returncode == 0:
             print(f"***************hit=[{ip}]")
-            # IP+HOST
-            mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
-            match = False
-            for line in sp_ping.stdout.readlines():
-                match = re.search(mask, line)
-                # print(match, ip, line)
-                if match:
-                    host = match[1]
-                    ip = ipaddress.ip_address(match[2])
+
+            if ip not in self.ip_found_dict:
+                # get IP+HOST
+                mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
+                match = False
+                for line in sp_ping.stdout.readlines():
+                    match = re.search(mask, line)
+                    # print(match, ip, line)
+                    if match:
+                        host = match[1]
+                        # ip = ipaddress.ip_address(match[2])
+                        self._dict_safely_update(self.ip_found_dict, ip, {})
+                        self._dict_safely_update(self.ip_found_dict[ip], "host", host)
+                        break
+
+                if not match:
+                    # some devises don't have hostname! and "ping -a" can't resolve it!
                     self._dict_safely_update(self.ip_found_dict, ip, {})
-                    self._dict_safely_update(self.ip_found_dict[ip], "host", host)
-                    break
+                    self._dict_safely_update(self.ip_found_dict[ip], "host", "NoNameDevice")
 
-            if not match:
-                # some devises don't have hostname! and "ping -a" can't resolve it!
-                self._dict_safely_update(self.ip_found_dict, ip, {})
-                self._dict_safely_update(self.ip_found_dict[ip], "host", "NoNameDevice")
-
-            # MAC
-            mac = self._get_mac(ip)
-            self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
+                # get MAC
+                mac = self._get_mac(ip)
+                self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
         return
 
+    @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
     def _get_mac(self, ip):
         sp_mac = subprocess.Popen(f"arp -a {str(ip)}", text=True, stdout=subprocess.PIPE, encoding="cp866")
         arp_lines = sp_mac.stdout.readlines()
@@ -234,16 +247,18 @@ class Logic:
 
     # ###########################################################
     # DICT managers
-    def _dict_safely_update(self, dict, key, val):
+    @contracts.contract(the_dict=dict)
+    def _dict_safely_update(self, the_dict, key, val):
         with self.lock:
-            if val is not None and dict.get(key, None) == None:
-                dict[key] = val
+            if val is not None and the_dict.get(key, None) == None:
+                the_dict[key] = val
                 # print(dict)
 
-                if dict is self.ip_found_dict:      # increase counter for found ip
+                if the_dict is self.ip_found_dict:      # increase counter for found ip
                     self.ip_found_dict_key_list.append(key)
                     self.count_found_ip += 1
 
+    @contracts.contract(the_dict=dict)
     def _sort_dict_by_keys(self, the_dict):
         # sorting dict by keys
         sorted_dict_keys_list = sorted(the_dict)
