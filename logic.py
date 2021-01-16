@@ -25,16 +25,16 @@ ip_tuples_list_default = [
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
     def __init__(self, ip_tuples_list=None, start_scan=True):
-        self.ping_timewait_limit_ms = 5
-        self.ping_thread_limit = 10
-        self.ping_concurrent_limit = 200
+        self.limit_ping_timewait_ms = 5
+        self.limit_ping_thread = 10
+        self.limit_ping_concurrent = 200
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
         self.hostname = platform.node()
 
-        self.lock_maxconnections = threading.BoundedSemaphore(value=self.ping_concurrent_limit)
+        self.lock_maxconnections = threading.BoundedSemaphore(value=self.limit_ping_concurrent)
         self.lock = threading.Lock()
 
         self.clear_data()
@@ -143,6 +143,21 @@ class Logic:
 
     # ###########################################################
     # SCAN
+    def start_sensor_gateway(self):
+        if self.gateway != None:
+            threading.Thread(target=self._sensor_gateway, daemon=True).start()
+        return
+
+    def _sensor_gateway(self):
+        while True:
+            cmd_list = ["ping", "-4", str(self.gateway), "-n", "1", "-i", "2", "-l", "1", "-w", "100"]
+            sp_sensor = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
+            sp_sensor.wait()
+            if sp_sensor.returncode != 0:
+                self.limit_ping_thread = 0
+            time.sleep(1)
+        return
+
     def scan_onсe(self):
         time_start = time.time()
 
@@ -200,7 +215,7 @@ class Logic:
 
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip_start_thread(self, ip):
-        while threading.active_count() > self.ping_thread_limit:
+        while threading.active_count() > self.limit_ping_thread:
             print(threading.active_count())
             time.sleep(0.01)
         threading.Thread(target=self.ping_ip, args=(ip,), daemon=False).start()
@@ -209,7 +224,7 @@ class Logic:
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip(self, ip):
         # DONT START DIRECTLY!!! USE ONLY THROUGH THREADING!
-        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ping_timewait_limit_ms)]
+        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.limit_ping_timewait_ms)]
         """
         -4 = ipv4
         -n = requests count
