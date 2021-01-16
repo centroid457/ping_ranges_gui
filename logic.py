@@ -27,6 +27,8 @@ class Logic:
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
+        self.hostname = platform.node()
+
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ping_concurrent_limit)
         self.lock = threading.Lock()
 
@@ -152,12 +154,6 @@ class Logic:
     def scan_loop(self):
         pass
 
-    def _sort_dict_by_keys(self, the_dict):
-        # sorting dict by keys
-        sorted_dict_keys_list = sorted(the_dict)
-        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
-        return sorted_dict
-
     # ###########################################################
     # PING
     def ping_ip_range(self, ip_range):
@@ -236,16 +232,22 @@ class Logic:
         return
 
     # ###########################################################
-    # DICT manager
+    # DICT managers
     def _dict_safely_update(self, dict, key, val):
         with self.lock:
             if val is not None and dict.get(key, None) == None:
                 dict[key] = val
                 # print(dict)
 
-                if dict is self.ip_found_dict:
+                if dict is self.ip_found_dict:      # increase counter for found ip
                     self.ip_found_dict_key_list.append(key)
                     self.count_found_ip += 1
+
+    def _sort_dict_by_keys(self, the_dict):
+        # sorting dict by keys
+        sorted_dict_keys_list = sorted(the_dict)
+        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
+        return sorted_dict
 
 
 if __name__ == '__main__':
