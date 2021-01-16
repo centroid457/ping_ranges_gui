@@ -107,6 +107,7 @@ class Logic:
 
         self.ip_found_dict = {}
         self.ip_found_dict_key_list = []    # you can see found ips in found order
+        self.ip_last_running = None     # IP was actually last running in all threads
 
         # self.ip_input_ranges_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
@@ -200,6 +201,7 @@ class Logic:
         """
 
         with self.lock_maxconnections:
+            self.ip_last_running = ip
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
             time.sleep(0.001)   # very necessary
