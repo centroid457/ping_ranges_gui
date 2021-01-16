@@ -21,6 +21,7 @@ ip_tuples_list_default = [
         ("192.168.43.0", "192.168.43.255"),
     ]
 
+
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
     def __init__(self, ip_tuples_list=None, start_scan=True):
