@@ -125,7 +125,7 @@ class Logic:
         self.clear_data()
 
         if start_scan:
-            self.scan_onсe()
+            self.scan_loop()
         return
 
     # ###########################################################
