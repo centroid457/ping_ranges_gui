@@ -115,6 +115,7 @@ class Logic:
 
         # COUNTERS
         self.count_found_ip = 0
+        self.time_cicle = 0
         return
 
     # ###########################################################
@@ -135,6 +136,8 @@ class Logic:
     # ###########################################################
     # SCAN
     def scan_onсe(self):
+        time_start = time.time()
+
         self.flag_stop_scan = False
         for ip_range in self.ip_input_ranges_list:
             if isinstance(ip_range, tuple):
@@ -149,7 +152,10 @@ class Logic:
 
         self.flag_scan_is_finished = True
 
+        self.time_cicle = round(time.time() - time_start, 3)
+
         print("*"*80)
+        print("time_cicle", self.time_cicle)
         print("ip_found_dict", self.ip_found_dict)
         print("ip_found_list", self.ip_found_list)
         return
