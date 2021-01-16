@@ -49,6 +49,7 @@ class Logic:
         self.adapter_dict = {}
         self.adapter_net_list = []
         self.adapter_ip_dict = {}
+        self.gateway = None
 
         self.adapters_detect()
 
@@ -84,6 +85,9 @@ class Logic:
             elif key_part in ["Основной"]:
                 gateway = part_result
                 self._dict_safely_update(self.adapter_dict[adapter], "gateway", gateway)
+                if gateway != "":
+                    self.gateway = ipaddress.ip_address(gateway)
+
         else:
             # use data from found active adapters
             for adapter_data in self.adapter_dict.values():
