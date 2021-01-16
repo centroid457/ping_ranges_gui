@@ -39,12 +39,14 @@ class Logic:
         self.flag_explore_is_finished = False
 
         # SETS/DICTS/LISTS
-        self.detected_local_adapters_dict = {}
-        self.nets_local_valid_list = []
+        self.adapter_dict = {}
+        self.adapter_net_list = []
+        self.adapter_ip_dict = {}
+
         self.nets_input_valid_list = []
 
         self.ip_found_dict = {}
-        self.ip_found_dict_key_list = []
+        self.ip_found_dict_key_list = []    # you can see found ips in found order
 
         # self.ip_input_range_tuples_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
@@ -52,13 +54,12 @@ class Logic:
         self.count_found_ip = 0
 
         # EXECUTIONS
-        self.detect_local_adapters()
+        self.adapters_detect()
         return
 
-    def apply_ranges(self, ip_data=None, start_scan=True):
-        # print(ip_data)
-        if ip_data is not None:
-            self.ip_input_range_tuples_list = ip_data
+    def apply_ranges(self, ip_ranges=None, start_scan=True):
+        if ip_ranges is not None:
+            self.ip_input_range_tuples_list = ip_ranges
 
             self.clear_data()
 
@@ -99,12 +100,12 @@ class Logic:
 
     # ###########################################################
     # DETERMINE nets
-    def detect_local_adapters(self):
+    def adapters_detect(self):
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         adapter = None  # cumulative var!
         for line in sp_ipconfig.stdout.readlines():
-            # find out data = generate detected_local_adapters_dict
+            # find out data = generate adapter_dict
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
             if len(line_striped_splited) == 1 or line_striped_splited[1] == "":
@@ -117,30 +118,34 @@ class Logic:
             # print(line.split(" ", maxsplit=4))
             if key_part in ["Описание."]:
                 adapter = part_result
-                self._dict_safely_update(self.detected_local_adapters_dict, adapter, {})
+                self._dict_safely_update(self.adapter_dict, adapter, {})
                 mac, ip, mask = None, None, None    # reset if detected new adaprer line
             elif key_part in ["Физический"]:
                 mac = part_result
-                self._dict_safely_update(self.detected_local_adapters_dict[adapter], "mac", mac)
+                self._dict_safely_update(self.adapter_dict[adapter], "mac", mac)
             elif key_part in ["IPv4-адрес."]:
                 ip = part_result.split("(")[0]
-                self._dict_safely_update(self.detected_local_adapters_dict[adapter], "ip", ip)
+                self._dict_safely_update(self.adapter_dict[adapter], "ip", ip)
             elif key_part in ["Маска"]:
                 mask = part_result
-                self._dict_safely_update(self.detected_local_adapters_dict[adapter], "mask", mask)
+                self._dict_safely_update(self.adapter_dict[adapter], "mask", mask)
         else:
             # use data from found active adapters
-            for adapter_data in self.detected_local_adapters_dict.values():
+            for adapter_data in self.adapter_dict.values():
                 if adapter_data.get("ip", None) is not None:
                     ip = ipaddress.ip_address(adapter_data["ip"])
                     mask = adapter_data["mask"]
-
+                    mac = adapter_data["mac"]
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
                     adapter_data["net"] = net
-                    self.nets_local_valid_list.append(net)
+                    self.adapter_net_list.append(net)
+                    self._dict_safely_update(self.adapter_ip_dict, ip, {})
+                    self._dict_safely_update(self.adapter_ip_dict[ip], "mac", mac)
+                    self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
 
-            print(self.detected_local_adapters_dict)
-            print(self.nets_local_valid_list)
+            print(self.adapter_dict)
+            print(self.adapter_net_list)
+            print(self.adapter_ip_dict)
             print("*"*80)
             self.generate_nets_input_valid_list()
 
@@ -194,19 +199,16 @@ class Logic:
         elif len(ip_range) == 2:
             ip_finish = ipaddress.ip_address(ip_range[1])
             while ip_current <= ip_finish:
-                if not ip_current.is_multicast:
-                    self.ping_ip_start_thread(ip_current)
-                    # self.ping_ip(ip_current)
+                self.ping_ip_start_thread(ip_current)
                 ip_current = ip_current + 1
-
         return
 
-    def ping_ip_start_thread(self, ip_or_name=None):
-        threading.Thread(target=self.ping_ip, args=(ip_or_name,), daemon=False).start()
+    def ping_ip_start_thread(self, ip=None):
+        threading.Thread(target=self.ping_ip, args=(ip,), daemon=False).start()
         return
 
-    def ping_ip(self, ip_or_name=None):
-        cmd_list = ["ping", "-a", "-4", str(ip_or_name), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ping_timewait_limit_ms)]
+    def ping_ip(self, ip=None):
+        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.ping_timewait_limit_ms)]
         """
         -4 = ipv4
         -n = requests count
@@ -223,13 +225,13 @@ class Logic:
             time.sleep(0.001)   # very necessary
 
         if sp_ping.returncode == 0:
-            print(f"***************hit=[{ip_or_name}]")
+            print(f"***************hit=[{ip}]")
             # IP+HOST
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
             match = False
             for line in sp_ping.stdout.readlines():
                 match = re.search(mask, line)
-                # print(match, ip_or_name, line)
+                # print(match, ip, line)
                 if match:
                     host = match[1]
                     ip = ipaddress.ip_address(match[2])
@@ -239,7 +241,6 @@ class Logic:
 
             if not match:
                 # some devises don't have hostname! and "ping -a" can't resolve it!
-                ip = ip_or_name
                 self._dict_safely_update(self.ip_found_dict, ip, {})
                 self._dict_safely_update(self.ip_found_dict[ip], "host", "NoNameDevice")
 
@@ -258,17 +259,20 @@ class Logic:
                     self.ip_found_dict_key_list.append(key)
                     self.count_found_ip += 1
 
-    def _get_mac(self, ip_or_name):
-        if type(ip_or_name) == str:
-            return None
-
-        sp_mac = subprocess.Popen(f"arp -a {str(ip_or_name)}", text=True, stdout=subprocess.PIPE, encoding="cp866")
+    def _get_mac(self, ip):
+        sp_mac = subprocess.Popen(f"arp -a {str(ip)}", text=True, stdout=subprocess.PIPE, encoding="cp866")
         arp_lines = sp_mac.stdout.readlines()
         for line in arp_lines:
             # print(line)
             match = re.search(r"[0-9a-fA-F]{2}(?:[:-][0-9a-fA-F]{2}){5}", line)
             if match is not None:
                 return match[0]
+
+        # if not returned before, try to find in adapters
+        adapter_ip_data = self.adapter_ip_dict.get(ip, None)
+        if adapter_ip_data is not None:
+            return adapter_ip_data.get("mac", None)
+
         return
 
 if __name__ == '__main__':
