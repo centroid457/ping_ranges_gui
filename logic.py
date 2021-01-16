@@ -103,11 +103,9 @@ class Logic:
         self.flag_stop_scan = False
 
         # SETS/DICTS/LISTS
-        self.nets_input_valid_list = []
-
         self.ip_found_dict = {}
         self.ip_found_dict_key_list = []    # you can see found ips in found order
-        self.ip_last_running = None     # IP was actually last running in all threads
+        self.ip_last_running = None         # IP was actually last running in all threads
 
         # self.ip_input_ranges_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
