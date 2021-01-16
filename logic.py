@@ -25,17 +25,7 @@ ip_tuples_list_default = [
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
     def __init__(self, ip_tuples_list=None, start_scan=True):
-        self.limit_ping_timewait_ms = 5
-        self.limit_ping_thread = 10
-        self.limit_ping_concurrent = 200
-        # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
-        # but it can overload you CPU!
-        # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
-
         self.hostname = platform.node()
-
-        self.lock_maxconnections = threading.BoundedSemaphore(value=self.limit_ping_concurrent)
-        self.lock = threading.Lock()
 
         self.clear_data()
         self.clear_adapters()
@@ -111,6 +101,18 @@ class Logic:
     # ###########################################################
     # RESET
     def clear_data(self):
+        # INITIATE LIMITS
+        self.limit_ping_timewait_ms = 5
+        self.limit_ping_thread = 10
+        self.limit_ping_concurrent = 200
+        # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
+        # but it can overload you CPU!
+        # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
+
+        self.lock_maxconnections = threading.BoundedSemaphore(value=self.limit_ping_concurrent)
+        self.lock = threading.Lock()
+
+        # FLAGS
         self.flag_scan_is_finished = False
         self.flag_stop_scan = False
 
