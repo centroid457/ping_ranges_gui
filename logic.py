@@ -98,7 +98,8 @@ class Logic:
     # ###########################################################
     # RESET
     def clear_data(self):
-        self.flag_explore_is_finished = False
+        self.flag_scan_is_finished = False
+        self.flag_stop_scan = False
 
         # SETS/DICTS/LISTS
         self.nets_input_valid_list = []
@@ -123,16 +124,12 @@ class Logic:
         self.clear_data()
 
         if start_scan:
-            self.start_scan()
+            self.scan_onсe()
         return
 
     # ###########################################################
     # SCAN
-    def start_scan(self):
-        self.scan()
-        return
-
-    def scan(self):
+    def scan_onсe(self):
         for ip_range in self.ip_input_ranges_list:
             if isinstance(ip_range, tuple):
                 self.ping_ip_range(ip_range)
@@ -144,7 +141,7 @@ class Logic:
 
         self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
 
-        self.flag_explore_is_finished = True
+        self.flag_scan_is_finished = True
 
         print("*"*80)
         print(self.ip_found_dict)
@@ -152,6 +149,10 @@ class Logic:
         return
 
     def scan_loop(self):
+        pass
+
+    def scan_stop(self):
+        self.flag_stop_scan = True
         pass
 
     # ###########################################################
@@ -164,7 +165,7 @@ class Logic:
             self.ping_ip_start_thread(ip_current)
         elif len(ip_range) == 2:
             ip_finish = ipaddress.ip_address(ip_range[1])
-            while ip_current <= ip_finish:
+            while ip_current <= ip_finish and not self.flag_stop_scan:
                 self.ping_ip_start_thread(ip_current)
                 ip_current = ip_current + 1
         return
