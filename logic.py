@@ -1,5 +1,7 @@
 # print("file logic.py")
 
+# todo: try to use NMAP, at least for OS versions!
+
 import contracts
 import ipaddress
 import itertools
