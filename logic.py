@@ -13,14 +13,14 @@ import platform
 from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
-ip_explore_tuples_list_default = [
+ip_tuples_list_default = [
         ("192.1.1.0",),
         ("192.168.1.0", "192.168.1.10"),
         ("192.168.43.0", "192.168.43.255"),
     ]
 
 class Logic:
-    def __init__(self, ip_explore_tuples_list=ip_explore_tuples_list_default, start_scan=True, use_adapter_nets=True):
+    def __init__(self, ip_tuples_list=None, start_scan=True):
         self.ping_timewait_limit_ms = 4
         self.ping_concurrent_limit = 300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
@@ -30,76 +30,21 @@ class Logic:
         self.lock_maxconnections = threading.BoundedSemaphore(value=self.ping_concurrent_limit)
         self.lock = threading.Lock()
 
-        self.apply_ranges(ip_explore_tuples_list, start_scan=start_scan)
+        self.clear_data()
+        self.clear_adapters()
+
+        self.apply_ranges(ip_tuples_list, start_scan=start_scan)
         return
 
     # ###########################################################
-    # RESET
-    def clear_data(self):
-        self.flag_explore_is_finished = False
-
-        # SETS/DICTS/LISTS
+    # ADAPTERS
+    def clear_adapters(self):
         self.adapter_dict = {}
         self.adapter_net_list = []
         self.adapter_ip_dict = {}
 
-        self.nets_input_valid_list = []
-
-        self.ip_found_dict = {}
-        self.ip_found_dict_key_list = []    # you can see found ips in found order
-
-        # self.ip_input_range_tuples_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
-
-        # COUNTERS
-        self.count_found_ip = 0
-
-        # EXECUTIONS
         self.adapters_detect()
-        return
 
-    def apply_ranges(self, ip_ranges=None, start_scan=True):
-        if ip_ranges is not None:
-            self.ip_input_range_tuples_list = ip_ranges
-
-            self.clear_data()
-
-            if start_scan:
-                self.start_scan()
-        return
-
-    # ###########################################################
-    # SCAN
-    def start_scan(self):
-        self.scan()
-        return
-
-    def scan(self):
-        for ip_range in self.ip_input_range_tuples_list:
-            self.ping_ip_range(ip_range)
-
-        while threading.active_count() > 1:
-            time.sleep(0.5)
-
-        self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
-
-        self.flag_explore_is_finished = True
-
-        print("*"*80)
-        print(self.ip_found_dict)
-        print(self.ip_found_dict_key_list)
-        return
-
-    def scan_loop(self):
-        pass
-
-    def _sort_dict_by_keys(self, the_dict):
-        # sorting dict by keys
-        sorted_dict_keys_list = sorted(the_dict)
-        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
-        return sorted_dict
-
-    # ###########################################################
-    # DETERMINE nets
     def adapters_detect(self):
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
@@ -147,18 +92,45 @@ class Logic:
             print(self.adapter_net_list)
             print(self.adapter_ip_dict)
             print("*"*80)
-            self.generate_nets_input_valid_list()
 
-    def add_adapters_ip_to_result(self):
-        pass
+    # ###########################################################
+    # RESET
+    def clear_data(self):
+        self.flag_explore_is_finished = False
+
+        # SETS/DICTS/LISTS
+        self.nets_input_valid_list = []
+
+        self.ip_found_dict = {}
+        self.ip_found_dict_key_list = []    # you can see found ips in found order
+
+        # self.ip_input_ranges_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
+
+        # COUNTERS
+        self.count_found_ip = 0
+        return
+
+    # ###########################################################
+    # RANGES
+    def apply_ranges(self, ip_ranges=None, start_scan=True):
+        if ip_ranges is None:
+            self.ip_input_ranges_list = self.adapter_net_list
+        else:
+            self.ip_input_ranges_list = ip_ranges
+
+        self.clear_data()
+
+        if start_scan:
+            self.start_scan()
+        return
 
     def generate_nets_input_valid_list(self):
         # self.nets_input_valid_list
         nets_input_gen_list = []
 
         # =1= GEN NETS LIST
-        print("self.ip_input_range_tuples_list", self.ip_input_range_tuples_list)
-        for range_tuple in self.ip_input_range_tuples_list:
+        print("self.ip_input_ranges_list", self.ip_input_ranges_list)
+        for range_tuple in self.ip_input_ranges_list:
             if len(range_tuple) == 1:
                 i_net = ipaddress.ip_network(range_tuple[0])
                 nets_input_gen_list.append(i_net)
@@ -187,6 +159,40 @@ class Logic:
             if net_input:
                 pass
         return
+
+    # ###########################################################
+    # SCAN
+    def start_scan(self):
+        self.scan()
+        return
+
+    def scan(self):
+        for ip_range in self.ip_input_ranges_list:
+            if isinstance(ip_range, tuple):
+                self.ping_ip_range(ip_range)
+            elif isinstance(ip_range, ipaddress.IPv4Network):
+                self.ping_ip_range((ip_range[0], ip_range[-1]))
+
+        while threading.active_count() > 1:
+            time.sleep(0.5)
+
+        self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
+
+        self.flag_explore_is_finished = True
+
+        print("*"*80)
+        print(self.ip_found_dict)
+        print(self.ip_found_dict_key_list)
+        return
+
+    def scan_loop(self):
+        pass
+
+    def _sort_dict_by_keys(self, the_dict):
+        # sorting dict by keys
+        sorted_dict_keys_list = sorted(the_dict)
+        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
+        return sorted_dict
 
     # ###########################################################
     # PING
@@ -249,16 +255,6 @@ class Logic:
             self._dict_safely_update(self.ip_found_dict[ip], "mac", mac)
         return
 
-    def _dict_safely_update(self, dict, key, val):
-        with self.lock:
-            if val is not None and dict.get(key, None) == None:
-                dict[key] = val
-                # print(dict)
-
-                if dict is self.ip_found_dict:
-                    self.ip_found_dict_key_list.append(key)
-                    self.count_found_ip += 1
-
     def _get_mac(self, ip):
         sp_mac = subprocess.Popen(f"arp -a {str(ip)}", text=True, stdout=subprocess.PIPE, encoding="cp866")
         arp_lines = sp_mac.stdout.readlines()
@@ -274,6 +270,19 @@ class Logic:
             return adapter_ip_data.get("mac", None)
 
         return
+
+    # ###########################################################
+    # DICT manager
+    def _dict_safely_update(self, dict, key, val):
+        with self.lock:
+            if val is not None and dict.get(key, None) == None:
+                dict[key] = val
+                # print(dict)
+
+                if dict is self.ip_found_dict:
+                    self.ip_found_dict_key_list.append(key)
+                    self.count_found_ip += 1
+
 
 if __name__ == '__main__':
     access_this_module_as_import = False
