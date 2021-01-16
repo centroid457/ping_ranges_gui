@@ -209,11 +209,7 @@ class Logic:
             time.sleep(0.001)   # very necessary
 
         if sp_ping.returncode != 0 and ip in self.ip_found_dict:
-            for mac in self.ip_found_dict[ip]:
-                # mark as None-Active
-                self._dict_safely_update(self.ip_found_dict[ip][mac], "active", False)
-                # mark as WasLost
-                self._dict_safely_update(self.ip_found_dict[ip][mac], "was_lost", True)  # can be cleared only by clear found data!
+            self._mark_nonactive_mac(ip=ip)
 
         elif sp_ping.returncode == 0:
             print(f"***************hit=[{ip}]")
@@ -224,6 +220,7 @@ class Logic:
             # get MAC
             mac = self._get_mac(ip)
             self._dict_safely_update(self.ip_found_dict[ip], mac, {})
+            self._mark_nonactive_mac(ip=ip, mac_except=mac)
 
             if ip not in self.ip_found_dict and self.ip_found_dict[ip][mac] != {}:
                 # get IP+HOST
@@ -261,6 +258,16 @@ class Logic:
         if adapter_ip_data is not None:
             return adapter_ip_data.get("mac", None)
 
+        return
+
+    @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
+    def _mark_nonactive_mac(self, ip, mac_except=None):
+        for mac in self.ip_found_dict[ip]:
+            if mac != mac_except:   # change all except the one!
+                # mark as None-Active
+                self._dict_safely_update(self.ip_found_dict[ip][mac], "active", False)
+                # mark as WasLost
+                self._dict_safely_update(self.ip_found_dict[ip][mac], "was_lost", True)  # clear only by clear found data!
         return
 
     # ###########################################################
