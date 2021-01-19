@@ -146,13 +146,10 @@ class Logic:
         self.ip_scan_ranges_dict = {}
         if ip_ranges is None:   # if none - use all Local!
             for net in self.adapter_net_dict:
-                self.ip_scan_ranges_dict.update({(net[0], net[-1]): {"adapter": True}})
+                self.ip_scan_ranges_dict.update({(net[0], net[-1]): {"adapter_net": net, "active": True}})
         else:
             for my_range in ip_ranges:
-                self.ip_scan_ranges_dict.update({my_range:{}})
-
-        for my_range in self.ip_scan_ranges_dict:
-            self.ip_scan_ranges_dict[my_range]["active"] = True
+                self.ip_scan_ranges_dict.update({my_range: {"active": True}})
 
         self.clear_data()
 
