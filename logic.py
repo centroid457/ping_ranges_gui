@@ -173,7 +173,7 @@ class Logic:
             line = sp_sensor.stdout.readline()[:-1]
             if line != "":
                 # print(line)
-                print(self.count_ip_scanned, self.ip_last_scanned, self.ip_last_answered)
+                print(threading.active_count(), self.count_ip_scanned, self.ip_last_scanned, self.ip_last_answered)
             if line in ["Превышен интервал ожидания для запроса.", ]:
                 time_response = 1000
                 # self.limit_ping_thread = 10
