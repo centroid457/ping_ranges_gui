@@ -112,7 +112,7 @@ class Logic:
     def clear_data(self):
         # INITIATE LIMITS
         self.limit_ping_timewait_ms = 5
-        self.limit_ping_thread = 100
+        self.limit_ping_thread = 200
         self.limit_ping_concurrent = 200
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
@@ -156,21 +156,26 @@ class Logic:
     # ###########################################################
     # SCAN
     def start_daemon_sensor_gateway(self):
+        threading.Thread(target=self._sensor_gateway, args=("ya.ru",), daemon=True).start()
         for gateway in self.adapter_gateway_list:
             threading.Thread(target=self._sensor_gateway, args=(gateway, ), daemon=True).start()
         return
 
     def _sensor_gateway(self, gateway):
-        cmd_list = ["ping", "-4", str(gateway), "-t", "-i", "2", "-l", "1", "-w", "1000"]
+        cmd_list = ["ping", "-4", str(gateway), "-t", "-l", "1", "-w", "1000"]
         sp_sensor = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
         sp_sensor.stdout.readline()
         sp_sensor.stdout.readline()
+        time_response = 1000
 
         while sp_sensor.poll() is None:
             line = sp_sensor.stdout.readline()[:-1]
-            print(line)
+            if line != "":
+                print(line)
+                print(self.ip_last_scanned, self.ip_last_answered)
             if line in ["Превышен интервал ожидания для запроса.", ]:
                 time_response = 1000
+                sp_sensor.kill()
             self.adapter_gateway_time_response_list.append(time_response)
 
         return
