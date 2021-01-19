@@ -37,9 +37,10 @@ class Logic:
     # ADAPTERS
     def clear_adapters(self):
         self.adapter_dict = {}
-        self.adapter_net_dict = {}
+        self.adapter_net_dict = {}  # can simplify to use list!
         self.adapter_ip_dict = {}
-        self.adapter_gateway = None
+        self.adapter_gateway_list = []
+        self.adapter_gateway_time_response_list = []
         self.adapter_ip_margin_list = []     # zero and broadcast ips
 
         self.adapters_detect()
@@ -79,8 +80,7 @@ class Logic:
                 gateway = part_result
                 self._dict_safely_update(self.adapter_dict[adapter], "gateway", gateway)
                 if gateway != "":
-                    self.adapter_gateway = ipaddress.ip_address(gateway)
-                    self.start_daemon_sensor_gateway()
+                    self.adapter_gateway_list.append(ipaddress.ip_address(gateway))
 
         else:
             # use data from found active adapters
@@ -105,13 +105,14 @@ class Logic:
             print(self.adapter_net_dict)
             print(self.adapter_ip_dict)
             print("*"*80)
+            self.start_daemon_sensor_gateway()
 
     # ###########################################################
     # RESET
     def clear_data(self):
         # INITIATE LIMITS
         self.limit_ping_timewait_ms = 5
-        self.limit_ping_thread = 10
+        self.limit_ping_thread = 100
         self.limit_ping_concurrent = 200
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
@@ -155,18 +156,23 @@ class Logic:
     # ###########################################################
     # SCAN
     def start_daemon_sensor_gateway(self):
-        if self.adapter_gateway != None:
-            threading.Thread(target=self._sensor_gateway, daemon=True).start()
+        for gateway in self.adapter_gateway_list:
+            threading.Thread(target=self._sensor_gateway, args=(gateway, ), daemon=True).start()
         return
 
-    def _sensor_gateway(self):
-        while True:
-            cmd_list = ["ping", "-4", str(self.adapter_gateway), "-n", "1", "-i", "2", "-l", "1", "-w", "100"]
-            sp_sensor = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
-            sp_sensor.wait()
-            if sp_sensor.returncode != 0:
-                self.limit_ping_thread = 0
-            time.sleep(1)
+    def _sensor_gateway(self, gateway):
+        cmd_list = ["ping", "-4", str(gateway), "-t", "-i", "2", "-l", "1", "-w", "1000"]
+        sp_sensor = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
+        sp_sensor.stdout.readline()
+        sp_sensor.stdout.readline()
+
+        while sp_sensor.poll() is None:
+            line = sp_sensor.stdout.readline()[:-1]
+            print(line)
+            if line in ["Превышен интервал ожидания для запроса.", ]:
+                time_response = 1000
+            self.adapter_gateway_time_response_list.append(time_response)
+
         return
 
     def scan_onсe(self):
@@ -229,7 +235,7 @@ class Logic:
         if ip in self.adapter_ip_margin_list:
             return
         while threading.active_count() > self.limit_ping_thread:
-            print(threading.active_count())
+            # print(threading.active_count())
             time.sleep(0.01)
         threading.Thread(target=self.ping_ip, args=(ip,), daemon=False).start()
         return
