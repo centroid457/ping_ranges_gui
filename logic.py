@@ -144,7 +144,7 @@ class Logic:
     @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, start_scan=True):
         if ip_ranges is None:   # if none - use all Local!
-            self.ip_input_ranges_list = list(self.adapter_net_dict)
+            self.ip_input_ranges_list = [(net[0], net[-1]) for net in self.adapter_net_dict]
         else:
             self.ip_input_ranges_list = ip_ranges
 
