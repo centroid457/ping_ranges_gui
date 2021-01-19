@@ -40,6 +40,7 @@ class Logic:
         self.adapter_net_list = []
         self.adapter_ip_dict = {}
         self.adapter_gateway = None
+        self.adapter_ip_margin_list = []     # zero and broadcast ips
 
         self.adapters_detect()
 
@@ -59,10 +60,12 @@ class Logic:
 
             # print(part_result)
             # print(line.split(" ", maxsplit=4))
+            # -----------------------------------------------------------
+            # CREATION self.adapter_dict
             if key_part in ["Описание."]:
                 adapter = part_result
                 self._dict_safely_update(self.adapter_dict, adapter, {})
-                mac, ip, mask = None, None, None    # reset if detected new adaprer line
+                mac, ip, mask, gateway = None, None, None, None    # reset if detected new adaprer line
             elif key_part in ["Физический"]:
                 mac = part_result
                 self._dict_safely_update(self.adapter_dict[adapter], "mac", mac)
@@ -86,9 +89,14 @@ class Logic:
                     ip = ipaddress.ip_address(adapter_data["ip"])
                     mask = adapter_data["mask"]
                     mac = adapter_data["mac"]
+                    gateway = adapter_data["gateway"]
+
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
                     adapter_data["net"] = net
                     self.adapter_net_list.append(net)
+                    self.adapter_ip_margin_list.append(net[0])
+                    self.adapter_ip_margin_list.append(net[-1])
+
                     self._dict_safely_update(self.adapter_ip_dict, ip, {})
                     self._dict_safely_update(self.adapter_ip_dict[ip], "mac", mac)
                     self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
