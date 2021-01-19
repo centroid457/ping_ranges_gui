@@ -89,7 +89,7 @@ class Logic:
                     ip = ipaddress.ip_address(adapter_data["ip"])
                     mask = adapter_data["mask"]
                     mac = adapter_data["mac"]
-                    gateway = adapter_data["gateway"]
+                    # gateway = adapter_data["gateway"]
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
                     adapter_data["net"] = net
@@ -226,6 +226,8 @@ class Logic:
 
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip_start_thread(self, ip):
+        if ip in self.adapter_ip_margin_list:
+            return
         while threading.active_count() > self.limit_ping_thread:
             print(threading.active_count())
             time.sleep(0.01)
