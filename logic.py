@@ -39,7 +39,7 @@ class Logic:
         self.adapter_dict = {}
         self.adapter_net_list = []
         self.adapter_ip_dict = {}
-        self.gateway = None
+        self.adapter_gateway = None
 
         self.adapters_detect()
 
@@ -76,7 +76,7 @@ class Logic:
                 gateway = part_result
                 self._dict_safely_update(self.adapter_dict[adapter], "gateway", gateway)
                 if gateway != "":
-                    self.gateway = ipaddress.ip_address(gateway)
+                    self.adapter_gateway = ipaddress.ip_address(gateway)
                     self.start_daemon_sensor_gateway()
 
         else:
@@ -147,13 +147,13 @@ class Logic:
     # ###########################################################
     # SCAN
     def start_daemon_sensor_gateway(self):
-        if self.gateway != None:
+        if self.adapter_gateway != None:
             threading.Thread(target=self._sensor_gateway, daemon=True).start()
         return
 
     def _sensor_gateway(self):
         while True:
-            cmd_list = ["ping", "-4", str(self.gateway), "-n", "1", "-i", "2", "-l", "1", "-w", "100"]
+            cmd_list = ["ping", "-4", str(self.adapter_gateway), "-n", "1", "-i", "2", "-l", "1", "-w", "100"]
             sp_sensor = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_sensor.wait()
             if sp_sensor.returncode != 0:
