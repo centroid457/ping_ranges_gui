@@ -111,8 +111,8 @@ class Logic:
     # RESET
     def clear_data(self):
         # INITIATE LIMITS
-        self.limit_ping_timewait_ms = 5
-        self.limit_ping_thread = 200
+        self.limit_ping_timewait_ms = 100
+        self.limit_ping_thread = 100
         self.limit_ping_concurrent = 200
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
@@ -134,7 +134,8 @@ class Logic:
         # self.ip_input_ranges_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
         # COUNTERS
-        self.count_found_ip = 0
+        self.count_ip_scanned = 0
+        self.count_ip_found = 0
         self.time_cicle = 0
         return
 
@@ -171,16 +172,18 @@ class Logic:
         while sp_sensor.poll() is None:
             line = sp_sensor.stdout.readline()[:-1]
             if line != "":
-                print(line)
-                print(self.ip_last_scanned, self.ip_last_answered)
+                # print(line)
+                print(self.count_ip_scanned, self.ip_last_scanned, self.ip_last_answered)
             if line in ["Превышен интервал ожидания для запроса.", ]:
                 time_response = 1000
+                self.limit_ping_thread = 10
                 sp_sensor.kill()
             self.adapter_gateway_time_response_list.append(time_response)
 
         return
 
     def scan_onсe(self):
+        count_main_threads = threading.active_count()
         time_start = time.time()
 
         self.flag_stop_scan = False
@@ -190,7 +193,7 @@ class Logic:
             elif isinstance(ip_range, ipaddress.IPv4Network):
                 self.ping_ip_range((ip_range[0], ip_range[-1]))
 
-        while threading.active_count() > 1:
+        while threading.active_count() > count_main_threads:
             time.sleep(0.5)
 
         self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
@@ -248,7 +251,7 @@ class Logic:
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip(self, ip):
         # DONT START DIRECTLY!!! USE ONLY THROUGH THREADING!
-        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-i", "2", "-l", "1", "-w", str(self.limit_ping_timewait_ms)]
+        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-w", str(self.limit_ping_timewait_ms)]
         """
         -4 = ipv4
         -n = requests count
@@ -261,6 +264,7 @@ class Logic:
 
         with self.lock_maxconnections:
             self.ip_last_scanned = ip
+            self.count_ip_scanned += 1
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
             time.sleep(0.001)   # very necessary =0.001 was good!
@@ -337,7 +341,7 @@ class Logic:
 
                 if the_dict is self.ip_found_dict:      # increase counter for found ip
                     self.ip_found_list.append(key)
-                    self.count_found_ip += 1
+                    self.count_ip_found += 1
 
     @contracts.contract(the_dict=dict)
     def _sort_dict_by_keys(self, the_dict):
