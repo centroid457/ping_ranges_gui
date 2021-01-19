@@ -131,7 +131,7 @@ class Logic:
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
-        # self.ip_input_ranges_list = []  # DO NOT CLEAR IT!!! update it in apply_ranges
+        # self.ip_scan_ranges_dict = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
         # COUNTERS
         self.count_ip_scanned = 0
@@ -143,10 +143,16 @@ class Logic:
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, start_scan=True):
+        self.ip_scan_ranges_dict = {}
         if ip_ranges is None:   # if none - use all Local!
-            self.ip_input_ranges_list = [(net[0], net[-1]) for net in self.adapter_net_dict]
+            for net in self.adapter_net_dict:
+                self.ip_scan_ranges_dict.update({(net[0], net[-1]): {"adapter": True}})
         else:
-            self.ip_input_ranges_list = ip_ranges
+            for my_range in ip_ranges:
+                self.ip_scan_ranges_dict.update({my_range:{}})
+
+        for my_range in self.ip_scan_ranges_dict:
+            self.ip_scan_ranges_dict[my_range]["active"] = True
 
         self.clear_data()
 
@@ -187,7 +193,7 @@ class Logic:
         time_start = time.time()
 
         self.flag_stop_scan = False
-        for ip_range in self.ip_input_ranges_list:
+        for ip_range in self.ip_scan_ranges_dict:
             if isinstance(ip_range, tuple):
                 self.ping_ip_range(ip_range)
             elif isinstance(ip_range, ipaddress.IPv4Network):
