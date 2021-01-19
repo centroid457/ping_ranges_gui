@@ -37,7 +37,7 @@ class Logic:
     # ADAPTERS
     def clear_adapters(self):
         self.adapter_dict = {}
-        self.adapter_net_list = []
+        self.adapter_net_dict = {}
         self.adapter_ip_dict = {}
         self.adapter_gateway = None
         self.adapter_ip_margin_list = []     # zero and broadcast ips
@@ -89,11 +89,11 @@ class Logic:
                     ip = ipaddress.ip_address(adapter_data["ip"])
                     mask = adapter_data["mask"]
                     mac = adapter_data["mac"]
-                    # gateway = adapter_data["gateway"]
+                    gateway = adapter_data["gateway"]
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
                     adapter_data["net"] = net
-                    self.adapter_net_list.append(net)
+                    self.adapter_net_dict.update({net: gateway})
                     self.adapter_ip_margin_list.append(net[0])
                     self.adapter_ip_margin_list.append(net[-1])
 
@@ -102,7 +102,7 @@ class Logic:
                     self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
 
             print(self.adapter_dict)
-            print(self.adapter_net_list)
+            print(self.adapter_net_dict)
             print(self.adapter_ip_dict)
             print("*"*80)
 
@@ -142,7 +142,7 @@ class Logic:
     @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, start_scan=True):
         if ip_ranges is None:   # if none - use all Local!
-            self.ip_input_ranges_list = self.adapter_net_list
+            self.ip_input_ranges_list = list(self.adapter_net_dict)
         else:
             self.ip_input_ranges_list = ip_ranges
 
