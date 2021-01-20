@@ -17,7 +17,7 @@ from pathlib import Path
 access_this_module_as_import = True  # at first need true to correct assertions!
 ip_tuples_list_default = [
         ("192.1.1.0",),
-        ("192.168.1.0", "192.168.1.100"),
+        ("192.168.1.0", "192.168.1.10"),
         # ("192.168.43.0", "192.168.43.255"),
     ]
 
@@ -36,10 +36,10 @@ class Logic:
     # ###########################################################
     # ADAPTERS
     def clear_adapters(self):
-        self.adapter_dict = {}
-        self.adapter_net_dict = {}  # can simplify to use list!
-        self.adapter_ip_dict = {}
-        self.adapter_gateway_list = []
+        self.adapter_dict = {}          # ={ADAPTER_NAME: {mac:, ip:, mask:, gateway:,    active:, was_lost:, }}
+        self.adapter_net_dict = {}      # ={net:gateway}                        can simplify to use list!
+        self.adapter_ip_dict = {}       # ={ip:{mac:, mask:,    active:, was_lost:, }}
+        self.adapter_gateway_list = []  #
         self.adapter_gateway_time_response_list = []
         self.adapter_ip_margin_list = []     # zero and broadcast ips
 
@@ -48,7 +48,8 @@ class Logic:
     def adapters_detect(self):
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
-        adapter = None  # cumulative var!
+        adapter_new = None  # cumulative var!
+        adapter_old = None
         for line in sp_ipconfig.stdout.readlines():
             # find out data = generate adapter_dict
             line_striped = line.strip()
@@ -66,37 +67,49 @@ class Logic:
             # print(line.split(" ", maxsplit=4))
             # -----------------------------------------------------------
             # CREATION self.adapter_dict
-            if key_part in ["Описание."]:
-                adapter = part_result
-                self._dict_safely_update(self.adapter_dict, adapter, {})
+            if key_part in ["Описание."]:       # found new adapter
+                adapter_old = adapter_new
+                if adapter_old is not None:
+                    last_active = self.adapter_dict[adapter_old].get("active", None)
+                    if last_active == True and ip is None:
+                        self._dict_safely_update(self.adapter_dict[adapter_new], "was_lost", True)
+
+                adapter_new = part_result
+                self._dict_safely_update(self.adapter_dict, adapter_new, {})
                 mac, ip, mask, gateway = None, None, None, None    # reset if detected new adaprer line
             elif key_part in ["Физический"]:
                 mac = part_result
-                self._dict_safely_update(self.adapter_dict[adapter], "mac", mac)
+                self._dict_safely_update(self.adapter_dict[adapter_new], "mac", mac)
             elif key_part in ["IPv4-адрес."]:
                 ip = part_result.split("(")[0]
-                self._dict_safely_update(self.adapter_dict[adapter], "ip", ip)
+                self._dict_safely_update(self.adapter_dict[adapter_new], "ip", ip)
+
+                last_active = self.adapter_dict[adapter_new].get("active", None)
+                if last_active == False:
+                    self._dict_safely_update(self.adapter_dict[adapter_new], "was_lost", True)
+                self._dict_safely_update(self.adapter_dict[adapter_new], "active", True)
+
             elif key_part in ["Маска"]:
                 mask = part_result
-                self._dict_safely_update(self.adapter_dict[adapter], "mask", mask)
+                self._dict_safely_update(self.adapter_dict[adapter_new], "mask", mask)
             elif key_part in ["Основной"]:
                 gateway = part_result
-                self._dict_safely_update(self.adapter_dict[adapter], "gateway", gateway)
+                self._dict_safely_update(self.adapter_dict[adapter_new], "gateway", gateway)
                 if gateway != "":
                     self.adapter_gateway_list.append(ipaddress.ip_address(gateway))
 
         else:
             # use data from found active adapters
-            for adapter_data in self.adapter_dict.values():
-                if adapter_data.get("ip", None) is not None:
-                    ip = ipaddress.ip_address(adapter_data["ip"])
+            for adapter_data_dict in self.adapter_dict.values():
+                if adapter_data_dict.get("ip", None) is not None:
+                    ip = ipaddress.ip_address(adapter_data_dict["ip"])
 
-                    mask = adapter_data.get("mask", None)
-                    mac = adapter_data.get("mac", None)
-                    gateway = adapter_data.get("gateway", None)
+                    mask = adapter_data_dict.get("mask", None)
+                    mac = adapter_data_dict.get("mac", None)
+                    gateway = adapter_data_dict.get("gateway", None)
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
-                    adapter_data["net"] = net
+                    adapter_data_dict["net"] = net
                     self.adapter_net_dict.update({net: gateway})
                     self.adapter_ip_margin_list.append(net[0])
                     self.adapter_ip_margin_list.append(net[-1])
@@ -130,8 +143,8 @@ class Logic:
         self.flag_stop_scan = False
 
         # SETS/DICTS/LISTS
-        self.ip_found_dict = {}
-        self.ip_found_list = []         # you can see found ips in found order
+        self.ip_found_dict = {}         # ={IP:{MAC:{host:,   active:, was_lost:, }}}
+        self.ip_found_list = []         # you can see found ips in found order if want!
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
