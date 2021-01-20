@@ -167,12 +167,13 @@ class Gui(Frame):
         btn["state"] = "disabled"
         btn.pack(side="left")
 
-        #self.status_versions = ttk.Label(frame_status_version, text="...SELECT item...", anchor="w")
-        #self.status_versions.pack(side="left")
-        #self.listbox_versions.bind("<<ListboxSelect>>", self.change_status_versions)
-
         # self.fill_listbox_adapters()
         return
+
+
+
+
+
 
     def fill_listbox_versions(self):
         self.listbox_versions.delete(0, self.listbox_versions.size() - 1)
