@@ -46,13 +46,14 @@ class Logic:
         self.adapters_detect()
 
     def adapters_detect(self):
-        sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
-
         # INITIATE work
         adapter_new = None  # cumulative var!
         for adapter in self.adapter_dict:           # clear all activated flags
             if self.adapter_dict[adapter].get("active", None) == True:
                 self.adapter_dict[adapter]["active"] = False
+
+        # START work
+        sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         for line in sp_ipconfig.stdout.readlines():
             # find out data = generate adapter_dict
