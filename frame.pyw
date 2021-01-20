@@ -140,12 +140,12 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="RESET")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = lambda: None
+        btn["command"] = self.adapters_reset
         btn.pack(side="left")
 
         lable = Label(frame_header)
-        lable["text"] = f"FOUND []ADAPTERS:" \
-                        f"on hostname=[{self.logic.hostname}]"
+        lable["text"] = f"Found ADAPTERS " \
+                        f"on [{self.logic.hostname}]-hostname:"
         lable.pack()
 
         # BOADY --------------------------------------------------------------
@@ -167,40 +167,40 @@ class Gui(Frame):
         btn["state"] = "disabled"
         btn.pack(side="left")
 
-        # self.fill_listbox_adapters()
+        self.status_adapters = ttk.Label(frame_status_adapters, text="...SELECT item...", anchor="w")
+        self.status_adapters.pack(side="left")
+        self.listbox_adapters.bind("<<ListboxSelect>>", self.change_status_adapters)
+
+        self.fill_listbox_adapters()
         return
 
+    def fill_listbox_adapters(self):
+        self.listbox_adapters.delete(0, self.listbox_adapters.size() - 1)
+        adapters_dict = self.logic.adapter_dict
 
-
-
-
-
-    def fill_listbox_versions(self):
-        self.listbox_versions.delete(0, self.listbox_versions.size() - 1)
-        versions_dict = self.logic.python_versions_found
-
-        ver_i = 0
-        for ver in versions_dict:
-            ver_i += 1
-            self.listbox_versions.insert('end',
-                                         ver.ljust(10, " ") +
-                                         versions_dict[ver][0].ljust(14, " ") +
-                                         versions_dict[ver][1]
+        for adapter in adapters_dict:
+            self.listbox_adapters.insert('end',
+                                         adapters_dict[adapter].get("mac", "").ljust(24, " ") +
+                                         adapters_dict[adapter].get("ip", "").ljust(16, " ") +
+                                         adapters_dict[adapter].get("mask", "").ljust(16, " ") +
+                                         adapters_dict[adapter].get("gateway", "").ljust(16, " ") +
+                                         adapter
                                          )
-            if ver.endswith("*"):
-                if self.logic.count_found_modules_bad == 0:
-                    self.listbox_versions.itemconfig('end', bg="#55FF55")
-                else:
-                    self.listbox_versions.itemconfig('end', bg="#FF9999")
+            if adapters_dict[adapter].get("ip", "") != "":
+                self.listbox_adapters.itemconfig('end', bg="#55FF55")
         return
 
-    def change_status_versions(self, event):
+    def adapters_reset(self):
+        self.logic.clear_adapters()
+        self.fill_listbox_adapters()
+
+    def change_status_adapters(self, event):
         # print(self.listbox_versions.curselection())
-        selected_list = (0,) if self.listbox_versions.curselection() == () else self.listbox_versions.curselection()
-        selected_version = self.listbox_versions.get(selected_list)
-        for ver in self.logic.python_versions_found:
-            if ver in selected_version:
-                self.status_versions["text"] = self.logic.python_versions_found[ver][1]
+        selected_list = (0,) if self.listbox_adapters.curselection() == () else self.listbox_adapters.curselection()
+        selected_adapter = self.listbox_adapters.get(selected_list)
+        for adapter in self.logic.adapter_dict:
+            if adapter in selected_adapter:
+                self.status_adapters["text"] = adapter
                 return
         return
 
