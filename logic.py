@@ -17,14 +17,14 @@ from pathlib import Path
 access_this_module_as_import = True  # at first need true to correct assertions!
 ip_tuples_list_default = [
         ("192.1.1.0",),
-        ("192.168.1.0", "192.168.1.10"),
-        ("192.168.43.0", "192.168.43.255"),
+        ("192.168.1.0", "192.168.1.100"),
+        # ("192.168.43.0", "192.168.43.255"),
     ]
 
 
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
-    def __init__(self, ip_tuples_list=None, start_scan=True):
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, start_scan=True):
         self.hostname = platform.node()
 
         self.clear_data()
