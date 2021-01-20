@@ -53,11 +53,14 @@ class Logic:
             # find out data = generate adapter_dict
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
-            if len(line_striped_splited) == 1 or line_striped_splited[1] == "":
+            if len(line_striped_splited) == 1 or line_striped_splited[1] == "": # exclude Blank or have no data lines
                 continue
 
-            key_part = line_striped.split(" ", maxsplit=2)[0]
-            part_result = line_striped.split(": ")[1]
+            part_1 = line_striped_splited[0].strip()
+            part_2 = line_striped_splited[1].strip()
+
+            key_part = part_1.split(" ", maxsplit=2)[0]
+            part_result = part_2
 
             # print(part_result)
             # print(line.split(" ", maxsplit=4))
@@ -87,9 +90,10 @@ class Logic:
             for adapter_data in self.adapter_dict.values():
                 if adapter_data.get("ip", None) is not None:
                     ip = ipaddress.ip_address(adapter_data["ip"])
-                    mask = adapter_data["mask"]
-                    mac = adapter_data["mac"]
-                    gateway = adapter_data["gateway"]
+
+                    mask = adapter_data.get("mask", None)
+                    mac = adapter_data.get("mac", None)
+                    gateway = adapter_data.get("gateway", None)
 
                     net = ipaddress.ip_network((str(ip), mask), strict=False)
                     adapter_data["net"] = net
