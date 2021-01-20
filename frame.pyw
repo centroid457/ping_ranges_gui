@@ -99,55 +99,116 @@ class Gui(Frame):
     def create_gui_structure(self):
         self.color_bg_mainframe()
 
+        self.COLOR_BUTTONS = "#aaaaFF"
+        PAD_EXTERNAL = 2
+
         self.parent.columnconfigure(0, weight=1)
         self.parent.rowconfigure([0, 1, 2, 3, ], weight=1)       # all
-        pad_external = 2
 
         # ======= FRAME-0 (ADAPTERS) ======================
         self.frame_adapters = Frame(self.parent)
-        self.frame_adapters.grid(row=0, sticky="nsew", padx=pad_external, pady=pad_external)
+        self.frame_adapters.grid(row=0, sticky="nsew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
 
         self.fill_frame_adapters(self.frame_adapters)
 
         # ======= FRAME-1 (RANGES) ====================
         self.frame_ranges = Frame(self.parent)
-        self.frame_ranges.grid(row=1, sticky="nsew", padx=pad_external, pady=pad_external)
+        self.frame_ranges.grid(row=1, sticky="nsew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
 
-        self.fill_frame_ranges(self.frame_ranges)
+        #self.fill_frame_ranges(self.frame_ranges)
 
         # ======= FRAME-2 (FOUND) ====================
         self.frame_found_ip = Frame(self.parent)
-        self.frame_found_ip.grid(row=2, sticky="snew", padx=pad_external, pady=pad_external)
+        self.frame_found_ip.grid(row=2, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
 
-        self.fill_frame_found_ip(self.frame_found_ip)
+        #self.fill_frame_found_ip(self.frame_found_ip)
         return
 
     def color_bg_mainframe(self):
         self.parent["bg"] = "#009900"
 
     # #################################################
-    # frame INFO
-    def fill_frame_info(self, parent):
-        btn = Button(parent, text=f"skip\n checking\n modules")
-        btn["bg"] = "#aaaaFF"
-        btn["command"] = self.root.destroy
-        btn["state"] = None if self.root == self.parent else "disabled"
+    # frame ADAPTERS
+    def fill_frame_adapters(self, parent):
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure([0, 2], weight=0)  # HEADER + STATUS
+        parent.grid_rowconfigure([1], weight=1)  # BODY
+
+        # HEADER -------------------------------------------------------------
+        frame_header = Frame(parent)
+        frame_header.grid(column=0, row=0, sticky="ew")
+
+        btn = Button(frame_header, text="RESET")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = lambda: None
         btn.pack(side="left")
 
-        self.lable_frame_info = Label(parent)
-        self.lable_frame_info["font"] = ("", 15)
-        self.lable_frame_info.pack(side="left", fill="x", expand=1)
-        self._fill_lable_frame_info()
+        lable = Label(frame_header)
+        lable["text"] = f"FOUND []ADAPTERS:" \
+                        f"on hostname=[{self.logic.hostname}]"
+        lable.pack()
+
+        # BOADY --------------------------------------------------------------
+        self.listbox_adapters = Listbox(parent, height=5, bg=None, font=('Courier', 9))
+        self.listbox_adapters.grid(column=0, row=1, sticky="snew")
+
+        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_adapters.yview)
+        self.scrollbar.grid(column=1, row=1, sticky="sn")
+
+        self.listbox_adapters['yscrollcommand'] = self.scrollbar.set
+
+        # STATUS -------------------------------------------------------------
+        frame_status_adapters = Frame(parent)
+        frame_status_adapters.grid(column=0, row=2, sticky="ew")
+
+        btn = Button(frame_status_adapters, text="settings")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = lambda: None
+        btn["state"] = "disabled"
+        btn.pack(side="left")
+
+        #self.status_versions = ttk.Label(frame_status_version, text="...SELECT item...", anchor="w")
+        #self.status_versions.pack(side="left")
+        #self.listbox_versions.bind("<<ListboxSelect>>", self.change_status_versions)
+
+        # self.fill_listbox_adapters()
         return
 
-    def _fill_lable_frame_info(self):
-        if self.logic.count_found_modules_bad > 0:
-            self.lable_frame_info["text"] = f"BAD SITUATION:\nYOU NEED INSTALL some modules"
-            self.lable_frame_info["bg"] = "#FF9999"
-        else:
-            self.lable_frame_info["text"] = f"GOOD:\nALL MODULES ARE PRESENT!"
-            self.lable_frame_info["bg"] = "#55FF55"
-            return
+    def fill_listbox_versions(self):
+        self.listbox_versions.delete(0, self.listbox_versions.size() - 1)
+        versions_dict = self.logic.python_versions_found
+
+        ver_i = 0
+        for ver in versions_dict:
+            ver_i += 1
+            self.listbox_versions.insert('end',
+                                         ver.ljust(10, " ") +
+                                         versions_dict[ver][0].ljust(14, " ") +
+                                         versions_dict[ver][1]
+                                         )
+            if ver.endswith("*"):
+                if self.logic.count_found_modules_bad == 0:
+                    self.listbox_versions.itemconfig('end', bg="#55FF55")
+                else:
+                    self.listbox_versions.itemconfig('end', bg="#FF9999")
+        return
+
+    def change_status_versions(self, event):
+        # print(self.listbox_versions.curselection())
+        selected_list = (0,) if self.listbox_versions.curselection() == () else self.listbox_versions.curselection()
+        selected_version = self.listbox_versions.get(selected_list)
+        for ver in self.logic.python_versions_found:
+            if ver in selected_version:
+                self.status_versions["text"] = self.logic.python_versions_found[ver][1]
+                return
+        return
+
+
+
+
+
+
+
 
     # #################################################
     # frame VERSIONS
