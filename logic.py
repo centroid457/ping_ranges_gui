@@ -160,9 +160,10 @@ class Logic:
     # ###########################################################
     # SCAN
     def start_daemon_sensor_gateway(self):
-        threading.Thread(target=self._sensor_gateway, args=("ya.ru",), daemon=True).start()
-        for gateway in self.adapter_gateway_list:
-            threading.Thread(target=self._sensor_gateway, args=(gateway, ), daemon=True).start()
+        active_thread_names_list = [thread_obj.name for thread_obj in threading.enumerate()]
+        for gateway in (*self.adapter_gateway_list, "ya.ru"):
+            if str(gateway) not in active_thread_names_list:
+                threading.Thread(target=self._sensor_gateway, name=str(gateway), args=(gateway, ), daemon=True).start()
         return
 
     def _sensor_gateway(self, gateway):
