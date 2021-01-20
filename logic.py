@@ -232,6 +232,7 @@ class Logic:
     def scan_loop(self):
         self.flag_stop_scan = False
         while not self.flag_stop_scan:
+            self.adapters_detect()
             self.rescan_found()
             self.scan_onсe()
             time.sleep(1)
