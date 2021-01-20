@@ -48,8 +48,12 @@ class Logic:
     def adapters_detect(self):
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
+        # INITIATE work
         adapter_new = None  # cumulative var!
-        adapter_old = None
+        for adapter in self.adapter_dict:           # clear all activated flags
+            if self.adapter_dict[adapter].get("active", None) == True:
+                self.adapter_dict[adapter]["active"] = False
+
         for line in sp_ipconfig.stdout.readlines():
             # find out data = generate adapter_dict
             line_striped = line.strip()
@@ -68,13 +72,6 @@ class Logic:
             # -----------------------------------------------------------
             # CREATION self.adapter_dict
             if key_part in ["Описание."]:       # found new adapter
-                adapter_old = adapter_new
-                if adapter_old is not None:
-                    last_active = self.adapter_dict[adapter_old].get("active", None)
-                    if last_active == True and ip is None:
-                        self._dict_safely_update(self.adapter_dict[adapter_new], "active", False)
-                        self._dict_safely_update(self.adapter_dict[adapter_new], "was_lost", True)
-
                 adapter_new = part_result
                 self._dict_safely_update(self.adapter_dict, adapter_new, {})
                 mac, ip, mask, gateway = None, None, None, None    # reset if detected new adaprer line
@@ -84,12 +81,7 @@ class Logic:
             elif key_part in ["IPv4-адрес."]:
                 ip = part_result.split("(")[0]
                 self._dict_safely_update(self.adapter_dict[adapter_new], "ip", ip)
-
-                last_active = self.adapter_dict[adapter_new].get("active", None)
-                if last_active == False:
-                    self._dict_safely_update(self.adapter_dict[adapter_new], "was_lost", True)
                 self._dict_safely_update(self.adapter_dict[adapter_new], "active", True)
-
             elif key_part in ["Маска"]:
                 mask = part_result
                 self._dict_safely_update(self.adapter_dict[adapter_new], "mask", mask)
@@ -99,31 +91,35 @@ class Logic:
                 if gateway != "":
                     self.adapter_gateway_list.append(ipaddress.ip_address(gateway))
 
-        else:
-            # use data from found active adapters
-            for adapter_data_dict in self.adapter_dict.values():
-                if adapter_data_dict.get("ip", None) is not None:
-                    ip = ipaddress.ip_address(adapter_data_dict["ip"])
+        # SET WAS_LOST flags
+        for adapter in self.adapter_dict:
+            if self.adapter_dict[adapter].get("active", None) == False:
+                self.adapter_dict[adapter]["was_lost"] = True
 
-                    mask = adapter_data_dict.get("mask", None)
-                    mac = adapter_data_dict.get("mac", None)
-                    gateway = adapter_data_dict.get("gateway", None)
+        # use data from found active adapters
+        for adapter_data_dict in self.adapter_dict.values():
+            if adapter_data_dict.get("ip", None) is not None:
+                ip = ipaddress.ip_address(adapter_data_dict["ip"])
 
-                    net = ipaddress.ip_network((str(ip), mask), strict=False)
-                    adapter_data_dict["net"] = net
-                    self.adapter_net_dict.update({net: gateway})
-                    self.adapter_ip_margin_list.append(net[0])
-                    self.adapter_ip_margin_list.append(net[-1])
+                mask = adapter_data_dict.get("mask", None)
+                mac = adapter_data_dict.get("mac", None)
+                gateway = adapter_data_dict.get("gateway", None)
 
-                    self._dict_safely_update(self.adapter_ip_dict, ip, {})
-                    self._dict_safely_update(self.adapter_ip_dict[ip], "mac", mac)
-                    self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
+                net = ipaddress.ip_network((str(ip), mask), strict=False)
+                adapter_data_dict["net"] = net
+                self.adapter_net_dict.update({net: gateway})
+                self.adapter_ip_margin_list.append(net[0])
+                self.adapter_ip_margin_list.append(net[-1])
 
-            print(self.adapter_dict)
-            print(self.adapter_net_dict)
-            print(self.adapter_ip_dict)
-            print("*"*80)
-            self.start_daemon_sensor_gateway()
+                self._dict_safely_update(self.adapter_ip_dict, ip, {})
+                self._dict_safely_update(self.adapter_ip_dict[ip], "mac", mac)
+                self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
+
+        print(self.adapter_dict)
+        print(self.adapter_net_dict)
+        print(self.adapter_ip_dict)
+        print("*"*80)
+        self.start_daemon_sensor_gateway()
 
     # ###########################################################
     # RESET
