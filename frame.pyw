@@ -143,6 +143,11 @@ class Gui(Frame):
         btn["command"] = self.adapters_reset
         btn.pack(side="left")
 
+        btn = Button(frame_header, text="RESCAN")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = self.adapters_rescan
+        btn.pack(side="left")
+
         lable = Label(frame_header)
         lable["text"] = f"Found ADAPTERS " \
                         f"on [{self.logic.hostname}]-hostname:"
@@ -179,19 +184,34 @@ class Gui(Frame):
         adapters_dict = self.logic.adapter_dict
 
         for adapter in adapters_dict:
+            active_mark = "+" if adapters_dict[adapter].get("active", "") == True else "-"
+            was_lost = adapters_dict[adapter].get("was_lost", "")
+            was_lost_mark = "lost" if was_lost == True else ""
             self.listbox_adapters.insert('end',
+                                         active_mark.ljust(2, " ") +
+                                         was_lost_mark.ljust(5, " ") +
                                          adapters_dict[adapter].get("mac", "").ljust(24, " ") +
                                          adapters_dict[adapter].get("ip", "").ljust(16, " ") +
                                          adapters_dict[adapter].get("mask", "").ljust(16, " ") +
                                          adapters_dict[adapter].get("gateway", "").ljust(16, " ") +
                                          adapter
                                          )
-            if adapters_dict[adapter].get("ip", "") != "":
+            if active_mark == "+":
                 self.listbox_adapters.itemconfig('end', bg="#55FF55")
+            elif active_mark == "-" and was_lost == True:
+                self.listbox_adapters.itemconfig('end', bg="#FF9999")
+
+            if was_lost == True:
+                self.listbox_adapters.itemconfig('end', fg="#FF0000")
+
         return
 
     def adapters_reset(self):
         self.logic.clear_adapters()
+        self.fill_listbox_adapters()
+
+    def adapters_rescan(self):
+        self.logic.adapters_detect()
         self.fill_listbox_adapters()
 
     def change_status_adapters(self, event):

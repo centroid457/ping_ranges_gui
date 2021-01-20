@@ -72,6 +72,7 @@ class Logic:
                 if adapter_old is not None:
                     last_active = self.adapter_dict[adapter_old].get("active", None)
                     if last_active == True and ip is None:
+                        self._dict_safely_update(self.adapter_dict[adapter_new], "active", False)
                         self._dict_safely_update(self.adapter_dict[adapter_new], "was_lost", True)
 
                 adapter_new = part_result
@@ -357,7 +358,10 @@ class Logic:
     @contracts.contract(the_dict=dict)
     def _dict_safely_update(self, the_dict, key, val):
         with self.lock:
-            if val is not None and the_dict.get(key, None) == None:
+            if key in ["active", "was_lost"]:      # use direct insertion!
+                the_dict[key] = val
+
+            if val is not None and the_dict.get(key, None) == None: # use safe insertion!
                 the_dict[key] = val
                 # print(dict)
 
