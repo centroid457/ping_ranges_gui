@@ -15,7 +15,6 @@ from tkinter import ttk
 def start_gui():
     root = Tk()
     app = Gui(parent=root)
-
     app.mainloop()
 
 
@@ -31,12 +30,15 @@ class Gui(Frame):
         self.root = self.winfo_toplevel()
         self.parent = parent
 
-        self.logic = logic.Logic(start_scan=False)
-
         self.create_gui_structure()
+        self.logic_connect()
 
         self.gui_root_configure()
         self.window_move_to_center()
+
+    def logic_connect(self):
+        self.logic = logic.Logic(start_scan=False)
+
 
     def gui_root_configure(self):
         if self.root != self.parent:      # if it is independent window (without insertion in outside project)
