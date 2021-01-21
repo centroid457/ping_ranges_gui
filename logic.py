@@ -30,7 +30,11 @@ class Logic:
         self.clear_data()
         self.clear_adapters()
 
-        self.apply_ranges(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters, start_scan=start_scan, start_scan_loop=start_scan_loop)
+        # save first started ranges
+        self.ip_ranges_started_dict = self.apply_ranges(ip_tuples_list,
+                                                        ip_ranges_use_adapters=ip_ranges_use_adapters,
+                                                        start_scan=start_scan,
+                                                        start_scan_loop=start_scan_loop)
         return
 
     # ###########################################################
@@ -173,7 +177,10 @@ class Logic:
             self.scan_loop()
         elif start_scan:
             self.scan_onсe()
-        return
+        return self.ip_ranges_dict
+
+    def ranges_reset_to_started(self):
+        self.ip_ranges_dict = self.ip_ranges_started_dict
 
     # ###########################################################
     # SCAN
