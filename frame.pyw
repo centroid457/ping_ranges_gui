@@ -7,7 +7,7 @@ import time
 from threading import Thread
 # import logic       # SEE THE END OF FILE
 from pathlib import Path
-from tkinter import Tk, Frame, Button, Label, BOTH, Listbox, Scrollbar, filedialog, messagebox
+from tkinter import Tk, Frame, Button, Label, BOTH, Listbox, Scrollbar, filedialog, messagebox, font
 from tkinter import ttk
 
 def start_gui():
@@ -101,7 +101,8 @@ class Gui(Frame):
         PAD_EXTERNAL = 2
 
         self.parent.columnconfigure(0, weight=1)
-        self.parent.rowconfigure([0, 1, 2, ], weight=1)       # all
+        self.parent.rowconfigure([0, 1, ], weight=0)       # all
+        self.parent.rowconfigure([2, ], weight=1)       # all
 
         # ======= FRAME-0 (ADAPTERS) ======================
         self.frame_adapters = Frame(self.parent)
@@ -286,6 +287,7 @@ class Gui(Frame):
                                 str(the_dict[the_range].get("start", "")).ljust(16, " ") +
                                 str(the_dict[the_range].get("end", "")).ljust(16, " ")
                                )
+            # change visual
             if active_mark == "+":
                 the_listbox.itemconfig('end', bg="#55FF55")
             elif active_mark == "-":
