@@ -212,13 +212,13 @@ class Gui(Frame):
         self.fill_listbox_adapters()
 
     def change_status_adapters(self, event):
-        # print(self.listbox_versions.curselection())
-        selected_list = (0,) if self.listbox_adapters.curselection() == () else self.listbox_adapters.curselection()
-        selected_item_text = self.listbox_adapters.get(selected_list)
-        for key in self.logic.adapter_dict:
-            if key in selected_item_text:
-                self.status_adapters["text"] = key
-                return
+        if self.listbox_adapters.curselection() != ():
+            selected_list = self.listbox_adapters.curselection()
+            selected_item_text = self.listbox_adapters.get(selected_list)
+            for key in self.logic.adapter_dict:
+                if key in selected_item_text:
+                    self.status_adapters["text"] = key
+                    return
         return
 
     # #################################################
@@ -314,12 +314,13 @@ class Gui(Frame):
         return
 
     def change_status_ranges(self, event):
-        selected_list = (0,) if self.listbox_ranges.curselection() == () else self.listbox_ranges.curselection()
-        selected_item_text = self.listbox_ranges.get(selected_list)
-        for key in self.logic.ip_ranges_active_dict:
-            if str(key) in selected_item_text:
-                self.status_ranges["text"] = str(key)
-                return
+        if self.listbox_ranges.curselection() != ():
+            selected_list = self.listbox_ranges.curselection()
+            selected_item_text = self.listbox_ranges.get(selected_list)
+            for key in self.logic.ip_ranges_active_dict:
+                if str(key) in selected_item_text:
+                    self.status_ranges["text"] = str(key)
+                    return
         return
 
     def _get_selected_key_range(self):
