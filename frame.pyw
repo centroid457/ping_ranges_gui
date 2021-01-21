@@ -296,7 +296,7 @@ class Gui(Frame):
     def range_restore_default(self):      # todo:
         return
 
-    def range_switch_activity(self):      # todo:
+    def range_switch_activity(self):
         range_selected_text = self.status_ranges["text"]
         for item in self.logic.ip_ranges_active_dict:
             if str(item) == range_selected_text:
