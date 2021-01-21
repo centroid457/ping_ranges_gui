@@ -288,19 +288,22 @@ class Logic:
             self.count_ip_scanned += 1
             sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
             sp_ping.wait()
-            time.sleep(0.001)   # very necessary =0.001 was good!
+            time.sleep(0.001)   # very necessary =0.001 was good! maybe not need)
 
         if sp_ping.returncode != 0 and ip in self.ip_found_dict:
             self._mark_nonactive_mac(ip=ip)
 
         elif sp_ping.returncode == 0:
+            # get MAC at first!
+            mac = self._get_mac(ip)
+            if mac is None:     # don't pay attention if have not mac! just an accident!
+                return
+
             print(f"***************hit=[{ip}]")
             self.ip_last_answered = ip
 
             self._dict_safely_update(self.ip_found_dict, ip, {})
 
-            # get MAC
-            mac = self._get_mac(ip)
             self._dict_safely_update(self.ip_found_dict[ip], mac, {})
             self._mark_nonactive_mac(ip=ip, mac_except=mac)
 
