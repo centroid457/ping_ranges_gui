@@ -168,7 +168,7 @@ class Logic:
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
-        self.ip_ranges_active_dict = {}        # ={RANGE_TUPLE: {active:,  info:,}}
+        self.ip_ranges_active_dict = {}        # ={RANGE_TUPLE: {active:, info:,    start:, end:,}}
 
         for net in self.adapter_net_dict:
             self.ip_ranges_active_dict.update({(str(net[0]), str(net[-1])): {
