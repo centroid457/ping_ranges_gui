@@ -290,7 +290,6 @@ class Gui(Frame):
                 the_listbox.itemconfig('end', bg="#55FF55")
             elif active_mark == "-":
                 the_listbox.itemconfig('end', bg="#FF9999")
-
         return
 
     def ranges_return_to_started(self):
@@ -298,7 +297,13 @@ class Gui(Frame):
         self.fill_listbox_ranges()
         return
 
-    def range_restore_default(self):      # todo:
+    def range_restore_default(self, use_key=None):
+        key = self._get_selected_key_range() if use_key is None else use_key
+        if key is not None:
+            self.logic.ip_ranges_active_dict[key]["start"] = key[0]
+            self.logic.ip_ranges_active_dict[key]["end"] = key[-1]
+            self.logic.ip_ranges_active_dict[key]["active"] = True
+            self.fill_listbox_ranges()
         return
 
     def range_switch_activity(self):
