@@ -24,13 +24,13 @@ ip_tuples_list_default = [
 
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True, start_scan=True):
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
         self.hostname = platform.node()
 
         self.clear_data()
         self.clear_adapters()
 
-        self.apply_ranges(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters, start_scan=start_scan)
+        self.apply_ranges(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters, start_scan=start_scan, start_scan_loop=start_scan_loop)
         return
 
     # ###########################################################
@@ -157,7 +157,7 @@ class Logic:
     # ###########################################################
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
-    def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=True):
+    def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
         self.ip_scan_ranges_dict = {}
 
         if ip_ranges_use_adapters:
@@ -169,7 +169,9 @@ class Logic:
 
         self.clear_data()
 
-        if start_scan:
+        if start_scan_loop:
+            self.scan_loop()
+        elif start_scan:
             self.scan_onсe()
         return
 
@@ -379,7 +381,7 @@ class Logic:
 # MAIN CODE
 if __name__ == '__main__':
     access_this_module_as_import = False
-    sample = Logic()
+    sample = Logic(start_scan=True)
 
     # input("Press ENTER to exit")
 else:
