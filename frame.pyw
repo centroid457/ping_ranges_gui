@@ -101,7 +101,7 @@ class Gui(Frame):
         PAD_EXTERNAL = 2
 
         self.parent.columnconfigure(0, weight=1)
-        self.parent.rowconfigure([0, 1, 2, 3, ], weight=1)       # all
+        self.parent.rowconfigure([0, 1, 2, ], weight=1)       # all
 
         # ======= FRAME-0 (ADAPTERS) ======================
         self.frame_adapters = Frame(self.parent)
