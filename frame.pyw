@@ -280,7 +280,7 @@ class Gui(Frame):
             the_listbox.insert('end',
                                 active_mark.ljust(2, " ") +
                                 str(the_range).ljust(40, " ") +
-                                str(the_dict[the_range].get("adapter_net", "")).ljust(16, " ")
+                                str(the_dict[the_range].get("info", "")).ljust(16, " ")
                                 )
             if active_mark == "+":
                 the_listbox.itemconfig('end', bg="#55FF55")
