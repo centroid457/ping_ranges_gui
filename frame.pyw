@@ -176,20 +176,20 @@ class Gui(Frame):
         return
 
     def fill_listbox_adapters(self):
-        self.listbox_adapters.delete(0, self.listbox_adapters.size() - 1)
-        adapters_dict = self.logic.adapter_dict
+        self.listbox_clear(self.listbox_adapters)
 
-        for adapter in adapters_dict:
-            active_mark = "+" if adapters_dict[adapter].get("active", "") == True else "-"
-            was_lost = adapters_dict[adapter].get("was_lost", "")
+        the_dict = self.logic.adapter_dict
+        for adapter in the_dict:
+            active_mark = "+" if the_dict[adapter].get("active", "") == True else "-"
+            was_lost = the_dict[adapter].get("was_lost", "")
             was_lost_mark = "lost" if was_lost == True else ""
             self.listbox_adapters.insert('end',
                                          active_mark.ljust(2, " ") +
                                          was_lost_mark.ljust(5, " ") +
-                                         adapters_dict[adapter].get("mac", "").ljust(24, " ") +
-                                         adapters_dict[adapter].get("ip", "").ljust(16, " ") +
-                                         adapters_dict[adapter].get("mask", "").ljust(16, " ") +
-                                         adapters_dict[adapter].get("gateway", "").ljust(16, " ") +
+                                         the_dict[adapter].get("mac", "").ljust(24, " ") +
+                                         the_dict[adapter].get("ip", "").ljust(16, " ") +
+                                         the_dict[adapter].get("mask", "").ljust(16, " ") +
+                                         the_dict[adapter].get("gateway", "").ljust(16, " ") +
                                          adapter
                                          )
             if active_mark == "+":
@@ -213,9 +213,9 @@ class Gui(Frame):
     def change_status_adapters(self, event):
         # print(self.listbox_versions.curselection())
         selected_list = (0,) if self.listbox_adapters.curselection() == () else self.listbox_adapters.curselection()
-        selected_adapter = self.listbox_adapters.get(selected_list)
+        selected_item = self.listbox_adapters.get(selected_list)
         for adapter in self.logic.adapter_dict:
-            if adapter in selected_adapter:
+            if adapter in selected_item:
                 self.status_adapters["text"] = adapter
                 return
         return
@@ -231,9 +231,9 @@ class Gui(Frame):
         frame_header = Frame(parent)
         frame_header.grid(column=0, row=0, sticky="ew")
 
-        btn = Button(frame_header, text="RESET to default")
+        btn = Button(frame_header, text="RESET to adapters ranges")
         btn["bg"] = self.COLOR_BUTTONS
-        # btn["command"] = self.ranges_reset        # todo:
+        btn["command"] = self.ranges_reset
         btn.pack(side="left")
 
         lable = Label(frame_header)
@@ -265,20 +265,20 @@ class Gui(Frame):
 
         self.status_ranges = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
         self.status_ranges.pack(side="left")
-        #self.listbox_ranges.bind("<<ListboxSelect>>", self.change_status_ranges) # todo:
+        self.listbox_ranges.bind("<<ListboxSelect>>", self.change_status_ranges)
 
-        #self.fill_listbox_ranges()     # todo:
+        self.fill_listbox_ranges()
         return
 
-    def fill_listbox_adapters(self):
-        self.listbox_adapters.delete(0, self.listbox_adapters.size() - 1)
+    def fill_listbox_ranges(self):     # todo:
+        self.listbox_ranges.delete(0, self.listbox_ranges.size() - 1)
         adapters_dict = self.logic.adapter_dict
 
         for adapter in adapters_dict:
             active_mark = "+" if adapters_dict[adapter].get("active", "") == True else "-"
             was_lost = adapters_dict[adapter].get("was_lost", "")
             was_lost_mark = "lost" if was_lost == True else ""
-            self.listbox_adapters.insert('end',
+            self.listbox_ranges.insert('end',
                                          active_mark.ljust(2, " ") +
                                          was_lost_mark.ljust(5, " ") +
                                          adapters_dict[adapter].get("mac", "").ljust(24, " ") +
@@ -288,30 +288,26 @@ class Gui(Frame):
                                          adapter
                                          )
             if active_mark == "+":
-                self.listbox_adapters.itemconfig('end', bg="#55FF55")
+                self.listbox_ranges.itemconfig('end', bg="#55FF55")
             elif active_mark == "-" and was_lost == True:
-                self.listbox_adapters.itemconfig('end', bg="#FF9999")
+                self.listbox_ranges.itemconfig('end', bg="#FF9999")
 
             if was_lost == True:
-                self.listbox_adapters.itemconfig('end', fg="#FF0000")
+                self.listbox_ranges.itemconfig('end', fg="#FF0000")
 
         return
 
-    def adapters_reset(self):
-        self.logic.clear_adapters()
-        self.fill_listbox_adapters()
+    def ranges_reset(self):
+        self.logic.apply_ranges(ip_ranges_use_adapters=True)
+        self.fill_listbox_ranges()
 
-    def adapters_rescan(self):
-        self.logic.adapters_detect()
-        self.fill_listbox_adapters()
-
-    def change_status_adapters(self, event):
+    def change_status_ranges(self, event):     # todo:
         # print(self.listbox_versions.curselection())
-        selected_list = (0,) if self.listbox_adapters.curselection() == () else self.listbox_adapters.curselection()
-        selected_adapter = self.listbox_adapters.get(selected_list)
+        selected_list = (0,) if self.listbox_ranges.curselection() == () else self.listbox_ranges.curselection()
+        selected_item = self.listbox_ranges.get(selected_list)
         for adapter in self.logic.adapter_dict:
-            if adapter in selected_adapter:
-                self.status_adapters["text"] = adapter
+            if adapter in selected_item:
+                self.status_ranges["text"] = adapter
                 return
         return
 
@@ -523,6 +519,11 @@ class Gui(Frame):
             messagebox.showinfo(title='INFO', message=txt)
         return
 
+    # #################################################
+    # rest
+    def listbox_clear(self, listbox):
+        listbox.delete(0, listbox.size()-1)
+        return
 
 if __name__ == '__main__':
     access_this_module_as_import = False
