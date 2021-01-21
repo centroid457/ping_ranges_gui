@@ -108,14 +108,12 @@ class Gui(Frame):
         # ======= FRAME-0 (ADAPTERS) ======================
         self.frame_adapters = Frame(self.parent)
         self.frame_adapters.grid(row=0, sticky="nsew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-
         self.fill_frame_adapters(self.frame_adapters)
 
         # ======= FRAME-1 (RANGES) ====================
         self.frame_ranges = Frame(self.parent)
         self.frame_ranges.grid(row=1, sticky="nsew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-
-        #self.fill_frame_ranges(self.frame_ranges)
+        self.fill_frame_ranges(self.frame_ranges)
 
         # ======= FRAME-2 (FOUND) ====================
         self.frame_found_ip = Frame(self.parent)
@@ -153,7 +151,7 @@ class Gui(Frame):
                         f"on [{self.logic.hostname}]-hostname:"
         lable.pack()
 
-        # BOADY --------------------------------------------------------------
+        # BODY --------------------------------------------------------------
         self.listbox_adapters = Listbox(parent, height=5, bg=None, font=('Courier', 9))
         self.listbox_adapters.grid(column=0, row=1, sticky="snew")
 
@@ -163,20 +161,110 @@ class Gui(Frame):
         self.listbox_adapters['yscrollcommand'] = self.scrollbar.set
 
         # STATUS -------------------------------------------------------------
-        frame_status_adapters = Frame(parent)
-        frame_status_adapters.grid(column=0, row=2, sticky="ew")
+        frame_status = Frame(parent)
+        frame_status.grid(column=0, row=2, sticky="ew")
 
-        btn = Button(frame_status_adapters, text="settings")
+        btn = Button(frame_status, text="settings")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = lambda: None
         btn["state"] = "disabled"
         btn.pack(side="left")
 
-        self.status_adapters = ttk.Label(frame_status_adapters, text="...SELECT item...", anchor="w")
+        self.status_adapters = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
         self.status_adapters.pack(side="left")
         self.listbox_adapters.bind("<<ListboxSelect>>", self.change_status_adapters)
 
         self.fill_listbox_adapters()
+        return
+
+    def fill_listbox_adapters(self):
+        self.listbox_adapters.delete(0, self.listbox_adapters.size() - 1)
+        adapters_dict = self.logic.adapter_dict
+
+        for adapter in adapters_dict:
+            active_mark = "+" if adapters_dict[adapter].get("active", "") == True else "-"
+            was_lost = adapters_dict[adapter].get("was_lost", "")
+            was_lost_mark = "lost" if was_lost == True else ""
+            self.listbox_adapters.insert('end',
+                                         active_mark.ljust(2, " ") +
+                                         was_lost_mark.ljust(5, " ") +
+                                         adapters_dict[adapter].get("mac", "").ljust(24, " ") +
+                                         adapters_dict[adapter].get("ip", "").ljust(16, " ") +
+                                         adapters_dict[adapter].get("mask", "").ljust(16, " ") +
+                                         adapters_dict[adapter].get("gateway", "").ljust(16, " ") +
+                                         adapter
+                                         )
+            if active_mark == "+":
+                self.listbox_adapters.itemconfig('end', bg="#55FF55")
+            elif active_mark == "-" and was_lost == True:
+                self.listbox_adapters.itemconfig('end', bg="#FF9999")
+
+            if was_lost == True:
+                self.listbox_adapters.itemconfig('end', fg="#FF0000")
+
+        return
+
+    def adapters_reset(self):
+        self.logic.clear_adapters()
+        self.fill_listbox_adapters()
+
+    def adapters_rescan(self):
+        self.logic.adapters_detect()
+        self.fill_listbox_adapters()
+
+    def change_status_adapters(self, event):
+        # print(self.listbox_versions.curselection())
+        selected_list = (0,) if self.listbox_adapters.curselection() == () else self.listbox_adapters.curselection()
+        selected_adapter = self.listbox_adapters.get(selected_list)
+        for adapter in self.logic.adapter_dict:
+            if adapter in selected_adapter:
+                self.status_adapters["text"] = adapter
+                return
+        return
+
+    # #################################################
+    # frame RANGES
+    def fill_frame_ranges(self, parent):
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure([0, 2], weight=0)  # HEADER + STATUS
+        parent.grid_rowconfigure([1], weight=1)  # BODY
+
+        # HEADER -------------------------------------------------------------
+        frame_header = Frame(parent)
+        frame_header.grid(column=0, row=0, sticky="ew")
+
+        btn = Button(frame_header, text="RESET")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = self.adapters_reset        # todo:
+        btn.pack(side="left")
+
+        lable = Label(frame_header)
+        lable["text"] = f"RANGES settings"
+        lable.pack()
+
+        # BODY --------------------------------------------------------------
+        self.listbox_ranges = Listbox(parent, height=5, bg=None, font=('Courier', 9))
+        self.listbox_ranges.grid(column=0, row=1, sticky="snew")
+
+        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_ranges.yview)
+        self.scrollbar.grid(column=1, row=1, sticky="sn")
+
+        self.listbox_ranges['yscrollcommand'] = self.scrollbar.set
+
+        # STATUS -------------------------------------------------------------
+        frame_status = Frame(parent)
+        frame_status.grid(column=0, row=2, sticky="ew")
+
+        btn = Button(frame_status, text="CLEAR to default")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = lambda: None   # todo:
+        btn.pack(side="left")
+
+        self.status_ranges = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
+        self.status_ranges.pack(side="left")
+        #self.listbox_ranges.bind("<<ListboxSelect>>", self.change_status_ranges) # todo:
+
+        #self.fill_listbox_ranges()     # todo:
         return
 
     def fill_listbox_adapters(self):
@@ -231,109 +319,25 @@ class Gui(Frame):
 
 
 
-    # #################################################
-    # frame VERSIONS
-    def fill_frame_versions(self, parent):
-        parent.grid_columnconfigure(0, weight=1)
-        parent.grid_rowconfigure([1], weight=1)
-        parent.grid_rowconfigure([0, 2], weight=0)
 
-        lable = Label(parent)
-        lable["text"] = f"FOUND python [{self.logic.count_python_versions}]VERSIONS:\n" \
-                        f"Active .exe=[{sys.executable}]"
-        lable.grid(column=0, row=0, columnspan=2, sticky="snew")
 
-        self.listbox_versions = Listbox(parent, height=4, bg=None, font=('Courier', 9))
-        self.listbox_versions.grid(column=0, row=1, sticky="snew")
 
-        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_versions.yview)
-        self.scrollbar.grid(column=1, row=1, sticky="sn")
 
-        self.listbox_versions['yscrollcommand'] = self.scrollbar.set
 
-        # STATUS FRAME
-        frame_status_version = Frame(parent)
-        frame_status_version.grid(column=0, columnspan=2, row=2, sticky="ew")
 
-        btn = Button(frame_status_version, text=f"RESTART by selected")
-        btn["bg"] = "#aaaaFF"
-        btn["command"] = lambda: self.program_restart(python_exe=self.status_versions["text"]) if self.listbox_versions.curselection() != () else None
-        btn.pack(side="left")
 
-        self.status_versions = ttk.Label(frame_status_version, text="...SELECT item...", anchor="w")
-        self.status_versions.pack(side="left")
-        self.listbox_versions.bind("<<ListboxSelect>>", self.change_status_versions)
 
-        self.fill_listbox_versions()
-        return
 
-    def fill_listbox_versions(self):
-        self.listbox_versions.delete(0, self.listbox_versions.size()-1)
-        versions_dict = self.logic.python_versions_found
-        for ver in versions_dict:
-            self.listbox_versions.insert('end', ver.ljust(10, " ") + versions_dict[ver][0].ljust(14, " ") + versions_dict[ver][1])
-            if ver.endswith("*"):
-                if self.logic.count_found_modules_bad == 0:
-                    self.listbox_versions.itemconfig('end', bg="#55FF55")
-                else:
-                    self.listbox_versions.itemconfig('end', bg="#FF9999")
-        return
 
-    def change_status_versions(self, event):
-        #print(self.listbox_versions.curselection())
-        selected_list = (0,) if self.listbox_versions.curselection() == () else self.listbox_versions.curselection()
-        selected_version = self.listbox_versions.get(selected_list)
-        for ver in self.logic.python_versions_found:
-            if selected_version.startswith(ver):
-                self.status_versions["text"] = self.logic.python_versions_found[ver][1]
-        return
+
+
+
+
 
     # #################################################
     # frame FILES
     def fill_frame_files(self, parent):
-        parent.grid_columnconfigure(0, weight=1)
-        parent.grid_rowconfigure([1], weight=1)
-        parent.grid_rowconfigure([0, 2], weight=0)
-
-        self.lable_frame_files = Label(parent)
-        self.lable_frame_files.grid(column=0, row=0, columnspan=2, sticky="snew")
-        self._fill_lable_frame_files()
-
-        self.listbox_files = Listbox(parent, height=6, bg="#55FF55", font=('Courier', 9))
-        self.listbox_files.grid(column=0, row=1, sticky="snew")
-
-        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_files.yview)
-        self.scrollbar.grid(column=1, row=1, sticky="sn")
-
-        self.listbox_files['yscrollcommand'] = self.scrollbar.set
-
-        # STATUS FRAME
-        frame_status_files = Frame(parent)
-        frame_status_files.grid(column=0, columnspan=2, row=2, sticky="ew")
-
-        btn = Button(frame_status_files, text=f"NEW FileAsLINK")
-        btn["bg"] = "#aaaaFF"
-        btn["command"] = lambda: self.change_path(mode="file")
-        btn.pack(side="left")
-
-        btn = Button(frame_status_files, text=f"NEW PATH")
-        btn["bg"] = "#aaaaFF"
-        btn["command"] = lambda: self.change_path(mode="folder")
-        btn.pack(side="left")
-
-        self.status_files = ttk.Label(frame_status_files, text="...SELECT item...", anchor="w")
-        self.status_files.pack(side="left")
-        self.listbox_files.bind("<<ListboxSelect>>", self.change_status_files)
-
-        btn = Button(frame_status_files, text=f"TRY without overcount")
-        btn["bg"] = "#aaaaFF"
-        btn["state"] = "disabled"
-        #btn["command"] = lambda: self.logic.count_found_files_overcount_limit = 0;
-        btn.pack(side="right")
-
-        self.fill_listbox_files()
-        return
-
+        pass
     def _fill_lable_frame_files(self):
         lbl = self.lable_frame_files
         mark = "!!!DETECTED OVERCOUNT!!!"
