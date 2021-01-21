@@ -24,13 +24,13 @@ ip_tuples_list_default = [
 
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, start_scan=True):
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True, start_scan=True):
         self.hostname = platform.node()
 
         self.clear_data()
         self.clear_adapters()
 
-        self.apply_ranges(ip_tuples_list, start_scan=start_scan)
+        self.apply_ranges(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters, start_scan=start_scan)
         return
 
     # ###########################################################
@@ -157,12 +157,13 @@ class Logic:
     # ###########################################################
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
-    def apply_ranges(self, ip_ranges=None, start_scan=True):
+    def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=True):
         self.ip_scan_ranges_dict = {}
-        if ip_ranges is None:   # if none - use all Local!
+
+        if ip_ranges_use_adapters:
             for net in self.adapter_net_dict:
                 self.ip_scan_ranges_dict.update({(net[0], net[-1]): {"adapter_net": net, "active": True}})
-        else:
+        if ip_ranges is not None:
             for my_range in ip_ranges:
                 self.ip_scan_ranges_dict.update({my_range: {"active": True}})
 
