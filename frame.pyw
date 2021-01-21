@@ -274,7 +274,7 @@ class Gui(Frame):
         the_listbox = self.listbox_ranges
         self.listbox_clear(the_listbox)
 
-        the_dict = self.logic.ip_ranges_dict
+        the_dict = self.logic.ip_ranges_active_dict
         for the_range in the_dict:
             active_mark = "+" if the_dict[the_range].get("active", False) else "-"
             the_listbox.insert('end',
@@ -296,16 +296,18 @@ class Gui(Frame):
     def range_restore_default(self):      # todo:
         return
 
-    def range_switch_activity(self):
-        the_range = self.status_ranges["text"]
-        self.logic.ip_ranges_dict[the_range]["active"] = not self.logic.ip_ranges_dict[the_range].get("active", False)
-        self.fill_listbox_ranges()
+    def range_switch_activity(self):      # todo:
+        range_selected_text = self.status_ranges["text"]
+        for item in self.logic.ip_ranges_active_dict:
+            if str(item) == range_selected_text:
+                self.logic.ip_ranges_active_dict[item]["active"] = not self.logic.ip_ranges_active_dict[item].get("active", False)
+                self.fill_listbox_ranges()
         return
 
     def change_status_ranges(self, event):
         selected_list = (0,) if self.listbox_ranges.curselection() == () else self.listbox_ranges.curselection()
         selected_item = self.listbox_ranges.get(selected_list)
-        for item in self.logic.ip_ranges_dict:
+        for item in self.logic.ip_ranges_active_dict:
             if str(item) in selected_item:
                 self.status_ranges["text"] = str(item)
                 return
