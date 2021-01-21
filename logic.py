@@ -172,12 +172,19 @@ class Logic:
 
         for net in self.adapter_net_dict:
             self.ip_ranges_active_dict.update({(str(net[0]), str(net[-1])): {
-                "info": f"[AdapterNet:{str(net)}]",
-                "active": True if ip_ranges_use_adapters else False}})
+                                                "info": f"[AdapterNet:{str(net)}]",
+                                                "active": True if ip_ranges_use_adapters else False,
+                                                "start": str(net[0]),
+                                                "end": str(net[-1]),
+                                                }})
 
         if ip_ranges is not None:
             for my_range in ip_ranges:
-                self.ip_ranges_active_dict.update({my_range: {"active": True, "info": "Input"}})
+                self.ip_ranges_active_dict.update({my_range: {"info": "Input",
+                                                              "active": True,
+                                                              "start": str(my_range[0]),
+                                                              "end": str(my_range[-1]),
+                                                              }})
 
         self.clear_data()
 
