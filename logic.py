@@ -160,9 +160,9 @@ class Logic:
     def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
         self.ip_scan_ranges_dict = {}
 
-        if ip_ranges_use_adapters:
-            for net in self.adapter_net_dict:
-                self.ip_scan_ranges_dict.update({(net[0], net[-1]): {"adapter_net": net, "active": True}})
+        for net in self.adapter_net_dict:
+            self.ip_scan_ranges_dict.update({(net[0], net[-1]): {"adapter_net": net, "active": True if ip_ranges_use_adapters else False}})
+
         if ip_ranges is not None:
             for my_range in ip_ranges:
                 self.ip_scan_ranges_dict.update({my_range: {"active": True}})
@@ -210,10 +210,8 @@ class Logic:
 
         self.flag_stop_scan = False
         for ip_range in self.ip_scan_ranges_dict:
-            if isinstance(ip_range, tuple):
+            if self.ip_scan_ranges_dict[ip_range].get("active", False):
                 self.ping_ip_range(ip_range)
-            elif isinstance(ip_range, ipaddress.IPv4Network):
-                self.ping_ip_range((ip_range[0], ip_range[-1]))
 
         while threading.active_count() > count_main_threads:
             time.sleep(0.5)
