@@ -146,7 +146,7 @@ class Logic:
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
-        # self.ip_scan_ranges_dict = []  # DO NOT CLEAR IT!!! update it in apply_ranges
+        # self.ip_ranges_dict = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
         # COUNTERS
         self.count_ip_scanned = 0
@@ -158,14 +158,14 @@ class Logic:
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
-        self.ip_scan_ranges_dict = {}
+        self.ip_ranges_dict = {}
 
         for net in self.adapter_net_dict:
-            self.ip_scan_ranges_dict.update({(net[0], net[-1]): {"adapter_net": net, "active": True if ip_ranges_use_adapters else False}})
+            self.ip_ranges_dict.update({(net[0], net[-1]): {"adapter_net": net, "active": True if ip_ranges_use_adapters else False}})
 
         if ip_ranges is not None:
             for my_range in ip_ranges:
-                self.ip_scan_ranges_dict.update({my_range: {"active": True}})
+                self.ip_ranges_dict.update({my_range: {"active": True}})
 
         self.clear_data()
 
@@ -209,8 +209,8 @@ class Logic:
         time_start = time.time()
 
         self.flag_scan_stop = False
-        for ip_range in self.ip_scan_ranges_dict:
-            if self.ip_scan_ranges_dict[ip_range].get("active", False):
+        for ip_range in self.ip_ranges_dict:
+            if self.ip_ranges_dict[ip_range].get("active", False):
                 self.ping_ip_range(ip_range)
 
         while threading.active_count() > count_main_threads:
