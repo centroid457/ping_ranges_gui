@@ -2,6 +2,7 @@
 
 # todo: try to use NMAP, at least for OS versions!
 
+import copy
 import contracts
 import ipaddress
 import itertools
@@ -31,10 +32,10 @@ class Logic:
         self.clear_adapters()
 
         # save first started ranges
-        self.ip_ranges_started_dict = self.apply_ranges(ip_tuples_list,
+        self.ip_ranges_started_dict = copy.deepcopy(self.apply_ranges(ip_tuples_list,
                                                         ip_ranges_use_adapters=ip_ranges_use_adapters,
                                                         start_scan=False,
-                                                        start_scan_loop=False)
+                                                        start_scan_loop=False))
 
         if start_scan_loop:
             self.scan_loop()
