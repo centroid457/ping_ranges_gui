@@ -2,9 +2,7 @@
 
 import subprocess
 import sys
-import os
 import re
-import ensurepip
 import time
 from threading import Thread
 # import logic       # SEE THE END OF FILE
