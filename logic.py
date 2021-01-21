@@ -138,7 +138,7 @@ class Logic:
 
         # FLAGS
         self.flag_scan_is_finished = False
-        self.flag_stop_scan = False
+        self.flag_scan_stop = False
 
         # SETS/DICTS/LISTS
         self.ip_found_dict = {}         # ={IP:{MAC:{host:,   active:, was_lost:, }}}
@@ -208,7 +208,7 @@ class Logic:
         count_main_threads = threading.active_count()
         time_start = time.time()
 
-        self.flag_stop_scan = False
+        self.flag_scan_stop = False
         for ip_range in self.ip_scan_ranges_dict:
             if self.ip_scan_ranges_dict[ip_range].get("active", False):
                 self.ping_ip_range(ip_range)
@@ -229,15 +229,15 @@ class Logic:
         return
 
     def scan_loop(self):
-        self.flag_stop_scan = False
-        while not self.flag_stop_scan:
+        self.flag_scan_stop = False
+        while not self.flag_scan_stop:
             self.adapters_detect()
             self.rescan_found()
             self.scan_onсe()
             time.sleep(1)
 
     def scan_stop(self):
-        self.flag_stop_scan = True
+        self.flag_scan_stop = True
 
     def rescan_found(self):
         for ip in self.ip_found_dict:
@@ -254,7 +254,7 @@ class Logic:
             self.ping_ip_start_thread(ip_current)
         elif len(ip_range) == 2:
             ip_finish = ipaddress.ip_address(ip_range[1])
-            while ip_current <= ip_finish and not self.flag_stop_scan:
+            while ip_current <= ip_finish and not self.flag_scan_stop:
                 self.ping_ip_start_thread(ip_current)
                 ip_current = ip_current + 1
         return
