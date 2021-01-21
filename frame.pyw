@@ -146,7 +146,8 @@ class Gui(Frame):
 
         lable = Label(frame_header)
         lable["text"] = f"Found ADAPTERS " \
-                        f"on [{self.logic.hostname}]-hostname:"
+                        f"on [{self.logic.hostname}]-hostname:\n" \
+                        "[active-was_lost-mac-ip-mask-gateway-KEYname]"
         lable.pack()
 
         # BODY --------------------------------------------------------------
@@ -213,10 +214,10 @@ class Gui(Frame):
     def change_status_adapters(self, event):
         # print(self.listbox_versions.curselection())
         selected_list = (0,) if self.listbox_adapters.curselection() == () else self.listbox_adapters.curselection()
-        selected_item = self.listbox_adapters.get(selected_list)
-        for adapter in self.logic.adapter_dict:
-            if adapter in selected_item:
-                self.status_adapters["text"] = adapter
+        selected_item_text = self.listbox_adapters.get(selected_list)
+        for key in self.logic.adapter_dict:
+            if key in selected_item_text:
+                self.status_adapters["text"] = key
                 return
         return
 
@@ -237,7 +238,8 @@ class Gui(Frame):
         btn.pack(side="left")
 
         lable = Label(frame_header)
-        lable["text"] = f"RANGES settings"
+        lable["text"] = f"RANGES settings:\n" \
+                        "[active-KEY_tuple-info-startActive-endActive]"
         lable.pack()
 
         # BODY --------------------------------------------------------------
@@ -280,12 +282,15 @@ class Gui(Frame):
             the_listbox.insert('end',
                                 active_mark.ljust(2, " ") +
                                 str(the_range).ljust(40, " ") +
-                                str(the_dict[the_range].get("info", "")).ljust(16, " ")
-                                )
+                                str(the_dict[the_range].get("info", "")).ljust(30, " ") +
+                                str(the_dict[the_range].get("start", "")).ljust(16, " ") +
+                                str(the_dict[the_range].get("end", "")).ljust(16, " ")
+                               )
             if active_mark == "+":
                 the_listbox.itemconfig('end', bg="#55FF55")
             elif active_mark == "-":
                 the_listbox.itemconfig('end', bg="#FF9999")
+
         return
 
     def ranges_return_to_started(self):
@@ -297,23 +302,27 @@ class Gui(Frame):
         return
 
     def range_switch_activity(self):
-        range_selected_text = self.status_ranges["text"]
-        for item in self.logic.ip_ranges_active_dict:
-            if str(item) == range_selected_text:
-                self.logic.ip_ranges_active_dict[item]["active"] = not self.logic.ip_ranges_active_dict[item].get("active", False)
-                self.fill_listbox_ranges()
+        key = self._get_selected_key_range()
+        if key is not None:
+            self.logic.ip_ranges_active_dict[key]["active"] = not self.logic.ip_ranges_active_dict[key].get("active", False)
+            self.fill_listbox_ranges()
         return
 
     def change_status_ranges(self, event):
         selected_list = (0,) if self.listbox_ranges.curselection() == () else self.listbox_ranges.curselection()
-        selected_item = self.listbox_ranges.get(selected_list)
-        for item in self.logic.ip_ranges_active_dict:
-            if str(item) in selected_item:
-                self.status_ranges["text"] = str(item)
+        selected_item_text = self.listbox_ranges.get(selected_list)
+        for key in self.logic.ip_ranges_active_dict:
+            if str(key) in selected_item_text:
+                self.status_ranges["text"] = str(key)
                 return
         return
 
-
+    def _get_selected_key_range(self):
+        range_selected_text = self.status_ranges["text"]
+        for key in self.logic.ip_ranges_active_dict:
+            if str(key) == range_selected_text:
+                return key
+        return None
 
 
 
