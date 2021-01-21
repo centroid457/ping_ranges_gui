@@ -233,7 +233,7 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="RETURN to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.logic.ranges_reset_to_started
+        btn["command"] = self.ranges_return_to_started
         btn.pack(side="left")
 
         lable = Label(frame_header)
@@ -255,12 +255,12 @@ class Gui(Frame):
 
         btn = Button(frame_status, text="CLEAR to default")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = lambda: None   # todo:
+        btn["command"] = self.range_restore_default
         btn.pack(side="left")
 
         btn = Button(frame_status, text="ENABLE/DISABLE")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.range_switch
+        btn["command"] = self.range_switch_activity
         btn.pack(side="left")
 
         self.status_ranges = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
@@ -270,20 +270,16 @@ class Gui(Frame):
         self.fill_listbox_ranges()
         return
 
-    def fill_listbox_ranges(self):     # todo:
+    def fill_listbox_ranges(self):
         the_listbox = self.listbox_ranges
         self.listbox_clear(the_listbox)
 
         the_dict = self.logic.ip_ranges_dict
         for the_range in the_dict:
             active_mark = "+" if the_dict[the_range].get("active", False) else "-"
-            range_start = str(the_range[0])
-            range_finish = "" if len(the_range) == 1 else str(the_range[1])
-
             the_listbox.insert('end',
                                 active_mark.ljust(2, " ") +
-                                range_start.ljust(16, " ") +
-                                range_finish.ljust(16, " ") +
+                                str(the_range).ljust(40, " ") +
                                 str(the_dict[the_range].get("adapter_net", "")).ljust(16, " ")
                                 )
             if active_mark == "+":
@@ -292,22 +288,26 @@ class Gui(Frame):
                 the_listbox.itemconfig('end', bg="#FF9999")
         return
 
-    def ranges_reset(self):
-        self.logic.apply_ranges(ip_ranges_use_adapters=True)
+    def ranges_return_to_started(self):
+        self.logic.ranges_reset_to_started()
         self.fill_listbox_ranges()
+        return
 
-    def range_switch(self):
+    def range_restore_default(self):      # todo:
+        return
+
+    def range_switch_activity(self):
         the_range = self.status_ranges["text"]
         self.logic.ip_ranges_dict[the_range]["active"] = not self.logic.ip_ranges_dict[the_range].get("active", False)
         self.fill_listbox_ranges()
+        return
 
-    def change_status_ranges(self, event):      # todo:
-        # print(self.listbox_versions.curselection())
+    def change_status_ranges(self, event):
         selected_list = (0,) if self.listbox_ranges.curselection() == () else self.listbox_ranges.curselection()
         selected_item = self.listbox_ranges.get(selected_list)
-        for adapter in self.logic.adapter_dict:
-            if adapter in selected_item:
-                self.status_ranges["text"] = adapter
+        for item in self.logic.ip_ranges_dict:
+            if str(item) in selected_item:
+                self.status_ranges["text"] = str(item)
                 return
         return
 
