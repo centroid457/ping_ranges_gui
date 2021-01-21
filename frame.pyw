@@ -176,14 +176,15 @@ class Gui(Frame):
         return
 
     def fill_listbox_adapters(self):
-        self.listbox_clear(self.listbox_adapters)
+        the_listbox = self.listbox_adapters
+        self.listbox_clear(the_listbox)
 
         the_dict = self.logic.adapter_dict
         for adapter in the_dict:
             active_mark = "+" if the_dict[adapter].get("active", "") == True else "-"
             was_lost = the_dict[adapter].get("was_lost", "")
             was_lost_mark = "lost" if was_lost == True else ""
-            self.listbox_adapters.insert('end',
+            the_listbox.insert('end',
                                          active_mark.ljust(2, " ") +
                                          was_lost_mark.ljust(5, " ") +
                                          the_dict[adapter].get("mac", "").ljust(24, " ") +
@@ -193,13 +194,12 @@ class Gui(Frame):
                                          adapter
                                          )
             if active_mark == "+":
-                self.listbox_adapters.itemconfig('end', bg="#55FF55")
+                the_listbox.itemconfig('end', bg="#55FF55")
             elif active_mark == "-" and was_lost == True:
-                self.listbox_adapters.itemconfig('end', bg="#FF9999")
+                the_listbox.itemconfig('end', bg="#FF9999")
 
             if was_lost == True:
-                self.listbox_adapters.itemconfig('end', fg="#FF0000")
-
+                the_listbox.itemconfig('end', fg="#FF0000")
         return
 
     def adapters_reset(self):
@@ -231,7 +231,7 @@ class Gui(Frame):
         frame_header = Frame(parent)
         frame_header.grid(column=0, row=0, sticky="ew")
 
-        btn = Button(frame_header, text="RESET to adapters ranges")
+        btn = Button(frame_header, text="RESET ALL to adapters ranges")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.ranges_reset
         btn.pack(side="left")
@@ -260,7 +260,7 @@ class Gui(Frame):
 
         btn = Button(frame_status, text="ENABLE/DISABLE")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = lambda: None   # todo:
+        btn["command"] = self.range_switch
         btn.pack(side="left")
 
         self.status_ranges = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
@@ -271,37 +271,42 @@ class Gui(Frame):
         return
 
     def fill_listbox_ranges(self):     # todo:
-        self.listbox_ranges.delete(0, self.listbox_ranges.size() - 1)
-        adapters_dict = self.logic.adapter_dict
+        the_listbox = self.listbox_ranges
+        self.listbox_clear(the_listbox)
 
-        for adapter in adapters_dict:
-            active_mark = "+" if adapters_dict[adapter].get("active", "") == True else "-"
-            was_lost = adapters_dict[adapter].get("was_lost", "")
+        the_dict = self.logic.ip_ranges_dict
+        for the_range in the_dict:
+            active_mark = "+" if the_dict[the_range].get("active", "") else "-"
+            was_lost = the_dict[the_range].get("was_lost", "")
             was_lost_mark = "lost" if was_lost == True else ""
-            self.listbox_ranges.insert('end',
+            the_listbox.insert('end',
                                          active_mark.ljust(2, " ") +
                                          was_lost_mark.ljust(5, " ") +
-                                         adapters_dict[adapter].get("mac", "").ljust(24, " ") +
-                                         adapters_dict[adapter].get("ip", "").ljust(16, " ") +
-                                         adapters_dict[adapter].get("mask", "").ljust(16, " ") +
-                                         adapters_dict[adapter].get("gateway", "").ljust(16, " ") +
-                                         adapter
+                                         the_dict[the_range].get("mac", "").ljust(24, " ") +
+                                         the_dict[the_range].get("ip", "").ljust(16, " ") +
+                                         the_dict[the_range].get("mask", "").ljust(16, " ") +
+                                         the_dict[the_range].get("gateway", "").ljust(16, " ") +
+                                         the_range
                                          )
             if active_mark == "+":
-                self.listbox_ranges.itemconfig('end', bg="#55FF55")
+                the_listbox.itemconfig('end', bg="#55FF55")
             elif active_mark == "-" and was_lost == True:
-                self.listbox_ranges.itemconfig('end', bg="#FF9999")
+                the_listbox.itemconfig('end', bg="#FF9999")
 
             if was_lost == True:
-                self.listbox_ranges.itemconfig('end', fg="#FF0000")
-
+                the_listbox.itemconfig('end', fg="#FF0000")
         return
 
     def ranges_reset(self):
         self.logic.apply_ranges(ip_ranges_use_adapters=True)
         self.fill_listbox_ranges()
 
-    def change_status_ranges(self, event):     # todo:
+    def range_switch(self):
+        the_range = self.status_ranges["text"]
+        self.logic.ip_ranges_dict[the_range]["active"] = not self.logic.ip_ranges_dict[the_range].get("active", False)
+        self.fill_listbox_ranges()
+
+    def change_status_ranges(self, event):      # todo:
         # print(self.listbox_versions.curselection())
         selected_list = (0,) if self.listbox_ranges.curselection() == () else self.listbox_ranges.curselection()
         selected_item = self.listbox_ranges.get(selected_list)
