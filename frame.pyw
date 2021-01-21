@@ -181,18 +181,18 @@ class Gui(Frame):
 
         the_dict = self.logic.adapter_dict
         for adapter in the_dict:
-            active_mark = "+" if the_dict[adapter].get("active", "") == True else "-"
-            was_lost = the_dict[adapter].get("was_lost", "")
-            was_lost_mark = "lost" if was_lost == True else ""
+            active_mark = "+" if the_dict[adapter].get("active", False) else "-"
+            was_lost = the_dict[adapter].get("was_lost", False)
+            was_lost_mark = "lost" if was_lost else ""
             the_listbox.insert('end',
-                                         active_mark.ljust(2, " ") +
-                                         was_lost_mark.ljust(5, " ") +
-                                         the_dict[adapter].get("mac", "").ljust(24, " ") +
-                                         the_dict[adapter].get("ip", "").ljust(16, " ") +
-                                         the_dict[adapter].get("mask", "").ljust(16, " ") +
-                                         the_dict[adapter].get("gateway", "").ljust(16, " ") +
-                                         adapter
-                                         )
+                                 active_mark.ljust(2, " ") +
+                                 was_lost_mark.ljust(5, " ") +
+                                 the_dict[adapter].get("mac", "").ljust(24, " ") +
+                                 the_dict[adapter].get("ip", "").ljust(16, " ") +
+                                 the_dict[adapter].get("mask", "").ljust(16, " ") +
+                                 the_dict[adapter].get("gateway", "").ljust(16, " ") +
+                                 adapter
+                                 )
             if active_mark == "+":
                 the_listbox.itemconfig('end', bg="#55FF55")
             elif active_mark == "-" and was_lost == True:
@@ -231,9 +231,9 @@ class Gui(Frame):
         frame_header = Frame(parent)
         frame_header.grid(column=0, row=0, sticky="ew")
 
-        btn = Button(frame_header, text="RESET ALL to adapters ranges")
+        btn = Button(frame_header, text="RETURN to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.ranges_reset
+        btn["command"] = self.logic.ranges_reset_to_started
         btn.pack(side="left")
 
         lable = Label(frame_header)
@@ -276,25 +276,20 @@ class Gui(Frame):
 
         the_dict = self.logic.ip_ranges_dict
         for the_range in the_dict:
-            active_mark = "+" if the_dict[the_range].get("active", "") else "-"
-            was_lost = the_dict[the_range].get("was_lost", "")
-            was_lost_mark = "lost" if was_lost == True else ""
+            active_mark = "+" if the_dict[the_range].get("active", False) else "-"
+            range_start = str(the_range[0])
+            range_finish = "" if len(the_range) == 1 else str(the_range[1])
+
             the_listbox.insert('end',
-                                         active_mark.ljust(2, " ") +
-                                         was_lost_mark.ljust(5, " ") +
-                                         the_dict[the_range].get("mac", "").ljust(24, " ") +
-                                         the_dict[the_range].get("ip", "").ljust(16, " ") +
-                                         the_dict[the_range].get("mask", "").ljust(16, " ") +
-                                         the_dict[the_range].get("gateway", "").ljust(16, " ") +
-                                         the_range
-                                         )
+                                active_mark.ljust(2, " ") +
+                                range_start.ljust(16, " ") +
+                                range_finish.ljust(16, " ") +
+                                str(the_dict[the_range].get("adapter_net", "")).ljust(16, " ")
+                                )
             if active_mark == "+":
                 the_listbox.itemconfig('end', bg="#55FF55")
-            elif active_mark == "-" and was_lost == True:
+            elif active_mark == "-":
                 the_listbox.itemconfig('end', bg="#FF9999")
-
-            if was_lost == True:
-                the_listbox.itemconfig('end', fg="#FF0000")
         return
 
     def ranges_reset(self):
