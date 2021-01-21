@@ -151,7 +151,7 @@ class Logic:
         # COUNTERS
         self.count_ip_scanned = 0
         self.count_ip_found = 0
-        self.time_cicle = 0
+        self.time_cycle = 0
         return
 
     # ###########################################################
@@ -219,10 +219,10 @@ class Logic:
 
         self.flag_scan_is_finished = True
 
-        self.time_cicle = round(time.time() - time_start, 3)
+        self.time_cycle = round(time.time() - time_start, 3)
 
         print("*"*80)
-        print("time_cicle", self.time_cicle)
+        print("time_cycle", self.time_cycle)
         print("ip_found_dict", self.ip_found_dict)
         print("ip_found_list", self.ip_found_list)
         return
