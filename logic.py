@@ -127,7 +127,7 @@ class Logic:
     def clear_data(self):
         # INITIATE LIMITS
         self.limit_ping_timewait_ms = 100   # BEST=100
-        self.limit_ping_thread = 5        # BEST=300   but don't break your phone WiFi!!!
+        self.limit_ping_thread = 300        # BEST=300   (but don't break your phone WiFi!!! - it was provider problem))
         self.limit_ping_concurrent = 300    # BEST=300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
