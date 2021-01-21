@@ -37,7 +37,7 @@ class Gui(Frame):
         self.window_move_to_center()
 
     def logic_connect(self):
-        self.logic = logic.Logic(start_scan=False)
+        self.logic = logic.Logic(ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False)
 
     def gui_root_configure(self):
         if self.root != self.parent:      # if it is independent window (without insertion in outside project)
@@ -233,9 +233,9 @@ class Gui(Frame):
         frame_header = Frame(parent)
         frame_header.grid(column=0, row=0, sticky="ew")
 
-        btn = Button(frame_header, text="RESET")
+        btn = Button(frame_header, text="RESET to default")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.adapters_reset        # todo:
+        # btn["command"] = self.ranges_reset        # todo:
         btn.pack(side="left")
 
         lable = Label(frame_header)
@@ -256,6 +256,11 @@ class Gui(Frame):
         frame_status.grid(column=0, row=2, sticky="ew")
 
         btn = Button(frame_status, text="CLEAR to default")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = lambda: None   # todo:
+        btn.pack(side="left")
+
+        btn = Button(frame_status, text="ENABLE/DISABLE")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = lambda: None   # todo:
         btn.pack(side="left")
