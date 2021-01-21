@@ -156,7 +156,7 @@ class Logic:
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
-        # self.ip_ranges_dict = []  # DO NOT CLEAR IT!!! update it in apply_ranges
+        # self.ip_ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in apply_ranges
 
         # COUNTERS
         self.count_ip_scanned = 0
@@ -168,16 +168,16 @@ class Logic:
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
-        self.ip_ranges_dict = {}        # ={RANGE_TUPLE: {active:,  adapter_net:,}}
+        self.ip_ranges_active_dict = {}        # ={RANGE_TUPLE: {active:,  adapter_net:,}}
 
         for net in self.adapter_net_dict:
-            self.ip_ranges_dict.update({(str(net[0]), str(net[-1])): {
+            self.ip_ranges_active_dict.update({(str(net[0]), str(net[-1])): {
                 "adapter_net": f"[AdapterNet:{str(net)}]",
                 "active": True if ip_ranges_use_adapters else False}})
 
         if ip_ranges is not None:
             for my_range in ip_ranges:
-                self.ip_ranges_dict.update({my_range: {"active": True}})
+                self.ip_ranges_active_dict.update({my_range: {"active": True}})
 
         self.clear_data()
 
@@ -185,10 +185,11 @@ class Logic:
             self.scan_loop()
         elif start_scan:
             self.scan_onсe()
-        return self.ip_ranges_dict
+        return self.ip_ranges_active_dict
 
     def ranges_reset_to_started(self):
-        self.ip_ranges_dict = self.ip_ranges_started_dict
+        self.ip_ranges_active_dict = copy.deepcopy(self.ip_ranges_started_dict)
+        return
 
     # ###########################################################
     # SCAN
@@ -224,8 +225,8 @@ class Logic:
         time_start = time.time()
 
         self.flag_scan_stop = False
-        for ip_range in self.ip_ranges_dict:
-            if self.ip_ranges_dict[ip_range].get("active", False):
+        for ip_range in self.ip_ranges_active_dict:
+            if self.ip_ranges_active_dict[ip_range].get("active", False):
                 self.ping_ip_range(ip_range)
 
         while threading.active_count() > count_main_threads:
