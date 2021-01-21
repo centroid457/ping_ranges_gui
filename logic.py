@@ -270,16 +270,13 @@ class Logic:
     # PING
     @contracts.contract(ip_range=tuple)
     def ping_ip_range(self, ip_range):
-        ip_start = ipaddress.ip_address(ip_range[0])
+        ip_start = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["start"])
+        ip_end = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["end"])
         ip_current = ip_start
 
-        if len(ip_range) == 1:
+        while ip_current <= ip_end and not self.flag_scan_stop:
             self.ping_ip_start_thread(ip_current)
-        elif len(ip_range) == 2:
-            ip_finish = ipaddress.ip_address(ip_range[1])
-            while ip_current <= ip_finish and not self.flag_scan_stop:
-                self.ping_ip_start_thread(ip_current)
-                ip_current = ip_current + 1
+            ip_current = ip_current + 1
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address)
