@@ -25,7 +25,11 @@ ip_tuples_list_default = [
 
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True,
+                 start_scan=False, start_scan_loop=False):
+
+        self.func_fill_found_ip = lambda: None
+
         self.hostname = platform.node()
 
         self.clear_data()
@@ -162,6 +166,8 @@ class Logic:
         self.count_ip_scanned = 0
         self.count_ip_found = 0
         self.time_cycle = 0
+
+        self.func_fill_found_ip()
         return
 
     # ###########################################################
@@ -228,21 +234,20 @@ class Logic:
         return
 
     def scan_onсe(self):
-        count_main_threads = threading.active_count()
+        self.flag_scan_stop = False
+        self.flag_scan_is_finished = False
         time_start = time.time()
 
-        self.flag_scan_stop = False
         for ip_range in self.ip_ranges_active_dict:
             if self.ip_ranges_active_dict[ip_range].get("active", False):
                 self.ping_ip_range(ip_range)
 
-        while threading.active_count() > count_main_threads:
-            time.sleep(0.5)
-
-        self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
+        # WAIT ALL PING THREADS FINISHED
+        for thread in threading.enumerate():
+            if thread.name.startswith("ping"):
+                thread.join()
 
         self.flag_scan_is_finished = True
-
         self.time_cycle = round(time.time() - time_start, 3)
 
         print("*"*80)
@@ -286,7 +291,7 @@ class Logic:
         while threading.active_count() > self.limit_ping_thread:
             # print(threading.active_count())
             time.sleep(0.01)    # USE=0.01
-        threading.Thread(target=self.ping_ip, args=(ip,), daemon=False).start()
+        threading.Thread(target=self.ping_ip, args=(ip,), daemon=False, name="ping").start()
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address)
@@ -346,6 +351,9 @@ class Logic:
 
             # mark as active
             self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
+
+            self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
+            self.func_fill_found_ip()
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
