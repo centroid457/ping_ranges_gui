@@ -30,6 +30,8 @@ class Gui(Frame):
 
         self.logic_connect()
         self.create_gui_structure()
+        self.logic.func_fill_found_ip = self.fill_listbox_found_ip
+        self.logic.scan_onсe_thread()
 
         self.gui_root_configure()
         self.window_move_to_center()
@@ -343,6 +345,11 @@ class Gui(Frame):
         frame_header = Frame(parent, relief="groove", borderwidth=4)
         frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
+        btn = Button(frame_header, text="STOP")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = self.logic.scan_stop
+        btn.pack(side="left", fill="y")
+
         btn = Button(frame_header, text="CLEAR")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.found_ip_reset
@@ -350,12 +357,12 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="SCAN ONES")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = None
+        btn["command"] =self.logic.scan_onсe_thread
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="SCAN LOOP")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = None
+        btn["command"] =self.logic.scan_loop_thread
         btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
@@ -394,7 +401,7 @@ class Gui(Frame):
 
         the_dict = self.logic.ip_found_dict
         for ip in the_dict:
-            for mac in ip:
+            for mac in the_dict[ip]:
                 active_mark = "+" if the_dict[ip][mac].get("active", False) else "-"
                 was_lost = the_dict[ip][mac].get("was_lost", False)
                 was_lost_mark = "lost" if was_lost else ""
@@ -402,8 +409,9 @@ class Gui(Frame):
                                      active_mark.ljust(2, " ") +
                                      was_lost_mark.ljust(5, " ") +
                                      str(ip).ljust(16, " ") +
-                                     f"[{str(mac)}]".ljust(30, " ")
-                                     )
+                                     f"[{str(mac)}]".ljust(20, " ") +
+                                     the_dict[ip][mac].get("host", "").ljust(15, " "))
+
                 if active_mark == "+":
                     the_listbox.itemconfig('end', bg="#55FF55")
                 elif active_mark == "-":
@@ -427,68 +435,6 @@ class Gui(Frame):
                     if mac in selected_item_text:
                         self.status_found_ip["text"] = f"{str(key)} [{mac}]"
                         return
-        return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def btn_module_action(self, mode):
-        if mode not in ("install", "upgrade", "delete"):
-            sys.stderr.write("WRONG PARAMETER MODE")
-            return
-        elif mode == "install":
-            mode_cmd = "install"
-        elif mode == "upgrade":
-            mode_cmd = "install --upgrade"
-        elif mode == "delete":
-            mode_cmd = "uninstall"
-
-        modulename = self.selected_module
-        module_data = self.logic.ranked_modules_dict[self.selected_module]
-        modulename_cmd = modulename if module_data[2] is None else module_data[2]
-
-        python_exe = sys.executable
-
-        cmd = f"{python_exe} -m pip {mode_cmd} {modulename_cmd}"
-        my_process = subprocess.Popen(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-
-        if mode == "delete":
-            my_stdout, my_stderr = my_process.communicate(input="y")
-        else:
-            my_stdout = my_process.stdout.readlines()
-            my_stderr = my_process.stderr.readlines()
-            my_process.wait()
-
-        # print(my_stdout, my_stderr)
-        if my_stderr in ([], "") and my_process.poll() == 0:
-            self.logic.rank_modules_dict()  # update data
-            self.logic.generate_modules_found_infiles_bad()
-            self.fill_listbox_modules()
-            self.fill_listbox_files()
-            #self.program_restart()
-        else:
-            txt = f"Can't {mode.upper()} module.\n"\
-                    "Мay be it is already IN_TARGET position or have ERROR.\n"\
-                    + "*"*50 + "\n"\
-                    f"stdout={my_stdout}\n\n"\
-                    f"stderr={my_stderr}"
-            messagebox.showinfo(title='INFO', message=txt)
         return
 
     # #################################################
