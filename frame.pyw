@@ -138,12 +138,12 @@ class Gui(Frame):
         btn = Button(frame_header, text="RESET")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.adapters_reset
-        btn.pack(side="left")
+        btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="RESCAN")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.adapters_rescan
-        btn.pack(side="left")
+        btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
         lable["text"] = f"Found ADAPTERS " \
@@ -236,7 +236,7 @@ class Gui(Frame):
         btn = Button(frame_header, text="RESET to started")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.ranges_reset_to_started
-        btn.pack(side="left")
+        btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
         lable["text"] = f"RANGES settings:\n" \
@@ -346,17 +346,17 @@ class Gui(Frame):
         btn = Button(frame_header, text="CLEAR")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.found_ip_reset
-        btn.pack(side="left")
+        btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="SCAN ONES")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = None
-        btn.pack(side="left")
+        btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="SCAN LOOP")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = None
-        btn.pack(side="left")
+        btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
         lable["text"] = "FOUND IP"
