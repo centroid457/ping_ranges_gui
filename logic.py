@@ -132,7 +132,9 @@ class Logic:
         print(self.adapter_net_dict)
         print(self.adapter_ip_dict)
         print("*"*80)
-        self.start_daemon_sensor_gateway()
+
+        # DO NOT NEED!!!
+        # self.start_daemon_sensor_gateway()  # todo: delete or use only as info_daemon
 
     # ###########################################################
     # RESET
@@ -200,7 +202,7 @@ class Logic:
             self.scan_onсe()
 
         self.func_fill_listbox_ranges()
-        print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
+        # print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
         return self.ip_ranges_active_dict
 
     def ranges_reset_to_started(self):
