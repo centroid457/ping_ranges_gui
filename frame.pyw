@@ -98,11 +98,11 @@ class Gui(Frame):
         self.color_bg_mainframe()
 
         self.COLOR_BUTTONS = "#aaaaFF"
-        PAD_EXTERNAL = 2
+        PAD_EXTERNAL = 3
 
         self.parent.columnconfigure(0, weight=1)
-        self.parent.rowconfigure([0, 1, ], weight=0)       # all
-        self.parent.rowconfigure([2, ], weight=1)       # all
+        self.parent.rowconfigure([0, 1, ], weight=0)
+        self.parent.rowconfigure([2, ], weight=1)
 
         # ======= FRAME-0 (ADAPTERS) ======================
         self.frame_adapters = Frame(self.parent)
@@ -244,7 +244,7 @@ class Gui(Frame):
         lable.pack()
 
         # BODY --------------------------------------------------------------
-        self.listbox_ranges = Listbox(parent, height=5, bg=None, font=('Courier', 9))
+        self.listbox_ranges = Listbox(parent, height=5, bg="#55FF55", font=('Courier', 9))
         self.listbox_ranges.grid(column=0, row=2, sticky="snew")
 
         self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_ranges.yview)
