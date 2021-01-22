@@ -142,12 +142,10 @@ class Logic:
         # INITIATE LIMITS
         self.limit_ping_timewait_ms = 100   # BEST=100
         self.limit_ping_thread = 300        # BEST=300   (but don't break your phone WiFi!!! - it was provider problem))
-        self.limit_ping_concurrent = 300    # BEST=300      = # todo: dont use it! enaugh limit_ping_thread!
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
-        self.lock_maxconnections = threading.BoundedSemaphore(value=self.limit_ping_concurrent)
         self.lock = threading.Lock()
 
         # FLAGS
@@ -331,12 +329,11 @@ class Logic:
         -w = waiting time
         """
 
-        with self.lock_maxconnections:
-            self.ip_last_scanned = ip
-            self.count_ip_scanned += 1
-            sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
-            sp_ping.wait()
-            time.sleep(0.001)   # very necessary =0.001 was good! maybe not need)
+        self.ip_last_scanned = ip
+        self.count_ip_scanned += 1
+        sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
+        sp_ping.wait()
+        time.sleep(0.001)   # very necessary =0.001 was good! maybe not need)
 
         if sp_ping.returncode != 0 and ip in self.ip_found_dict:
             self._mark_nonactive_mac(ip=ip)
