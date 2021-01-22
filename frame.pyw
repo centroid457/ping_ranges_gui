@@ -118,7 +118,7 @@ class Gui(Frame):
         self.frame_found_ip = Frame(self.parent)
         self.frame_found_ip.grid(row=2, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
 
-        #self.fill_frame_found_ip(self.frame_found_ip)
+        self.fill_frame_found_ip(self.frame_found_ip)
         return
 
     def color_bg_mainframe(self):
@@ -179,7 +179,7 @@ class Gui(Frame):
 
     def fill_listbox_adapters(self):
         the_listbox = self.listbox_adapters
-        self.listbox_clear(the_listbox)
+        self._listbox_clear(the_listbox)
 
         the_dict = self.logic.adapter_dict
         for adapter in the_dict:
@@ -256,7 +256,7 @@ class Gui(Frame):
         frame_status = Frame(parent)
         frame_status.grid(column=0, row=2, sticky="ew")
 
-        btn = Button(frame_status, text="CLEAR to default")
+        btn = Button(frame_status, text="CLEAR to started")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.range_restore_default
         btn.pack(side="left")
@@ -275,7 +275,7 @@ class Gui(Frame):
 
     def fill_listbox_ranges(self):
         the_listbox = self.listbox_ranges
-        self.listbox_clear(the_listbox)
+        self._listbox_clear(the_listbox)
 
         the_dict = self.logic.ip_ranges_active_dict
         for the_range in the_dict:
@@ -332,168 +332,124 @@ class Gui(Frame):
                 return key
         return None
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     # #################################################
-    # frame FILES
-    def fill_frame_files(self, parent):
-        pass
-    def _fill_lable_frame_files(self):
-        lbl = self.lable_frame_files
-        mark = "!!!DETECTED OVERCOUNT!!!"
-        gap = " "*20
-        line1 = f"FOUND python [{self.logic.count_found_files}]FILES:"
-        line2 = f"Active link path=[{self.path_link_applied}]"
-        if self.logic.count_found_files_overcount:
-            line1 = mark + gap + line1 + gap + mark
-            lbl["bg"] = "#FF9999"
-
-        lbl["text"] = line1 + "\n" + line2
-        return
-
-    def fill_listbox_files(self):
-        self.listbox_files.delete(0, self.listbox_files.size()-1)
-        files_dict = self.logic.python_files_found_dict
-        for file in files_dict:
-            file_str = str(file) + " *" if file == Path(self.path_link_applied) else file
-            self.listbox_files.insert('end', file_str)
-            if not files_dict[file].isdisjoint(self.logic.modules_found_infiles_bad):
-                self.listbox_files.itemconfig('end', bg="#FF9999")
-        return
-
-    def change_status_files(self, event):
-        #print(self.listbox_files.curselection())
-        selected_list = (0,) if self.listbox_files.curselection() == () else self.listbox_files.curselection()
-        selected_filename = self.listbox_files.get(*selected_list)
-        self.status_files["text"] = self.logic.python_files_found_dict[Path(selected_filename.replace(" *", ""))]
-        return
-
-    def change_path(self, mode):
-        if mode == "file":
-            path_new = filedialog.Open(self.root, filetypes=[('*.py* files', '.py*')]).show()
-        elif mode == "folder":
-            path_new = filedialog.askdirectory()
-
-        if path_new == '':
-            return
-
-        self.update_total_gui_data(path_new)
-        return
-
-    def update_total_gui_data(self, path_link):
-        self.apply_path(path_link)
-
-        self._fill_lable_frame_info()
-        self._fill_lable_frame_files()
-        self._fill_lable_frame_modules()
-
-        self.fill_listbox_versions()
-        self.fill_listbox_files()
-        self.fill_listbox_modules()
-
-        self.color_bg_mainframe()
-        return
-
-    # #################################################
-    # frame MODULES
-    def fill_frame_modules(self, parent):
+    # frame FOUND IP
+    def fill_frame_found_ip(self, parent):
         parent.grid_columnconfigure(0, weight=1)
-        parent.grid_rowconfigure([1], weight=10)
-        parent.grid_rowconfigure([0, 2], weight=0)
+        parent.grid_rowconfigure([0, 2], weight=0)  # HEADER + STATUS
+        parent.grid_rowconfigure([1], weight=1)  # BODY
 
-        self.lable_frame_modules = Label(parent)
-        self.lable_frame_modules.grid(column=0, row=0, columnspan=2, sticky="snew")
-        self._fill_lable_frame_modules()
+        # HEADER -------------------------------------------------------------
+        frame_header = Frame(parent)
+        frame_header.grid(column=0, row=0, sticky="ew")
 
-        self.listbox_modules = Listbox(parent, height=8, bg="#55FF55", font=('Courier', 9))
-        self.listbox_modules.grid(column=0, row=1, sticky="snew")
+        btn = Button(frame_header, text="CLEAR")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = self.found_ip_reset
+        btn.pack(side="left")
 
-        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_modules.yview)
+        btn = Button(frame_header, text="SCAN ONES")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = None
+        btn.pack(side="left")
+
+        btn = Button(frame_header, text="SCAN LOOP")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = None
+        btn.pack(side="left")
+
+        lable = Label(frame_header)
+        lable["text"] = "FOUND IP"
+        lable.pack()
+
+        # BODY --------------------------------------------------------------
+        self.listbox_found_ip = Listbox(parent, height=5, bg=None, font=('Courier', 9))
+        self.listbox_found_ip.grid(column=0, row=1, sticky="snew")
+
+        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_found_ip.yview)
         self.scrollbar.grid(column=1, row=1, sticky="sn")
 
-        self.listbox_modules['yscrollcommand'] = self.scrollbar.set
+        self.listbox_found_ip['yscrollcommand'] = self.scrollbar.set
 
-        # STATUS FRAME
-        frame_status_modules = Frame(parent)
-        frame_status_modules.grid(column=0, columnspan=2, row=2, sticky="ew")
+        # STATUS -------------------------------------------------------------
+        frame_status = Frame(parent)
+        frame_status.grid(column=0, row=2, sticky="ew")
 
-        lbl = Label(frame_status_modules)
-        lbl["text"] = f"In ACTIVE python version"
-        lbl.pack(side="left")
+        btn = Button(frame_status, text="settings")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = lambda: None
+        btn["state"] = "disabled"
+        btn.pack(side="left")
 
-        btn_module_install = Button(frame_status_modules, text=f"INSTALL")
-        btn_module_install["bg"] = "#aaaaFF"
-        btn_module_install["command"] = lambda: self.btn_module_action("install")
-        btn_module_install.pack(side="left")
+        self.status_found_ip = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
+        self.status_found_ip.pack(side="left")
+        self.listbox_found_ip.bind("<<ListboxSelect>>", self.change_status_found_ip)
 
-        btn_module_upgrade = Button(frame_status_modules, text=f"upgrade")
-        btn_module_upgrade["bg"] = "#aaaaFF"
-        btn_module_upgrade["command"] = lambda: self.btn_module_action("upgrade")
-        btn_module_upgrade.pack(side="left")
-
-        btn_module_delete = Button(frame_status_modules, text=f"DELETE")
-        btn_module_delete["bg"] = "#aaaaFF"
-        btn_module_delete["command"] = lambda: self.btn_module_action("delete")
-        btn_module_delete.pack(side="left")
-
-        lbl = Label(frame_status_modules)
-        lbl["text"] = f"module: "
-        lbl.pack(side="left")
-
-        self.status_modules = ttk.Label(frame_status_modules, text="...SELECT item...", anchor="w")
-        self.status_modules.pack(side="left")
-        self.listbox_modules.bind("<<ListboxSelect>>", self.change_status_modules)
-
-        self.fill_listbox_modules()
-        self.change_status_modules(None)
+        self.fill_listbox_found_ip()
         return
 
-    def _fill_lable_frame_modules(self):
-        self.lable_frame_modules["text"] = f"FOUND importing [{self.logic.count_found_modules}]MODULES:\n"\
-            "(GREEN - Installed, RED - Not installed, LightRED - Definitely can be installed!)"
+    def fill_listbox_found_ip(self):
+        the_listbox = self.listbox_found_ip
+        self._listbox_clear(the_listbox)
+
+        the_dict = self.logic.ip_found_dict
+        for adapter in the_dict:
+            active_mark = "+" if the_dict[adapter].get("active", False) else "-"
+            was_lost = the_dict[adapter].get("was_lost", False)
+            was_lost_mark = "lost" if was_lost else ""
+            the_listbox.insert('end',
+                                 active_mark.ljust(2, " ") +
+                                 was_lost_mark.ljust(5, " ") +
+                                 the_dict[adapter].get("mac", "").ljust(24, " ") +
+                                 the_dict[adapter].get("ip", "").ljust(16, " ") +
+                                 the_dict[adapter].get("mask", "").ljust(16, " ") +
+                                 the_dict[adapter].get("gateway", "").ljust(16, " ") +
+                                 adapter
+                                 )
+            if active_mark == "+":
+                the_listbox.itemconfig('end', bg="#55FF55")
+            elif active_mark == "-" and was_lost == True:
+                the_listbox.itemconfig('end', bg="#FF9999")
+
+            if was_lost == True:
+                the_listbox.itemconfig('end', fg="#FF0000")
         return
 
-    def fill_listbox_modules(self):
-        self.listbox_modules.delete(0, self.listbox_modules.size()-1)
-        for module in self.logic.ranked_modules_dict:
-            #[CanImport=True/False, Placement=ShortPathName, InstallNameIfDetected]
-            can_import, short_pathname, detected_installname = self.logic.ranked_modules_dict[module]
-            bad_module_index = 0
-            if can_import:
-                self.listbox_modules.insert('end', "%-20s \t[%s]" % (module, short_pathname))
-            else:
-                self.listbox_modules.insert(bad_module_index, "%-20s \t[%s]" % (module, short_pathname))
-                color = "#FF9999" if detected_installname is None else "#FFcc99"
-                self.listbox_modules.itemconfig(bad_module_index, bg=color)
-                bad_module_index += 1
+    def found_ip_reset(self):
         return
 
-    def change_status_modules(self, event):
-        #print(self.listbox_modules.curselection())
-        selected_list = (0,) if self.listbox_modules.curselection() == () else self.listbox_modules.curselection()
-        selected_data = self.listbox_modules.get(*selected_list)
-        selected_module_w_spaces = selected_data.split("\t")[0]
-        self.selected_module = re.sub(r"\s", "", selected_module_w_spaces)
-        self.status_modules["text"] = self.selected_module
+
+
+
+
+    def change_status_found_ip(self, event):
+        if self.listbox_found_ip.curselection() != ():
+            selected_list = self.listbox_found_ip.curselection()
+            selected_item_text = self.listbox_found_ip.get(selected_list)
+            for key in self.logic.adapter_dict:
+                if key in selected_item_text:
+                    self.status_adapters["text"] = key
+                    return
         return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def btn_module_action(self, mode):
         if mode not in ("install", "upgrade", "delete"):
@@ -540,7 +496,7 @@ class Gui(Frame):
 
     # #################################################
     # rest
-    def listbox_clear(self, listbox):
+    def _listbox_clear(self, listbox):
         listbox.delete(0, listbox.size()-1)
         return
 
