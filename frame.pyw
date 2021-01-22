@@ -128,12 +128,12 @@ class Gui(Frame):
     # frame ADAPTERS
     def fill_frame_adapters(self, parent):
         parent.grid_columnconfigure(0, weight=1)
-        parent.grid_rowconfigure([0, 2], weight=0)  # HEADER + STATUS
-        parent.grid_rowconfigure([1], weight=1)  # BODY
+        parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
+        parent.grid_rowconfigure([2], weight=1)     # BODY
 
         # HEADER -------------------------------------------------------------
-        frame_header = Frame(parent)
-        frame_header.grid(column=0, row=0, sticky="ew")
+        frame_header = Frame(parent, relief="groove", borderwidth=4)
+        frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
         btn = Button(frame_header, text="RESET")
         btn["bg"] = self.COLOR_BUTTONS
@@ -153,16 +153,16 @@ class Gui(Frame):
 
         # BODY --------------------------------------------------------------
         self.listbox_adapters = Listbox(parent, height=5, bg=None, font=('Courier', 9))
-        self.listbox_adapters.grid(column=0, row=1, sticky="snew")
+        self.listbox_adapters.grid(column=0, row=2, sticky="snew")
 
         self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_adapters.yview)
-        self.scrollbar.grid(column=1, row=1, sticky="sn")
+        self.scrollbar.grid(column=1, row=2, sticky="sn")
 
         self.listbox_adapters['yscrollcommand'] = self.scrollbar.set
 
         # STATUS -------------------------------------------------------------
         frame_status = Frame(parent)
-        frame_status.grid(column=0, row=2, sticky="ew")
+        frame_status.grid(column=0, row=1, sticky="ew")
 
         btn = Button(frame_status, text="settings")
         btn["bg"] = self.COLOR_BUTTONS
@@ -226,16 +226,16 @@ class Gui(Frame):
     # frame RANGES
     def fill_frame_ranges(self, parent):
         parent.grid_columnconfigure(0, weight=1)
-        parent.grid_rowconfigure([0, 2], weight=0)  # HEADER + STATUS
-        parent.grid_rowconfigure([1], weight=1)  # BODY
+        parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
+        parent.grid_rowconfigure([2], weight=1)     # BODY
 
         # HEADER -------------------------------------------------------------
-        frame_header = Frame(parent)
-        frame_header.grid(column=0, row=0, sticky="ew")
+        frame_header = Frame(parent, relief="groove", borderwidth=4)
+        frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
-        btn = Button(frame_header, text="RETURN to started")
+        btn = Button(frame_header, text="RESET to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.ranges_return_to_started
+        btn["command"] = self.ranges_reset_to_started
         btn.pack(side="left")
 
         lable = Label(frame_header)
@@ -245,16 +245,16 @@ class Gui(Frame):
 
         # BODY --------------------------------------------------------------
         self.listbox_ranges = Listbox(parent, height=5, bg=None, font=('Courier', 9))
-        self.listbox_ranges.grid(column=0, row=1, sticky="snew")
+        self.listbox_ranges.grid(column=0, row=2, sticky="snew")
 
         self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_ranges.yview)
-        self.scrollbar.grid(column=1, row=1, sticky="sn")
+        self.scrollbar.grid(column=1, row=2, sticky="sn")
 
         self.listbox_ranges['yscrollcommand'] = self.scrollbar.set
 
         # STATUS -------------------------------------------------------------
         frame_status = Frame(parent)
-        frame_status.grid(column=0, row=2, sticky="ew")
+        frame_status.grid(column=0, row=1, sticky="ew")
 
         btn = Button(frame_status, text="CLEAR to started")
         btn["bg"] = self.COLOR_BUTTONS
@@ -294,7 +294,7 @@ class Gui(Frame):
                 the_listbox.itemconfig('end', bg="#FF9999")
         return
 
-    def ranges_return_to_started(self):
+    def ranges_reset_to_started(self):
         self.logic.ranges_reset_to_started()
         self.fill_listbox_ranges()
         return
@@ -336,12 +336,12 @@ class Gui(Frame):
     # frame FOUND IP
     def fill_frame_found_ip(self, parent):
         parent.grid_columnconfigure(0, weight=1)
-        parent.grid_rowconfigure([0, 2], weight=0)  # HEADER + STATUS
-        parent.grid_rowconfigure([1], weight=1)  # BODY
+        parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
+        parent.grid_rowconfigure([2], weight=1)     # BODY
 
         # HEADER -------------------------------------------------------------
-        frame_header = Frame(parent)
-        frame_header.grid(column=0, row=0, sticky="ew")
+        frame_header = Frame(parent, relief="groove", borderwidth=4)
+        frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
         btn = Button(frame_header, text="CLEAR")
         btn["bg"] = self.COLOR_BUTTONS
@@ -364,16 +364,16 @@ class Gui(Frame):
 
         # BODY --------------------------------------------------------------
         self.listbox_found_ip = Listbox(parent, height=5, bg=None, font=('Courier', 9))
-        self.listbox_found_ip.grid(column=0, row=1, sticky="snew")
+        self.listbox_found_ip.grid(column=0, row=2, sticky="snew")
 
         self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_found_ip.yview)
-        self.scrollbar.grid(column=1, row=1, sticky="sn")
+        self.scrollbar.grid(column=1, row=2, sticky="sn")
 
         self.listbox_found_ip['yscrollcommand'] = self.scrollbar.set
 
         # STATUS -------------------------------------------------------------
         frame_status = Frame(parent)
-        frame_status.grid(column=0, row=2, sticky="ew")
+        frame_status.grid(column=0, row=1, sticky="ew")
 
         btn = Button(frame_status, text="settings")
         btn["bg"] = self.COLOR_BUTTONS
