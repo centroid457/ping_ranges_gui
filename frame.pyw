@@ -402,7 +402,7 @@ class Gui(Frame):
                                      active_mark.ljust(2, " ") +
                                      was_lost_mark.ljust(5, " ") +
                                      str(ip).ljust(16, " ") +
-                                     str(mac).ljust(30, " ")
+                                     f"[{str(mac)}]".ljust(30, " ")
                                      )
                 if active_mark == "+":
                     the_listbox.itemconfig('end', bg="#55FF55")
@@ -414,20 +414,19 @@ class Gui(Frame):
         return
 
     def found_ip_reset(self):
+        self.logic.clear_data()
+        self.fill_listbox_found_ip()
         return
-
-
-
-
 
     def change_status_found_ip(self, event):
         if self.listbox_found_ip.curselection() != ():
             selected_list = self.listbox_found_ip.curselection()
             selected_item_text = self.listbox_found_ip.get(selected_list)
-            for key in self.logic.adapter_dict:
-                if key in selected_item_text:
-                    self.status_adapters["text"] = key
-                    return
+            for key in self.logic.ip_found_dict:
+                for mac in self.logic.ip_found_dict[key]:
+                    if mac in selected_item_text:
+                        self.status_found_ip["text"] = f"{str(key)} [{mac}]"
+                        return
         return
 
 
