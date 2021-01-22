@@ -247,9 +247,13 @@ class Logic:
         return
 
     def scan_onсe(self):
+        time_start = time.time()
+
         self.flag_scan_stop = False
         self.flag_scan_is_finished = False
-        time_start = time.time()
+
+        self.adapters_detect()
+        self.apply_ranges()
 
         for ip_range in self.ip_ranges_active_dict:
             if self.ip_ranges_active_dict[ip_range].get("active", False):
@@ -283,8 +287,6 @@ class Logic:
     def scan_loop(self):
         self.flag_scan_stop = False
         while not self.flag_scan_stop:
-            self.adapters_detect()
-            self.apply_ranges()
             self.rescan_found()
             self.scan_onсe()
             time.sleep(1)
