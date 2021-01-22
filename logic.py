@@ -355,22 +355,20 @@ class Logic:
             self._dict_safely_update(self.ip_found_dict[ip], mac, {})
             self._mark_nonactive_mac(ip=ip, mac_except=mac)
 
-            if ip not in self.ip_found_dict and self.ip_found_dict[ip][mac] != {}:
-                # get IP+HOST
-                mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
-                match = False
-                for line in sp_ping.stdout.readlines():
-                    match = re.search(mask, line)
-                    # print(match, ip, line)
-                    if match:
-                        host = match[1]
-                        self._dict_safely_update(self.ip_found_dict[ip][mac], "host", host)
-                        break
+            # get IP+HOST
+            mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
+            match = False
+            for line in sp_ping.stdout.readlines():
+                match = re.search(mask, line)
+                # print(match, ip, line)
+                if match:
+                    host = match[1]
+                    self._dict_safely_update(self.ip_found_dict[ip][mac], "host", host)
+                    break
 
-                if not match:
-                    # some devises don't have hostname! and "ping -a" can't resolve it!
-                    self._dict_safely_update(self.ip_found_dict, ip, {})
-                    self._dict_safely_update(self.ip_found_dict[ip], "host", "NoNameDevice")
+            if not match:
+                # some devises don't have hostname! and "ping -a" can't resolve it!
+                self._dict_safely_update(self.ip_found_dict[ip][mac], "host", "NoNameDevice")
 
             # mark as active
             self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
