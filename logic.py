@@ -142,7 +142,7 @@ class Logic:
         # INITIATE LIMITS
         self.limit_ping_timewait_ms = 100   # BEST=100
         self.limit_ping_thread = 300        # BEST=300   (but don't break your phone WiFi!!! - it was provider problem))
-        self.limit_ping_concurrent = 300    # BEST=300
+        self.limit_ping_concurrent = 300    # BEST=300      = # todo: dont use it! enaugh limit_ping_thread!
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
@@ -240,7 +240,7 @@ class Logic:
             if thread.name.startswith(thread_name_scan_once):
                 return
 
-        threading.Thread(target=self.scan_onсe, daemon=False, name=thread_name_scan_once).start()
+        threading.Thread(target=self.scan_onсe, daemon=True, name=thread_name_scan_once).start()
         return
 
     def scan_onсe(self):
@@ -274,7 +274,7 @@ class Logic:
             if thread.name.startswith(thread_name_scan_loop):
                 return
 
-        threading.Thread(target=self.scan_loop, daemon=False, name=thread_name_scan_loop).start()
+        threading.Thread(target=self.scan_loop, daemon=True, name=thread_name_scan_loop).start()
         return
 
     def scan_loop(self):
@@ -314,7 +314,7 @@ class Logic:
         while threading.active_count() > self.limit_ping_thread:
             # print(threading.active_count())
             time.sleep(0.01)    # USE=0.01
-        threading.Thread(target=self.ping_ip, args=(ip,), daemon=False, name=thread_name_ping).start()
+        threading.Thread(target=self.ping_ip, args=(ip,), daemon=True, name=thread_name_ping).start()
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address)
