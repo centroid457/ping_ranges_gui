@@ -2,24 +2,20 @@
 
 # todo: try to use NMAP, at least for OS versions!
 
-import copy
 import contracts
 import ipaddress
-import itertools
 import re
-import os
-import sys
 import subprocess
 import threading
 import time
 import platform
-from pathlib import Path
 
 access_this_module_as_import = True  # at first need true to correct assertions!
 ip_tuples_list_default = [
-        ("192.1.1.0",),
-        ("192.168.1.0", "192.168.1.10"),
+        # ("192.1.1.0",),
+        # ("192.168.1.10", "192.168.1.20"),
         # ("192.168.43.0", "192.168.43.255"),
+        ("192.168.43.207", )
     ]
 
 
@@ -28,6 +24,7 @@ class Logic:
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True,
                  start_scan=False, start_scan_loop=False):
 
+        # initiate None funcs for gui collaboration
         self.func_fill_listbox_adapters = lambda: None
         self.func_fill_listbox_ranges = lambda: None
         self.func_fill_listbox_found_ip = lambda: None
@@ -38,10 +35,11 @@ class Logic:
         self.clear_adapters()
 
         # save first started ranges
-        self.ip_ranges_started_dict = copy.deepcopy(self.apply_ranges(ip_tuples_list,
-                                                        ip_ranges_use_adapters=ip_ranges_use_adapters,
-                                                        start_scan=False,
-                                                        start_scan_loop=False))
+        self.ip_ranges_input_list = ip_tuples_list
+        self.apply_ranges(ip_tuples_list,
+                            ip_ranges_use_adapters=ip_ranges_use_adapters,
+                            start_scan=False,
+                            start_scan_loop=False)
 
         if start_scan_loop:
             self.scan_loop()
@@ -53,8 +51,8 @@ class Logic:
     # ADAPTERS
     def clear_adapters(self):
         self.adapter_dict = {}          # ={ADAPTER_NAME: {mac:, ip:, mask:, gateway:,    active:, was_lost:, }}
-        self.adapter_net_dict = {}      # ={net:gateway}                        can simplify to use list!
-        self.adapter_ip_dict = {}       # ={ip:{mac:, mask:,    active:, was_lost:, }}
+        self.adapter_net_dict = {}      # ={NET:{gateway:, active: }}
+        self.adapter_ip_dict = {}       # ={IP:{mac:, mask:,    active:, was_lost:, }}
         self.adapter_gateway_list = []  #
         self.adapter_gateway_time_response_list = []
         self.adapter_ip_margin_list = []     # zero and broadcast ips
@@ -64,8 +62,8 @@ class Logic:
     def adapters_detect(self):
         # INITIATE work
         adapter_new = None  # cumulative var!
-        for adapter in self.adapter_dict:           # clear all activated flags
-            if self.adapter_dict[adapter].get("active", None) == True:
+        for adapter in self.adapter_dict:           # clear all active flags
+            if self.adapter_dict[adapter].get("active", None):
                 self.adapter_dict[adapter]["active"] = False
 
         # START work
@@ -75,7 +73,7 @@ class Logic:
             # find out data = generate adapter_dict
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
-            if len(line_striped_splited) == 1 or line_striped_splited[1] == "": # exclude Blank or have no data lines
+            if len(line_striped_splited) == 1 or line_striped_splited[1] == "":   # exclude Blank or have no data lines
                 continue
 
             part_1 = line_striped_splited[0].strip()
@@ -84,8 +82,6 @@ class Logic:
             key_part = part_1.split(" ", maxsplit=2)[0]
             part_result = part_2
 
-            # print(part_result)
-            # print(line.split(" ", maxsplit=4))
             # -----------------------------------------------------------
             # CREATION self.adapter_dict
             if key_part in ["Описание."]:       # found new adapter
@@ -108,13 +104,8 @@ class Logic:
                 if gateway != "":
                     self.adapter_gateway_list.append(ipaddress.ip_address(gateway))
 
-        # SET WAS_LOST flags
-        for adapter in self.adapter_dict:
-            if self.adapter_dict[adapter].get("active", None) == False:
-                self.adapter_dict[adapter]["was_lost"] = True
-
         # use data from found active adapters
-        for adapter_data_dict in self.adapter_dict.values():
+        for adapter, adapter_data_dict in self.adapter_dict.items():
             if adapter_data_dict.get("ip", None) is not None:
                 ip = ipaddress.ip_address(adapter_data_dict["ip"])
 
@@ -124,13 +115,17 @@ class Logic:
 
                 net = ipaddress.ip_network((str(ip), mask), strict=False)
                 adapter_data_dict["net"] = net
-                self.adapter_net_dict.update({net: gateway})
+                self.adapter_net_dict.update({net: {"gateway": gateway}})
                 self.adapter_ip_margin_list.append(net[0])
                 self.adapter_ip_margin_list.append(net[-1])
 
                 self._dict_safely_update(self.adapter_ip_dict, ip, {})
                 self._dict_safely_update(self.adapter_ip_dict[ip], "mac", mac)
                 self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
+
+                if not adapter_data_dict.get("active", True):
+                    self.adapter_dict[adapter]["was_lost"] = True
+                    self.adapter_net_dict.update({net: {"active": False}})
 
         self.func_fill_listbox_adapters()
         print(self.adapter_dict)
@@ -177,23 +172,25 @@ class Logic:
     def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
         self.ip_ranges_active_dict = {}        # ={RANGE_TUPLE: {active:, info:,    start:, end:,}}
 
+        # use adapters nets
         for net in self.adapter_net_dict:
             self.ip_ranges_active_dict.update({(str(net[0]), str(net[-1])): {
-                                                "info": f"[AdapterNet:{str(net)}]",
-                                                "active": True if ip_ranges_use_adapters else False,
-                                                "start": str(net[0]),
-                                                "end": str(net[-1]),
-                                                }})
+                    "info": f"[AdapterNet:{str(net)}]",
+                    "active": True if all((ip_ranges_use_adapters, self.adapter_net_dict[net].get("active", True))) else False,
+                    "start": str(net[0]),
+                    "end": str(net[-1])}})
 
+        # use input nets
         if ip_ranges is not None:
-            for my_range in ip_ranges:
-                self.ip_ranges_active_dict.update({my_range: {"info": "Input",
-                                                              "active": True,
-                                                              "start": str(my_range[0]),
-                                                              "end": str(my_range[-1]),
-                                                              }})
+            self.ip_ranges_input_list = ip_ranges
 
-        self.clear_data()
+        for my_range in self.ip_ranges_input_list:
+            self.ip_ranges_active_dict.update({my_range: {"info": "Input",
+                                                          "active": True,
+                                                          "start": str(my_range[0]),
+                                                          "end": str(my_range[-1])}})
+
+        # self.clear_data()
 
         if start_scan_loop:
             self.scan_loop()
@@ -201,10 +198,12 @@ class Logic:
             self.scan_onсe()
 
         self.func_fill_listbox_ranges()
+        print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
         return self.ip_ranges_active_dict
 
     def ranges_reset_to_started(self):
-        self.ip_ranges_active_dict = copy.deepcopy(self.ip_ranges_started_dict)
+        self.adapters_detect()
+        self.apply_ranges()
         self.func_fill_listbox_ranges()
         return
 
@@ -285,6 +284,7 @@ class Logic:
         self.flag_scan_stop = False
         while not self.flag_scan_stop:
             self.adapters_detect()
+            self.apply_ranges()
             self.rescan_found()
             self.scan_onсe()
             time.sleep(1)

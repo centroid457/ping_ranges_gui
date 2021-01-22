@@ -1,12 +1,8 @@
 # print("file frame.pyw")
 
-import subprocess
-import sys
 import re
 import time
-from threading import Thread
 # import logic       # SEE THE END OF FILE
-from pathlib import Path
 from tkinter import Tk, Frame, Button, Label, BOTH, Listbox, Scrollbar, filedialog, messagebox, font
 from tkinter import ttk
 
@@ -30,8 +26,12 @@ class Gui(Frame):
 
         self.logic_connect()
         self.create_gui_structure()
-        self.logic.func_fill_found_ip = self.fill_listbox_found_ip
-        self.logic.scan_onсe_thread()
+        # implement fill listbox funcs
+        self.logic.func_fill_listbox_adapters = self.fill_listbox_adapters
+        self.logic.func_fill_listbox_ranges = self.fill_listbox_ranges
+        self.logic.func_fill_listbox_found_ip = self.fill_listbox_found_ip
+        # start initial scan once
+        #self.logic.scan_onсe_thread()
 
         self.gui_root_configure()
         self.window_move_to_center()
@@ -237,7 +237,7 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="RESET to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.ranges_reset_to_started
+        btn["command"] = self.logic.ranges_reset_to_started
         btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
@@ -294,11 +294,6 @@ class Gui(Frame):
                 the_listbox.itemconfig('end', bg="#55FF55")
             elif active_mark == "-":
                 the_listbox.itemconfig('end', bg="#FF9999")
-        return
-
-    def ranges_reset_to_started(self):
-        self.logic.ranges_reset_to_started()
-        self.fill_listbox_ranges()
         return
 
     def range_restore_default(self, use_key=None):
