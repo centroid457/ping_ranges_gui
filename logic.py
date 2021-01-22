@@ -28,7 +28,9 @@ class Logic:
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True,
                  start_scan=False, start_scan_loop=False):
 
-        self.func_fill_found_ip = lambda: None
+        self.func_fill_listbox_adapters = lambda: None
+        self.func_fill_listbox_ranges = lambda: None
+        self.func_fill_listbox_found_ip = lambda: None
 
         self.hostname = platform.node()
 
@@ -130,6 +132,7 @@ class Logic:
                 self._dict_safely_update(self.adapter_ip_dict[ip], "mac", mac)
                 self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
 
+        self.func_fill_listbox_adapters()
         print(self.adapter_dict)
         print(self.adapter_net_dict)
         print(self.adapter_ip_dict)
@@ -165,7 +168,7 @@ class Logic:
         self.count_ip_found = 0
         self.time_cycle = 0
 
-        self.func_fill_found_ip()
+        self.func_fill_listbox_found_ip()
         return
 
     # ###########################################################
@@ -196,10 +199,13 @@ class Logic:
             self.scan_loop()
         elif start_scan:
             self.scan_onсe()
+
+        self.func_fill_listbox_ranges()
         return self.ip_ranges_active_dict
 
     def ranges_reset_to_started(self):
         self.ip_ranges_active_dict = copy.deepcopy(self.ip_ranges_started_dict)
+        self.func_fill_listbox_ranges()
         return
 
     # ###########################################################
@@ -371,7 +377,7 @@ class Logic:
             self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
 
             self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
-            self.func_fill_found_ip()
+            self.func_fill_listbox_found_ip()
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
