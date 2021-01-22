@@ -170,6 +170,8 @@ class Logic:
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
     def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
+
+        # do not use WAS_LOST! it is useless!
         self.ip_ranges_active_dict = {}        # ={RANGE_TUPLE: {active:, info:,    start:, end:,}}
 
         # use adapters nets
