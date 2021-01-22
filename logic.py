@@ -266,6 +266,17 @@ class Logic:
         print("ip_found_list", self.ip_found_list)
         return
 
+    def scan_loop_thread(self):
+        thread_name_scan_loop = "scan_loop"
+
+        # start only one thread
+        for thread in threading.enumerate():
+            if thread.name.startswith(thread_name_scan_loop):
+                return
+
+        threading.Thread(target=self.scan_loop, daemon=False, name=thread_name_scan_loop).start()
+        return
+
     def scan_loop(self):
         self.flag_scan_stop = False
         while not self.flag_scan_stop:
