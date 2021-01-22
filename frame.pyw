@@ -197,10 +197,10 @@ class Gui(Frame):
                                  )
             if active_mark == "+":
                 the_listbox.itemconfig('end', bg="#55FF55")
-            elif active_mark == "-" and was_lost == True:
+            elif active_mark == "-" and was_lost:
                 the_listbox.itemconfig('end', bg="#FF9999")
 
-            if was_lost == True:
+            if was_lost:
                 the_listbox.itemconfig('end', fg="#FF0000")
         return
 
@@ -393,26 +393,24 @@ class Gui(Frame):
         self._listbox_clear(the_listbox)
 
         the_dict = self.logic.ip_found_dict
-        for adapter in the_dict:
-            active_mark = "+" if the_dict[adapter].get("active", False) else "-"
-            was_lost = the_dict[adapter].get("was_lost", False)
-            was_lost_mark = "lost" if was_lost else ""
-            the_listbox.insert('end',
-                                 active_mark.ljust(2, " ") +
-                                 was_lost_mark.ljust(5, " ") +
-                                 the_dict[adapter].get("mac", "").ljust(24, " ") +
-                                 the_dict[adapter].get("ip", "").ljust(16, " ") +
-                                 the_dict[adapter].get("mask", "").ljust(16, " ") +
-                                 the_dict[adapter].get("gateway", "").ljust(16, " ") +
-                                 adapter
-                                 )
-            if active_mark == "+":
-                the_listbox.itemconfig('end', bg="#55FF55")
-            elif active_mark == "-" and was_lost == True:
-                the_listbox.itemconfig('end', bg="#FF9999")
+        for ip in the_dict:
+            for mac in ip:
+                active_mark = "+" if the_dict[ip][mac].get("active", False) else "-"
+                was_lost = the_dict[ip][mac].get("was_lost", False)
+                was_lost_mark = "lost" if was_lost else ""
+                the_listbox.insert('end',
+                                     active_mark.ljust(2, " ") +
+                                     was_lost_mark.ljust(5, " ") +
+                                     str(ip).ljust(16, " ") +
+                                     str(mac).ljust(30, " ")
+                                     )
+                if active_mark == "+":
+                    the_listbox.itemconfig('end', bg="#55FF55")
+                elif active_mark == "-":
+                    the_listbox.itemconfig('end', bg="#FF9999")
 
-            if was_lost == True:
-                the_listbox.itemconfig('end', fg="#FF0000")
+                if was_lost:
+                    the_listbox.itemconfig('end', fg="#FF0000")
         return
 
     def found_ip_reset(self):
