@@ -230,7 +230,17 @@ class Logic:
                 # self.limit_ping_thread = 5
                 sp_sensor.kill()
             self.adapter_gateway_time_response_list.append(time_response)
+        return
 
+    def scan_onсe_thread(self):
+        thread_name_scan_once = "scan_once"
+
+        # start only one thread
+        for thread in threading.enumerate():
+            if thread.name.startswith(thread_name_scan_once):
+                return
+
+        threading.Thread(target=self.scan_onсe, daemon=False, name=thread_name_scan_once).start()
         return
 
     def scan_onсe(self):
@@ -286,12 +296,14 @@ class Logic:
 
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip_start_thread(self, ip):
+        thread_name_ping = "ping"
+
         if ip in self.adapter_ip_margin_list:
             return
         while threading.active_count() > self.limit_ping_thread:
             # print(threading.active_count())
             time.sleep(0.01)    # USE=0.01
-        threading.Thread(target=self.ping_ip, args=(ip,), daemon=False, name="ping").start()
+        threading.Thread(target=self.ping_ip, args=(ip,), daemon=False, name=thread_name_ping).start()
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address)
