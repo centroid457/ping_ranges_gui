@@ -405,7 +405,7 @@ class Gui(Frame):
                                      was_lost_mark.ljust(5, " ") +
                                      str(ip).ljust(16, " ") +
                                      f"[{str(mac)}]".ljust(20, " ") +
-                                     the_dict[ip][mac].get("host", "").ljust(15, " "))
+                                     the_dict[ip][mac].get("hostname", "").ljust(15, " "))
 
                 if active_mark == "+":
                     the_listbox.itemconfig('end', bg="#55FF55")
