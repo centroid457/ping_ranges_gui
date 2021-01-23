@@ -245,7 +245,7 @@ class Gui(Frame):
 
         lable = Label(frame_header)
         lable["text"] = f"RANGES settings:\n" \
-                        "[active-KEY_tuple-info-startActive-endActive]"
+                        "[use-active(adapter)-KEYtuple-info-ipStart-ipFinish]"
         lable.pack()
 
         # BODY --------------------------------------------------------------
@@ -366,7 +366,8 @@ class Gui(Frame):
         btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
-        lable["text"] = "FOUND IP"
+        lable["text"] = "FOUND IP\n" \
+                        "[active-wasLost-ip-mac-hostname-vendorDev-osVer]"
         lable.pack()
 
         # BODY --------------------------------------------------------------
@@ -413,7 +414,7 @@ class Gui(Frame):
                                          active_mark.ljust(2, " ") +
                                          was_lost_mark.ljust(5, " ") +
                                          str(ip).ljust(16, " ") +
-                                         f"[{str(mac)}]".ljust(20, " ") +
+                                         str(mac).ljust(20, " ") +
                                          hostname.ljust(15, " ") +
                                          vendor.ljust(20, " ") +
                                          os
