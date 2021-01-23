@@ -27,20 +27,17 @@ class Gui(Frame):
 
         self.lock = threading.Lock()
 
-        self.logic_connect()
+        self.logic = logic.Logic(ip_ranges_use_adapters=True)
         self.create_gui_structure()
         # implement fill listbox funcs
         self.logic.func_fill_listbox_adapters = self.fill_listbox_adapters
         self.logic.func_fill_listbox_ranges = self.fill_listbox_ranges
         self.logic.func_fill_listbox_found_ip = self.fill_listbox_found_ip
-        # start initial scan once
-        #self.logic.scan_onсe_thread()
+        # start initial scan_once
+        self.logic.scan_onсe_thread()
 
         self.gui_root_configure()
         self.window_move_to_center()
-
-    def logic_connect(self):
-        self.logic = logic.Logic(ip_ranges_use_adapters=True)
 
     def gui_root_configure(self):
         if self.root != self.parent:      # if it is independent window (without insertion in outside project)
@@ -106,24 +103,28 @@ class Gui(Frame):
         PAD_EXTERNAL = 3
 
         self.parent.columnconfigure(0, weight=1)
-        self.parent.rowconfigure([0, 1, ], weight=0)
+        self.parent.rowconfigure([0, 1, 3, ], weight=0)
         self.parent.rowconfigure([2, ], weight=1)
 
         # ======= FRAME-0 (ADAPTERS) ======================
         self.frame_adapters = Frame(self.parent)
-        self.frame_adapters.grid(row=0, sticky="nsew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
+        self.frame_adapters.grid(row=0, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
         self.fill_frame_adapters(self.frame_adapters)
 
         # ======= FRAME-1 (RANGES) ====================
         self.frame_ranges = Frame(self.parent)
-        self.frame_ranges.grid(row=1, sticky="nsew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
+        self.frame_ranges.grid(row=1, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
         self.fill_frame_ranges(self.frame_ranges)
 
         # ======= FRAME-2 (FOUND) ====================
         self.frame_found_ip = Frame(self.parent)
         self.frame_found_ip.grid(row=2, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-
         self.fill_frame_found_ip(self.frame_found_ip)
+
+        # ======= FRAME-3 (MAIN STATUS) ====================
+        self.frame_main_status = Frame(self.parent, relief="groove", borderwidth=4)
+        self.frame_main_status.grid(row=3, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
+        self.fill_frame_main_status(self.frame_main_status)
         return
 
     def color_bg_mainframe(self):
@@ -150,11 +151,11 @@ class Gui(Frame):
         btn["command"] = self.adapters_refresh
         btn.pack(side="left", fill="y")
 
-        lable = Label(frame_header)
-        lable["text"] = f"Found ADAPTERS " \
+        lbl = Label(frame_header)
+        lbl["text"] = f"Found ADAPTERS " \
                         f"on [{self.logic.hostname}]-hostname:\n" \
                         "[active-was_lost-mac-ip-mask-gateway-KEYname]"
-        lable.pack()
+        lbl.pack()
 
         # BODY --------------------------------------------------------------
         self.listbox_adapters = Listbox(parent, height=7, bg=None, font=('Courier', 9))
@@ -243,10 +244,10 @@ class Gui(Frame):
         btn["command"] = self.logic.ranges_reset_to_started
         btn.pack(side="left", fill="y")
 
-        lable = Label(frame_header)
-        lable["text"] = f"RANGES settings:\n" \
+        lbl = Label(frame_header)
+        lbl["text"] = f"RANGES settings:\n" \
                         "[use-active(adapter)-KEYtuple-info-ipStart-ipFinish]"
-        lable.pack()
+        lbl.pack()
 
         # BODY --------------------------------------------------------------
         self.listbox_ranges = Listbox(parent, height=5, bg="#55FF55", font=('Courier', 9))
@@ -365,10 +366,10 @@ class Gui(Frame):
         btn["command"] =self.logic.scan_loop_thread
         btn.pack(side="left", fill="y")
 
-        lable = Label(frame_header)
-        lable["text"] = "FOUND IP:\n" \
+        lbl = Label(frame_header)
+        lbl["text"] = "FOUND IP:\n" \
                         "[active-wasLost-ip-mac-hostname-vendorDev-osVer]"
-        lable.pack()
+        lbl.pack()
 
         # BODY --------------------------------------------------------------
         self.listbox_found_ip = Listbox(parent, height=5, bg=None, font=('Courier', 9))
@@ -443,6 +444,18 @@ class Gui(Frame):
                     if mac in selected_item_text:
                         self.status_found_ip["text"] = f"{str(key)} [{mac}]"
                         return
+        return
+
+    # #################################################
+    # frame MAIN STATUS
+    def fill_frame_main_status(self, parent):
+        lbl = Label(parent)
+        lbl["text"] = "FOUND IP:"
+        lbl.pack(side="left", fill="y")
+        return
+
+    def refresh_fill_frame_main_status(self):
+        self.fill_frame_main_status(self.frame_main_status)
         return
 
     # #################################################
