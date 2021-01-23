@@ -1,9 +1,8 @@
 # print("file logic.py")
 
-# todo: try to use NMAP, at least for OS versions!
-
 import contracts
 import ipaddress
+import nmap
 import re
 import subprocess
 import threading
@@ -153,7 +152,7 @@ class Logic:
         self.flag_scan_stop = False
 
         # SETS/DICTS/LISTS
-        self.ip_found_dict = {}         # ={IP:{MAC:{host:,   active:, was_lost:, }}}
+        self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,   active:, was_lost:, }}}
         self.ip_found_list = []         # you can see found ips in found order if want!
         self.ip_last_scanned = None
         self.ip_last_answered = None
@@ -364,20 +363,27 @@ class Logic:
             self._dict_safely_update(self.ip_found_dict[ip], mac, {})
             self._mark_nonactive_mac(ip=ip, mac_except=mac)
 
-            # get IP+HOST
+            # get IP+HOSTNAME
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
             match = False
             for line in sp_ping.stdout.readlines():
                 match = re.search(mask, line)
                 # print(match, ip, line)
                 if match:
-                    host = match[1]
-                    self._dict_safely_update(self.ip_found_dict[ip][mac], "host", host)
+                    hostname = match[1]
+                    self._dict_safely_update(self.ip_found_dict[ip][mac], "hostname", hostname)
                     break
 
             if not match:
                 # some devises don't have hostname! and "ping -a" can't resolve it!
-                self._dict_safely_update(self.ip_found_dict[ip][mac], "host", "NoNameDevice")
+                self._dict_safely_update(self.ip_found_dict[ip][mac], "hostname", "NoNameDevice")
+
+            # NMAP=OS+VENDOR
+            nmap_dict = self._use_nmap(ip)
+            vendor = nmap_dict.get("vendor", None)
+            os = nmap_dict.get("os", None)
+            self._dict_safely_update(self.ip_found_dict[ip][mac], "vendor", vendor)
+            self._dict_safely_update(self.ip_found_dict[ip][mac], "os", os)
 
             # mark as active
             self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
@@ -412,6 +418,22 @@ class Logic:
                 self._dict_safely_update(self.ip_found_dict[ip][mac], "was_lost", True)  # clear only by clear found data!
         return
 
+    @contracts.contract(ip=ipaddress.IPv4Address, returns=dict)
+    def _use_nmap(self, ip):
+        try:
+            ip = str(ip)
+
+            nm = nmap.PortScanner()
+            nm.scan(ip, arguments='-O')
+
+            hostname = nm[ip].get("hostnames", None)[0]["name"]     # BLANK value "" at embedded
+            mac = nm[ip]["addresses"].get("mac", None)              # can't see KEY at localhost
+            vendor = nm[ip].get("vendor", None).get(mac, None)      # can't see KEY at localhost
+            os = nm[ip]["osmatch"][0]["name"]
+            return {"hostname": hostname, "mac": mac, "vendor": vendor, "os": os}
+        except:
+            return {"vendor": "install Nmap.EXE", "os": "install Nmap.EXE"}
+
     # ###########################################################
     # DICT managers
     @contracts.contract(the_dict=dict)
@@ -420,7 +442,7 @@ class Logic:
             if key in ["active", "was_lost"]:      # use direct insertion!
                 the_dict[key] = val
 
-            if val is not None and the_dict.get(key, None) == None: # use safe insertion!
+            if val not in [None, ""] and the_dict.get(key, None) == None:   # use safe insertion!
                 the_dict[key] = val
                 # print(dict)
 
