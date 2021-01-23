@@ -30,9 +30,9 @@ class Gui(Frame):
         self.logic = logic.Logic(ip_ranges_use_adapters=True)
         self.create_gui_structure()
         # implement fill listbox funcs
-        self.logic.func_fill_listbox_adapters = self.fill_listbox_adapters
-        self.logic.func_fill_listbox_ranges = self.fill_listbox_ranges
-        self.logic.func_fill_listbox_ip_found = self.fill_listbox_ip_found
+        self.logic.func_adapters_fill_listbox = self.adapters_fill_listbox
+        self.logic.func_ranges_fill_listbox = self.ranges_fill_listbox
+        self.logic.func_ip_found_fill_listbox = self.ip_found_fill_listbox
         # start initial scan_once
         self.logic.scan_onсe_thread()
 
@@ -109,22 +109,22 @@ class Gui(Frame):
         # ======= FRAME-0 (ADAPTERS) ======================
         self.frame_adapters = Frame(self.parent)
         self.frame_adapters.grid(row=0, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-        self.fill_frame_adapters(self.frame_adapters)
+        self.adapters_fill_frame(self.frame_adapters)
 
         # ======= FRAME-1 (RANGES) ====================
         self.frame_ranges = Frame(self.parent)
         self.frame_ranges.grid(row=1, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-        self.fill_frame_ranges(self.frame_ranges)
+        self.ranges_fill_frame(self.frame_ranges)
 
         # ======= FRAME-2 (FOUND) ====================
         self.frame_ip_found = Frame(self.parent)
         self.frame_ip_found.grid(row=2, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-        self.fill_frame_ip_found(self.frame_ip_found)
+        self.ip_found_fill_frame(self.frame_ip_found)
 
         # ======= FRAME-3 (MAIN STATUS) ====================
         self.frame_main_status = Frame(self.parent, relief="groove", borderwidth=4)
         self.frame_main_status.grid(row=3, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-        self.fill_frame_main_status(self.frame_main_status)
+        self.main_status_fill_frame(self.frame_main_status)
         return
 
     def color_bg_mainframe(self):
@@ -132,7 +132,7 @@ class Gui(Frame):
 
     # #################################################
     # frame ADAPTERS
-    def fill_frame_adapters(self, parent):
+    def adapters_fill_frame(self, parent):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
         parent.grid_rowconfigure([2], weight=1)     # BODY
@@ -178,12 +178,12 @@ class Gui(Frame):
 
         self.status_adapters = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
         self.status_adapters.pack(side="left")
-        self.listbox_adapters.bind("<<ListboxSelect>>", self.change_status_adapters)
+        self.listbox_adapters.bind("<<ListboxSelect>>", self.adapters_change_status)
 
-        self.fill_listbox_adapters()
+        self.adapters_fill_listbox()
         return
 
-    def fill_listbox_adapters(self):
+    def adapters_fill_listbox(self):
         the_listbox = self.listbox_adapters
         self._listbox_clear(the_listbox)
 
@@ -212,13 +212,13 @@ class Gui(Frame):
 
     def adapters_reset(self):
         self.logic.clear_adapters()
-        self.fill_listbox_adapters()
+        self.adapters_fill_listbox()
 
     def adapters_refresh(self):
         self.logic.adapters_detect()
-        self.fill_listbox_adapters()
+        self.adapters_fill_listbox()
 
-    def change_status_adapters(self, event):
+    def adapters_change_status(self, event):
         if self.listbox_adapters.curselection() != ():
             selected_list = self.listbox_adapters.curselection()
             selected_item_text = self.listbox_adapters.get(selected_list)
@@ -230,7 +230,7 @@ class Gui(Frame):
 
     # #################################################
     # frame RANGES
-    def fill_frame_ranges(self, parent):
+    def ranges_fill_frame(self, parent):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
         parent.grid_rowconfigure([2], weight=1)     # BODY
@@ -274,12 +274,12 @@ class Gui(Frame):
 
         self.status_ranges = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
         self.status_ranges.pack(side="left")
-        self.listbox_ranges.bind("<<ListboxSelect>>", self.change_status_ranges)
+        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
 
-        self.fill_listbox_ranges()
+        self.ranges_fill_listbox()
         return
 
-    def fill_listbox_ranges(self):
+    def ranges_fill_listbox(self):
         the_listbox = self.listbox_ranges
         self._listbox_clear(the_listbox)
 
@@ -303,22 +303,22 @@ class Gui(Frame):
         return
 
     def range_restore_default(self, use_key=None):
-        key = self._get_selected_key_range() if use_key is None else use_key
+        key = self._range_get_selected_key() if use_key is None else use_key
         if key is not None:
             self.logic.ip_ranges_active_dict[key]["ip_start"] = key[0]
             self.logic.ip_ranges_active_dict[key]["ip_finish"] = key[-1]
             self.logic.ip_ranges_active_dict[key]["use"] = True
-            self.fill_listbox_ranges()
+            self.ranges_fill_listbox()
         return
 
     def range_switch_activity(self):
-        key = self._get_selected_key_range()
+        key = self._range_get_selected_key()
         if key is not None:
             self.logic.ip_ranges_active_dict[key]["use"] = not self.logic.ip_ranges_active_dict[key].get("use", False)
-            self.fill_listbox_ranges()
+            self.ranges_fill_listbox()
         return
 
-    def change_status_ranges(self, event):
+    def ranges_change_status(self, event):
         if self.listbox_ranges.curselection() != ():
             selected_list = self.listbox_ranges.curselection()
             selected_item_text = self.listbox_ranges.get(selected_list)
@@ -328,7 +328,7 @@ class Gui(Frame):
                     return
         return
 
-    def _get_selected_key_range(self):
+    def _range_get_selected_key(self):
         range_selected_text = self.status_ranges["text"]
         for key in self.logic.ip_ranges_active_dict:
             if str(key) == range_selected_text:
@@ -337,7 +337,7 @@ class Gui(Frame):
 
     # #################################################
     # frame FOUND IP
-    def fill_frame_ip_found(self, parent):
+    def ip_found_fill_frame(self, parent):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
         parent.grid_rowconfigure([2], weight=1)     # BODY
@@ -391,12 +391,12 @@ class Gui(Frame):
 
         self.status_ip_found = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
         self.status_ip_found.pack(side="left")
-        self.listbox_ip_found.bind("<<ListboxSelect>>", self.change_status_ip_found)
+        self.listbox_ip_found.bind("<<ListboxSelect>>", self.ip_found_change_status)
 
-        self.fill_listbox_ip_found()
+        self.ip_found_fill_listbox()
         return
 
-    def fill_listbox_ip_found(self):
+    def ip_found_fill_listbox(self):
         with self.lock:
             the_listbox = self.listbox_ip_found
             self._listbox_clear(the_listbox)
@@ -431,10 +431,10 @@ class Gui(Frame):
 
     def ip_found_reset(self):
         self.logic.clear_data()
-        self.fill_listbox_ip_found()
+        self.ip_found_fill_listbox()
         return
 
-    def change_status_ip_found(self, event):
+    def ip_found_change_status(self, event):
         if self.listbox_ip_found.curselection() != ():
             selected_list = self.listbox_ip_found.curselection()
             selected_item_text = self.listbox_ip_found.get(selected_list)
@@ -447,7 +447,7 @@ class Gui(Frame):
 
     # #################################################
     # frame MAIN STATUS
-    def fill_frame_main_status(self, parent):
+    def main_status_fill_frame(self, parent):
         self.main_status_lbl_dict = {}      # collect all itself lables
 
         the_dict = self.logic.get_main_status_dict()
@@ -459,10 +459,10 @@ class Gui(Frame):
 
             self.main_status_lbl_dict.update({key: lbl})
 
-        threading.Thread(target=self.refresh_fill_frame_main_status, daemon=True).start()
+        threading.Thread(target=self.main_status_fill_frame_refresh, daemon=True).start()
         return
 
-    def refresh_fill_frame_main_status(self):
+    def main_status_fill_frame_refresh(self):
         while True:
             the_dict = self.logic.get_main_status_dict()
             for key, lbl_obj in self.main_status_lbl_dict.items():
