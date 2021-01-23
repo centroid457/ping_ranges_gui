@@ -3,6 +3,7 @@
 import re
 import time
 # import logic       # SEE THE END OF FILE
+import threading
 from tkinter import Tk, Frame, Button, Label, BOTH, Listbox, Scrollbar, filedialog, messagebox, font
 from tkinter import ttk
 
@@ -23,6 +24,8 @@ class Gui(Frame):
         super().__init__()
         self.root = self.winfo_toplevel()
         self.parent = parent
+
+        self.lock = threading.Lock()
 
         self.logic_connect()
         self.create_gui_structure()
@@ -391,29 +394,36 @@ class Gui(Frame):
         return
 
     def fill_listbox_found_ip(self):
-        the_listbox = self.listbox_found_ip
-        self._listbox_clear(the_listbox)
+        with self.lock:
+            the_listbox = self.listbox_found_ip
+            self._listbox_clear(the_listbox)
 
-        the_dict = self.logic.ip_found_dict
-        for ip in the_dict:
-            for mac in the_dict[ip]:
-                active_mark = "+" if the_dict[ip][mac].get("active", False) else "-"
-                was_lost = the_dict[ip][mac].get("was_lost", False)
-                was_lost_mark = "lost" if was_lost else ""
-                the_listbox.insert('end',
-                                     active_mark.ljust(2, " ") +
-                                     was_lost_mark.ljust(5, " ") +
-                                     str(ip).ljust(16, " ") +
-                                     f"[{str(mac)}]".ljust(20, " ") +
-                                     the_dict[ip][mac].get("hostname", "").ljust(15, " "))
+            the_dict = self.logic.ip_found_dict
+            for ip in the_dict:
+                for mac in the_dict[ip]:
+                    active_mark = "+" if the_dict[ip][mac].get("active", False) else "-"
+                    was_lost = the_dict[ip][mac].get("was_lost", False)
+                    was_lost_mark = "lost" if was_lost else ""
+                    hostname = the_dict[ip][mac].get("hostname", "")
+                    vendor = the_dict[ip][mac].get("vendor", "")
+                    os = the_dict[ip][mac].get("os", "")
+                    the_listbox.insert('end',
+                                         active_mark.ljust(2, " ") +
+                                         was_lost_mark.ljust(5, " ") +
+                                         str(ip).ljust(16, " ") +
+                                         f"[{str(mac)}]".ljust(20, " ") +
+                                         hostname.ljust(15, " ") +
+                                         vendor.ljust(20, " ") +
+                                         os
+                                       )
 
-                if active_mark == "+":
-                    the_listbox.itemconfig('end', bg="#55FF55")
-                elif active_mark == "-":
-                    the_listbox.itemconfig('end', bg="#FF9999")
+                    if active_mark == "+":
+                        the_listbox.itemconfig('end', bg="#55FF55")
+                    elif active_mark == "-":
+                        the_listbox.itemconfig('end', bg="#FF9999")
 
-                if was_lost:
-                    the_listbox.itemconfig('end', fg="#FF0000")
+                    if was_lost:
+                        the_listbox.itemconfig('end', fg="#FF0000")
         return
 
     def found_ip_reset(self):
