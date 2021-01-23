@@ -148,15 +148,15 @@ class Logic:
 
         # SETS/DICTS/LISTS
         self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,   active:, was_lost:, }}}
-        self.ip_found_list = []         # you can see found ips in found order if want!
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
         # self.ip_ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in ranges_apply
 
         # COUNTERS
+        self.count_scan_cycles = 0
         self.count_ip_scanned = 0
-        self.count_ip_found = 0
+        self.count_ip_found_additions = 0
         self.time_last_cycle = 0
 
         self.func_ip_found_fill_listbox()
@@ -167,15 +167,19 @@ class Logic:
             "limit_ping_timewait_ms": self.limit_ping_timewait_ms,
             "limit_ping_thread": self.limit_ping_thread,
 
+            "count_scan_cycles": self.count_scan_cycles,
+            "threads_active_count": threading.active_count(),
+            "time_last_cycle": self.time_last_cycle,
+
             "flag_scan_manual_stop": self.flag_scan_manual_stop,
             "flag_scan_is_finished": self.flag_scan_is_finished,
-            "time_last_cycle": self.time_last_cycle,
 
             "ip_last_scanned": self.ip_last_scanned,
             "ip_last_answered": self.ip_last_answered,
 
             "count_ip_scanned": self.count_ip_scanned,
-            "count_ip_found": self.count_ip_found,
+            "count_ip_found_additions": self.count_ip_found_additions,
+            "count_ip_found_real": sum([len(self.ip_found_dict[keys]) for keys in self.ip_found_dict])
         }
         return the_dict
 
@@ -274,6 +278,7 @@ class Logic:
         return
 
     def scan_onсe(self):
+        self.count_scan_cycles += 1
         time_start = time.time()
         self.rescan_found()
 
@@ -297,7 +302,6 @@ class Logic:
         print("*"*80)
         print("time_last_cycle", self.time_last_cycle)
         print("ip_found_dict", self.ip_found_dict)
-        print("ip_found_list", self.ip_found_list)
         return
 
     def scan_loop_thread(self):
@@ -465,13 +469,11 @@ class Logic:
             if key in ["active", "was_lost"]:      # use direct insertion!
                 the_dict[key] = val
 
-            if val not in [None, ""] and the_dict.get(key, None) == None:   # use safe insertion!
+            elif val not in [None, ""] and the_dict.get(key, None) is None:   # use safe insertion!
                 the_dict[key] = val
-                # print(dict)
 
                 if the_dict is self.ip_found_dict:      # increase counter for found ip
-                    self.ip_found_list.append(key)
-                    self.count_ip_found += 1
+                    self.count_ip_found_additions += 1
 
     @contracts.contract(the_dict=dict)
     def _sort_dict_by_keys(self, the_dict):
