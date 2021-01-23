@@ -20,8 +20,8 @@ ip_tuples_list_default = [
 
 
 class Logic:
-    @contracts.contract(ip_tuples_list="None|(list(tuple))", ip_ranges_use_adapters=bool)
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True):
+    @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters=bool)
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters=True):
 
         # initiate None funcs for gui collaboration
         self.func_adapters_fill_listbox = lambda: None
@@ -34,10 +34,10 @@ class Logic:
         self.clear_adapters()
 
         # input
-        self.ip_ranges_use_adapters = ip_ranges_use_adapters
-        self.ip_ranges_input_list = ip_tuples_list
-        self.ip_ranges_input_default_list = copy.deepcopy(self.ip_ranges_input_list)
-        self.ranges_apply(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters)
+        self.ranges_use_adapters = ranges_use_adapters
+        self.ranges_input_list = ip_tuples_list
+        self.ranges_input_default_list = copy.deepcopy(self.ranges_input_list)
+        self.ranges_apply(ip_tuples_list, ranges_use_adapters=ranges_use_adapters)
         return
 
     # ###########################################################
@@ -151,7 +151,7 @@ class Logic:
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
-        # self.ip_ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in ranges_apply
+        # self.ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in ranges_apply
 
         # COUNTERS
         self.count_scan_cycles = 0
@@ -185,46 +185,46 @@ class Logic:
 
     # ###########################################################
     # RANGES
-    @contracts.contract(ip_ranges="None|(list(tuple))", ip_ranges_use_adapters=bool)
-    def ranges_apply(self, ip_ranges=None, ip_ranges_use_adapters=True):
-        self.ip_ranges_use_adapters = ip_ranges_use_adapters
+    @contracts.contract(ranges="None|(list(tuple))", ranges_use_adapters=bool)
+    def ranges_apply(self, ranges=None, ranges_use_adapters=True):
+        self.ranges_use_adapters = ranges_use_adapters
 
         # do not use WAS_LOST! it is useless!
-        self.ip_ranges_active_dict = {}    # ={RANGE_TUPLE: {use:, active:, info:,   ip_start:, ip_finish:,}}
+        self.ranges_active_dict = {}    # ={RANGE_TUPLE: {use:, active:, info:,   ip_start:, ip_finish:,}}
 
         # use adapters nets
         for net in self.adapter_net_dict:
-            self.ip_ranges_active_dict.update({(str(net[0]), str(net[-1])): {
+            self.ranges_active_dict.update({(str(net[0]), str(net[-1])): {
                     "info": f"[Adapter:{str(net)}]",
-                    "use": True if ip_ranges_use_adapters else False,
+                    "use": True if ranges_use_adapters else False,
                     "active": True if self.adapter_net_dict[net].get("active", True) else False,
                     "ip_start": str(net[0]),
                     "ip_finish": str(net[-1])}})
 
         # use input nets
-        if ip_ranges is not None:
-            self.ip_ranges_input_list = ip_ranges
+        if ranges is not None:
+            self.ranges_input_list = ranges
 
-        for my_range in self.ip_ranges_input_list:
-            self.ip_ranges_active_dict.update({my_range: {"info": "Input",
+        for my_range in self.ranges_input_list:
+            self.ranges_active_dict.update({my_range: {"info": "Input",
                                                           "use": True,
                                                           "active": True,
                                                           "ip_start": str(my_range[0]),
                                                           "ip_finish": str(my_range[-1])}})
 
         self.func_ranges_fill_listbox()
-        # print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
+        # print("APPLY ranges=ranges_active_dict=======", self.ranges_active_dict)
         return
 
     def ranges_check_adapters(self):
         # it will update existed or fill not existed (if was found changes in adapters!)
         self.adapters_detect()
         for net in self.adapter_net_dict:
-            self._dict_safely_update(self.ip_ranges_active_dict, (str(net[0]), str(net[-1])), {})
+            self._dict_safely_update(self.ranges_active_dict, (str(net[0]), str(net[-1])), {})
 
-            the_dict = self.ip_ranges_active_dict[(str(net[0]), str(net[-1]))]
+            the_dict = self.ranges_active_dict[(str(net[0]), str(net[-1]))]
             self._dict_safely_update(the_dict, "info", f"[AdapterNet:{str(net)}]")
-            self._dict_safely_update(the_dict, "use", True if self.ip_ranges_use_adapters and the_dict.get("use", True) else False)
+            self._dict_safely_update(the_dict, "use", True if self.ranges_use_adapters and the_dict.get("use", True) else False)
             self._dict_safely_update(the_dict, "active", True if self.adapter_net_dict[net].get("active", True) else False)
             self._dict_safely_update(the_dict, "ip_start", str(net[0]))
             self._dict_safely_update(the_dict, "ip_finish", str(net[-1]))
@@ -233,10 +233,15 @@ class Logic:
         return
 
     def ranges_reset_to_started(self):
-        self.ip_ranges_input_list = self.ip_ranges_input_default_list
+        self.ranges_input_list = self.ranges_input_default_list
         self.adapters_detect()
         self.ranges_apply()
         return
+
+    def ranges_all_control(self, disable=False, enable=False):
+        if disable:
+            for net in self.ranges_active_dict:
+                return
 
     # ###########################################################
     # SCAN
@@ -287,8 +292,8 @@ class Logic:
 
         self.ranges_check_adapters()
 
-        for ip_range in self.ip_ranges_active_dict:
-            if self.ip_ranges_active_dict[ip_range]["use"] and self.ip_ranges_active_dict[ip_range]["active"]:
+        for ip_range in self.ranges_active_dict:
+            if self.ranges_active_dict[ip_range]["use"] and self.ranges_active_dict[ip_range]["active"]:
                 self.ping_ip_range(ip_range)
 
         # WAIT ALL PING THREADS FINISHED
@@ -332,8 +337,8 @@ class Logic:
     # PING
     @contracts.contract(ip_range=tuple)
     def ping_ip_range(self, ip_range):
-        ip_start = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["ip_start"])
-        ip_finish = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["ip_finish"])
+        ip_start = ipaddress.ip_address(self.ranges_active_dict[ip_range]["ip_start"])
+        ip_finish = ipaddress.ip_address(self.ranges_active_dict[ip_range]["ip_finish"])
         ip_current = ip_start
 
         while ip_current <= ip_finish and not self.flag_scan_manual_stop:

@@ -28,7 +28,7 @@ class Gui(Frame):
 
         self.lock = threading.Lock()
 
-        self.logic = logic.Logic(ip_ranges_use_adapters=True)
+        self.logic = logic.Logic(ranges_use_adapters=True)
         self.create_gui_structure()
         # implement fill listbox funcs
         self.logic.func_adapters_fill_listbox = self.adapters_fill_listbox
@@ -285,7 +285,7 @@ class Gui(Frame):
         the_listbox = self.listbox_ranges
         self._listbox_clear(the_listbox)
 
-        the_dict = self.logic.ip_ranges_active_dict
+        the_dict = self.logic.ranges_active_dict
         for the_range in the_dict:
             use_mark = "+" if the_dict[the_range].get("use", False) else "-"
             active_mark = "+" if the_dict[the_range].get("active", False) else "-"
@@ -305,23 +305,23 @@ class Gui(Frame):
         return
 
     def range_restore_default(self, use_key=None):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)[0] if use_key is None else use_key
+        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ranges_active_dict)[0] if use_key is None else use_key
         if key is not None:
-            self.logic.ip_ranges_active_dict[key]["ip_start"] = key[0]
-            self.logic.ip_ranges_active_dict[key]["ip_finish"] = key[-1]
-            self.logic.ip_ranges_active_dict[key]["use"] = True
+            self.logic.ranges_active_dict[key]["ip_start"] = key[0]
+            self.logic.ranges_active_dict[key]["ip_finish"] = key[-1]
+            self.logic.ranges_active_dict[key]["use"] = True
             self.ranges_fill_listbox()
         return
 
     def range_switch_activity(self):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)[0]
+        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ranges_active_dict)[0]
         if None not in (key, ):
-            self.logic.ip_ranges_active_dict[key]["use"] = not self.logic.ip_ranges_active_dict[key].get("use", False)
+            self.logic.ranges_active_dict[key]["use"] = not self.logic.ranges_active_dict[key].get("use", False)
             self.ranges_fill_listbox()
         return
 
     def ranges_change_status(self, event):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)[0]
+        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ranges_active_dict)[0]
         if None not in (key, ):
             self.status_ranges["text"] = str(key)
         return
