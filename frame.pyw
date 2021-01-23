@@ -1,5 +1,6 @@
 # print("file frame.pyw")
 
+import contracts
 import re
 import time
 # import logic       # SEE THE END OF FILE
@@ -434,8 +435,8 @@ class Gui(Frame):
         return
 
     def ip_found_delete_line(self):     # todo: finish!
-        key = self._listbox_get_selected_key(the_listbox=None, the_dict=None)
-        del self.logic.ip_found_dict[key]
+        key1, key2 = self._listbox_get_selected_key(the_listbox=self.listbox_ip_found, the_dict=self.logic.ip_found_dict, deep_key="mac")
+        del self.logic.ip_found_dict[key1][key2]
         self.ip_found_fill_listbox()
         return
 
@@ -467,14 +468,20 @@ class Gui(Frame):
 
     # #################################################
     # rest
-    def _listbox_get_selected_key(self, the_listbox, the_dict):
+    @contracts.contract(the_dict=dict, deep_key="None|str", returns="None|str|tuple")
+    def _listbox_get_selected_key(self, the_listbox, the_dict, deep_key=None):
         if the_listbox.curselection() != ():
             selected_list = the_listbox.curselection()
             selected_item_text = the_listbox.get(selected_list)
 
-            for key in the_dict:
-                if str(key) in selected_item_text:
-                    return key
+            for key1 in the_dict:
+                if str(key1) in selected_item_text:
+                    if deep_key is None:
+                        return key1
+                    else:
+                        for key2 in the_dict[key1]:
+                            if str(key2) in selected_item_text:
+                                return (key1, key2)
         return None
 
     def _listbox_clear(self, listbox):
