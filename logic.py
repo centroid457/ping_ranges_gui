@@ -46,9 +46,10 @@ class Logic:
         self.adapter_dict = {}          # ={ADAPTER_NAME: {mac:, ip:, mask:, gateway:,    active:, was_lost:, }}
         self.adapter_net_dict = {}      # ={NET:{gateway:, active: }}
         self.adapter_ip_dict = {}       # ={IP:{mac:, mask:,    active:, was_lost:, }}
+        self.adapter_ip_margin_list = []     # zero and broadcast ips
+
         self.adapter_gateway_list = []  #
         self.adapter_gateway_time_response_list = []
-        self.adapter_ip_margin_list = []     # zero and broadcast ips
 
         self.adapters_detect()
 
@@ -143,7 +144,7 @@ class Logic:
 
         # FLAGS
         self.flag_scan_is_finished = False
-        self.flag_scan_stop = False
+        self.flag_scan_manual_stop = False
 
         # SETS/DICTS/LISTS
         self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,   active:, was_lost:, }}}
@@ -156,10 +157,27 @@ class Logic:
         # COUNTERS
         self.count_ip_scanned = 0
         self.count_ip_found = 0
-        self.time_cycle = 0
+        self.time_last_cycle = 0
 
         self.func_fill_listbox_found_ip()
         return
+
+    def get_main_status_dict(self):
+        the_dict = {
+            "limit_ping_timewait_ms": self.limit_ping_timewait_ms,
+            "limit_ping_thread": self.limit_ping_thread,
+
+            "flag_scan_manual_stop": self.flag_scan_manual_stop,
+            "flag_scan_is_finished": self.flag_scan_is_finished,
+            "time_last_cycle": self.time_last_cycle,
+
+            "ip_last_scanned": self.ip_last_scanned,
+            "ip_last_answered": self.ip_last_answered,
+
+            "count_ip_scanned": self.count_ip_scanned,
+            "count_ip_found": self.count_ip_found,
+        }
+        return the_dict
 
     # ###########################################################
     # RANGES
@@ -259,7 +277,7 @@ class Logic:
         time_start = time.time()
         self.rescan_found()
 
-        self.flag_scan_stop = False
+        self.flag_scan_manual_stop = False
         self.flag_scan_is_finished = False
 
         self.ranges_check_adapters()
@@ -274,10 +292,10 @@ class Logic:
                 thread.join()
 
         self.flag_scan_is_finished = True
-        self.time_cycle = round(time.time() - time_start, 3)
+        self.time_last_cycle = round(time.time() - time_start, 3)
 
         print("*"*80)
-        print("time_cycle", self.time_cycle)
+        print("time_last_cycle", self.time_last_cycle)
         print("ip_found_dict", self.ip_found_dict)
         print("ip_found_list", self.ip_found_list)
         return
@@ -294,13 +312,13 @@ class Logic:
         return
 
     def scan_loop(self):
-        self.flag_scan_stop = False
-        while not self.flag_scan_stop:
+        self.flag_scan_manual_stop = False
+        while not self.flag_scan_manual_stop:
             self.scan_onсe()
             time.sleep(1)
 
     def scan_stop(self):
-        self.flag_scan_stop = True
+        self.flag_scan_manual_stop = True
 
     def rescan_found(self):
         for ip in self.ip_found_dict:
@@ -314,7 +332,7 @@ class Logic:
         ip_finish = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["ip_finish"])
         ip_current = ip_start
 
-        while ip_current <= ip_finish and not self.flag_scan_stop:
+        while ip_current <= ip_finish and not self.flag_scan_manual_stop:
             self.ping_ip_start_thread(ip_current)
             ip_current = ip_current + 1
         return

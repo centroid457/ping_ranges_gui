@@ -449,13 +449,27 @@ class Gui(Frame):
     # #################################################
     # frame MAIN STATUS
     def fill_frame_main_status(self, parent):
-        lbl = Label(parent)
-        lbl["text"] = "FOUND IP:"
-        lbl.pack(side="left", fill="y")
+        self.main_status_lbl_dict = {}      # collect all itself lables
+
+        the_dict = self.logic.get_main_status_dict()
+        for key in the_dict:
+            lbl = Label(parent)
+            lbl["text"] = f"{key}=[{the_dict[key]}]"
+            #print(lbl)
+            lbl.pack()
+
+            self.main_status_lbl_dict.update({key: lbl})
+
+        threading.Thread(target=self.refresh_fill_frame_main_status, daemon=True).start()
         return
 
     def refresh_fill_frame_main_status(self):
-        self.fill_frame_main_status(self.frame_main_status)
+        while True:
+            the_dict = self.logic.get_main_status_dict()
+            for key, lbl_obj in self.main_status_lbl_dict.items():
+                # print(key, lbl, the_dict[key])
+                lbl_obj["text"] = f"{key}=[{str(the_dict[key])}]"
+            time.sleep(1)
         return
 
     # #################################################
