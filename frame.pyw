@@ -289,7 +289,7 @@ class Gui(Frame):
             the_listbox.insert('end',
                                 use_mark.ljust(1, " ") +
                                 active_mark.ljust(2, " ") +
-                                str(the_range).ljust(40, " ") +
+                                str(the_range).ljust(37, " ") +
                                 str(the_dict[the_range].get("info", "")).ljust(30, " ") +
                                 str(the_dict[the_range].get("start", "")).ljust(16, " ") +
                                 str(the_dict[the_range].get("end", "")).ljust(16, " ")
