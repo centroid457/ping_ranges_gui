@@ -246,6 +246,16 @@ class Gui(Frame):
         btn["command"] = self.logic.ranges_reset_to_started
         btn.pack(side="left", fill="y")
 
+        btn = Button(frame_header, text="DISABLE all")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = lambda: self.logic.ranges_all_control(disable=True)
+        btn.pack(side="left", fill="y")
+
+        btn = Button(frame_header, text="ENABLE all")
+        btn["bg"] = self.COLOR_BUTTONS
+        btn["command"] = lambda: self.logic.ranges_all_control(enable=True)
+        btn.pack(side="left", fill="y")
+
         lbl = Label(frame_header)
         lbl["text"] = f"RANGES settings:\n" \
                         "[use-active(adapter)-KEYtuple-info-ipStart-ipFinish]"

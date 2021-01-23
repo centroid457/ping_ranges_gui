@@ -241,6 +241,8 @@ class Logic:
     def ranges_all_control(self, disable=False, enable=False):
         for the_range in self.ranges_active_dict:
             self.ranges_active_dict[the_range]["use"] = False if disable else True if enable else None
+
+        self.func_ranges_fill_listbox()
         return
 
     # ###########################################################
