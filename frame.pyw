@@ -101,6 +101,7 @@ class Gui(Frame):
         self.color_bg_mainframe()
 
         self.COLOR_BUTTONS = "#aaaaFF"
+        self.TEXT_SELECT_ITEM = "...SELECT item..."
         PAD_EXTERNAL = 3
 
         self.parent.columnconfigure(0, weight=1)
@@ -177,7 +178,7 @@ class Gui(Frame):
         btn["state"] = "disabled"
         btn.pack(side="left")
 
-        self.status_adapters = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
+        self.status_adapters = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
         self.status_adapters.pack(side="left")
         self.listbox_adapters.bind("<<ListboxSelect>>", self.adapters_change_status)
 
@@ -273,7 +274,7 @@ class Gui(Frame):
         btn["command"] = self.range_switch_activity
         btn.pack(side="left")
 
-        self.status_ranges = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
+        self.status_ranges = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
         self.status_ranges.pack(side="left")
         self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
 
@@ -304,7 +305,7 @@ class Gui(Frame):
         return
 
     def range_restore_default(self, use_key=None):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict) if use_key is None else use_key
+        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)[0] if use_key is None else use_key
         if key is not None:
             self.logic.ip_ranges_active_dict[key]["ip_start"] = key[0]
             self.logic.ip_ranges_active_dict[key]["ip_finish"] = key[-1]
@@ -313,15 +314,16 @@ class Gui(Frame):
         return
 
     def range_switch_activity(self):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)
-        if key is not None:
+        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)[0]
+        if None not in (key, ):
             self.logic.ip_ranges_active_dict[key]["use"] = not self.logic.ip_ranges_active_dict[key].get("use", False)
             self.ranges_fill_listbox()
         return
 
     def ranges_change_status(self, event):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)
-        self.status_ranges["text"] = str(key)
+        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)[0]
+        if None not in (key, ):
+            self.status_ranges["text"] = str(key)
         return
 
     # #################################################
@@ -378,7 +380,7 @@ class Gui(Frame):
         btn["command"] = self.ip_found_delete_line
         btn.pack(side="left")
 
-        self.status_ip_found = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
+        self.status_ip_found = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
         self.status_ip_found.pack(side="left")
         self.listbox_ip_found.bind("<<ListboxSelect>>", self.ip_found_change_status)
 
@@ -419,14 +421,9 @@ class Gui(Frame):
         return
 
     def ip_found_change_status(self, event):
-        if self.listbox_ip_found.curselection() != ():
-            selected_list = self.listbox_ip_found.curselection()
-            selected_item_text = self.listbox_ip_found.get(selected_list)
-            for key in self.logic.ip_found_dict:
-                for mac in self.logic.ip_found_dict[key]:
-                    if mac in selected_item_text:
-                        self.status_ip_found["text"] = f"{str(key)} [{mac}]"
-                        return
+        key1, key2 = self._listbox_get_selected_key(the_listbox=self.listbox_ip_found, the_dict=self.logic.ip_found_dict, deep_key="mac")
+        if None not in (key1, key2):
+            self.status_ip_found["text"] = f"{str(key1)} [{key2}]"
         return
 
     def ip_found_reset(self):
@@ -434,10 +431,12 @@ class Gui(Frame):
         self.ip_found_fill_listbox()
         return
 
-    def ip_found_delete_line(self):     # todo: finish!
+    def ip_found_delete_line(self):
         key1, key2 = self._listbox_get_selected_key(the_listbox=self.listbox_ip_found, the_dict=self.logic.ip_found_dict, deep_key="mac")
-        del self.logic.ip_found_dict[key1][key2]
-        self.ip_found_fill_listbox()
+        if None not in (key1, key2):
+            del self.logic.ip_found_dict[key1][key2]
+            self.ip_found_fill_listbox()
+            self.status_ip_found["text"] = self.TEXT_SELECT_ITEM
         return
 
     # #################################################
@@ -477,12 +476,12 @@ class Gui(Frame):
             for key1 in the_dict:
                 if str(key1) in selected_item_text:
                     if deep_key is None:
-                        return key1
+                        return (key1, None)
                     else:
                         for key2 in the_dict[key1]:
                             if str(key2) in selected_item_text:
                                 return (key1, key2)
-        return None
+        return (None, None)
 
     def _listbox_clear(self, listbox):
         listbox.delete(0, listbox.size()-1)
