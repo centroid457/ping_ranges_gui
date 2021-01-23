@@ -145,9 +145,9 @@ class Gui(Frame):
         btn["command"] = self.adapters_reset
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="RESCAN")
+        btn = Button(frame_header, text="REFRESH")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.adapters_rescan
+        btn["command"] = self.adapters_refresh
         btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
@@ -213,7 +213,7 @@ class Gui(Frame):
         self.logic.clear_adapters()
         self.fill_listbox_adapters()
 
-    def adapters_rescan(self):
+    def adapters_refresh(self):
         self.logic.adapters_detect()
         self.fill_listbox_adapters()
 
