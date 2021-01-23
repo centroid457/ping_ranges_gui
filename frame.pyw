@@ -295,10 +295,10 @@ class Gui(Frame):
                                 str(the_dict[the_range].get("end", "")).ljust(16, " ")
                                )
             # change visual
-            if use_mark == "+":
-                the_listbox.itemconfig('end', bg="#55FF55")
-            elif use_mark == "-" or active_mark == "-":
+            if use_mark == "-" or active_mark == "-":
                 the_listbox.itemconfig('end', bg="#FF9999")
+            else:
+                the_listbox.itemconfig('end', bg="#55FF55")
         return
 
     def range_restore_default(self, use_key=None):

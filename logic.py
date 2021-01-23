@@ -254,6 +254,7 @@ class Logic:
 
     def scan_onсe(self):
         time_start = time.time()
+        self.rescan_found()
 
         self.flag_scan_stop = False
         self.flag_scan_is_finished = False
@@ -292,7 +293,6 @@ class Logic:
     def scan_loop(self):
         self.flag_scan_stop = False
         while not self.flag_scan_stop:
-            self.rescan_found()
             self.scan_onсe()
             time.sleep(1)
 
