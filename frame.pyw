@@ -366,7 +366,7 @@ class Gui(Frame):
         btn.pack(side="left", fill="y")
 
         lable = Label(frame_header)
-        lable["text"] = "FOUND IP\n" \
+        lable["text"] = "FOUND IP:\n" \
                         "[active-wasLost-ip-mac-hostname-vendorDev-osVer]"
         lable.pack()
 
