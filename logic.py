@@ -1,5 +1,6 @@
 # print("file logic.py")
 
+import copy
 import contracts
 import ipaddress
 import nmap
@@ -35,6 +36,7 @@ class Logic:
         # input
         self.ip_ranges_use_adapters = ip_ranges_use_adapters
         self.ip_ranges_input_list = ip_tuples_list
+        self.ip_ranges_input_default_list = copy.deepcopy(self.ip_ranges_input_list)
         self.ranges_apply(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters)
         return
 
@@ -209,6 +211,7 @@ class Logic:
         return
 
     def ranges_reset_to_started(self):
+        self.ip_ranges_input_list = self.ip_ranges_input_default_list
         self.adapters_detect()
         self.ranges_apply()
         return
