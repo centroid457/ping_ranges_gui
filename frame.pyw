@@ -284,8 +284,10 @@ class Gui(Frame):
 
         the_dict = self.logic.ip_ranges_active_dict
         for the_range in the_dict:
+            use_mark = "+" if the_dict[the_range].get("use", False) else "-"
             active_mark = "+" if the_dict[the_range].get("active", False) else "-"
             the_listbox.insert('end',
+                                use_mark.ljust(1, " ") +
                                 active_mark.ljust(2, " ") +
                                 str(the_range).ljust(40, " ") +
                                 str(the_dict[the_range].get("info", "")).ljust(30, " ") +
@@ -293,9 +295,9 @@ class Gui(Frame):
                                 str(the_dict[the_range].get("end", "")).ljust(16, " ")
                                )
             # change visual
-            if active_mark == "+":
+            if use_mark == "+":
                 the_listbox.itemconfig('end', bg="#55FF55")
-            elif active_mark == "-":
+            elif use_mark == "-" or active_mark == "-":
                 the_listbox.itemconfig('end', bg="#FF9999")
         return
 
@@ -304,14 +306,14 @@ class Gui(Frame):
         if key is not None:
             self.logic.ip_ranges_active_dict[key]["start"] = key[0]
             self.logic.ip_ranges_active_dict[key]["end"] = key[-1]
-            self.logic.ip_ranges_active_dict[key]["active"] = True
+            self.logic.ip_ranges_active_dict[key]["use"] = True
             self.fill_listbox_ranges()
         return
 
     def range_switch_activity(self):
         key = self._get_selected_key_range()
         if key is not None:
-            self.logic.ip_ranges_active_dict[key]["active"] = not self.logic.ip_ranges_active_dict[key].get("active", False)
+            self.logic.ip_ranges_active_dict[key]["use"] = not self.logic.ip_ranges_active_dict[key].get("use", False)
             self.fill_listbox_ranges()
         return
 

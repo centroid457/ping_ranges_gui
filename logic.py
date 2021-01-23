@@ -19,7 +19,7 @@ ip_tuples_list_default = [
 
 
 class Logic:
-    @contracts.contract(ip_tuples_list="None|(list(tuple))")
+    @contracts.contract(ip_tuples_list="None|(list(tuple))", ip_ranges_use_adapters=bool)
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True):
 
         # initiate None funcs for gui collaboration
@@ -32,9 +32,10 @@ class Logic:
         self.clear_data()
         self.clear_adapters()
 
-        # save first started ranges
+        # input
+        self.ip_ranges_use_adapters = ip_ranges_use_adapters
         self.ip_ranges_input_list = ip_tuples_list
-        self.apply_ranges(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters)
+        self.ranges_apply(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters)
         return
 
     # ###########################################################
@@ -148,7 +149,7 @@ class Logic:
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
-        # self.ip_ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in apply_ranges
+        # self.ip_ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in ranges_apply
 
         # COUNTERS
         self.count_ip_scanned = 0
@@ -160,11 +161,12 @@ class Logic:
 
     # ###########################################################
     # RANGES
-    @contracts.contract(ip_ranges="None|(list(tuple))")
-    def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True):
+    @contracts.contract(ip_ranges="None|(list(tuple))", ip_ranges_use_adapters=bool)
+    def ranges_apply(self, ip_ranges=None, ip_ranges_use_adapters=True):
+        self.ip_ranges_use_adapters = ip_ranges_use_adapters
 
         # do not use WAS_LOST! it is useless!
-        self.ip_ranges_active_dict = {}        # ={RANGE_TUPLE: {active:, info:,    start:, end:,}}
+        self.ip_ranges_active_dict = {}    # ={RANGE_TUPLE: {use:, active:, info:,   start:, end:,}}
 
         # use adapters nets
         for net in self.adapter_net_dict:
@@ -186,16 +188,29 @@ class Logic:
                                                           "start": str(my_range[0]),
                                                           "end": str(my_range[-1])}})
 
-        # self.clear_data()
-
         self.func_fill_listbox_ranges()
         # print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
         return
 
+    def ranges_check_adapters(self):
+        # it will update existed or fill not existed (if was found changes in adapters!)
+        self.adapters_detect()
+        for net in self.adapter_net_dict:
+            self._dict_safely_update(self.ip_ranges_active_dict, (str(net[0]), str(net[-1])), {})
+
+            the_dict = self.ip_ranges_active_dict[(str(net[0]), str(net[-1]))]
+            self._dict_safely_update(the_dict, "info", f"[AdapterNet:{str(net)}]")
+            self._dict_safely_update(the_dict, "use", True if self.ip_ranges_use_adapters and the_dict.get("use", True) else False)
+            self._dict_safely_update(the_dict, "active", True if self.adapter_net_dict[net].get("active", True) else False)
+            self._dict_safely_update(the_dict, "start", str(net[0]))
+            self._dict_safely_update(the_dict, "end", str(net[-1]))
+
+        self.func_fill_listbox_ranges()
+        return
+
     def ranges_reset_to_started(self):
         self.adapters_detect()
-        self.apply_ranges()
-        self.func_fill_listbox_ranges()
+        self.ranges_apply()
         return
 
     # ###########################################################
@@ -243,11 +258,10 @@ class Logic:
         self.flag_scan_stop = False
         self.flag_scan_is_finished = False
 
-        self.adapters_detect()
-        self.apply_ranges()
+        self.ranges_check_adapters()
 
         for ip_range in self.ip_ranges_active_dict:
-            if self.ip_ranges_active_dict[ip_range].get("active", False):
+            if self.ip_ranges_active_dict[ip_range]["use"] and self.ip_ranges_active_dict[ip_range]["active"]:
                 self.ping_ip_range(ip_range)
 
         # WAIT ALL PING THREADS FINISHED
