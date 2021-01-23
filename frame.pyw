@@ -157,7 +157,7 @@ class Gui(Frame):
         lable.pack()
 
         # BODY --------------------------------------------------------------
-        self.listbox_adapters = Listbox(parent, height=5, bg=None, font=('Courier', 9))
+        self.listbox_adapters = Listbox(parent, height=7, bg=None, font=('Courier', 9))
         self.listbox_adapters.grid(column=0, row=2, sticky="snew")
 
         self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_adapters.yview)
