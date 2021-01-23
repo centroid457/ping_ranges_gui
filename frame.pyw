@@ -32,7 +32,7 @@ class Gui(Frame):
         # implement fill listbox funcs
         self.logic.func_fill_listbox_adapters = self.fill_listbox_adapters
         self.logic.func_fill_listbox_ranges = self.fill_listbox_ranges
-        self.logic.func_fill_listbox_found_ip = self.fill_listbox_found_ip
+        self.logic.func_fill_listbox_ip_found = self.fill_listbox_ip_found
         # start initial scan_once
         self.logic.scan_onсe_thread()
 
@@ -117,9 +117,9 @@ class Gui(Frame):
         self.fill_frame_ranges(self.frame_ranges)
 
         # ======= FRAME-2 (FOUND) ====================
-        self.frame_found_ip = Frame(self.parent)
-        self.frame_found_ip.grid(row=2, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
-        self.fill_frame_found_ip(self.frame_found_ip)
+        self.frame_ip_found = Frame(self.parent)
+        self.frame_ip_found.grid(row=2, sticky="snew", padx=PAD_EXTERNAL, pady=PAD_EXTERNAL)
+        self.fill_frame_ip_found(self.frame_ip_found)
 
         # ======= FRAME-3 (MAIN STATUS) ====================
         self.frame_main_status = Frame(self.parent, relief="groove", borderwidth=4)
@@ -337,7 +337,7 @@ class Gui(Frame):
 
     # #################################################
     # frame FOUND IP
-    def fill_frame_found_ip(self, parent):
+    def fill_frame_ip_found(self, parent):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
         parent.grid_rowconfigure([2], weight=1)     # BODY
@@ -353,7 +353,7 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="CLEAR")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.found_ip_reset
+        btn["command"] = self.ip_found_reset
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="SCAN ONES")
@@ -372,34 +372,33 @@ class Gui(Frame):
         lbl.pack()
 
         # BODY --------------------------------------------------------------
-        self.listbox_found_ip = Listbox(parent, height=5, bg=None, font=('Courier', 9))
-        self.listbox_found_ip.grid(column=0, row=2, sticky="snew")
+        self.listbox_ip_found = Listbox(parent, height=5, bg=None, font=('Courier', 9))
+        self.listbox_ip_found.grid(column=0, row=2, sticky="snew")
 
-        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_found_ip.yview)
+        self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_ip_found.yview)
         self.scrollbar.grid(column=1, row=2, sticky="sn")
 
-        self.listbox_found_ip['yscrollcommand'] = self.scrollbar.set
+        self.listbox_ip_found['yscrollcommand'] = self.scrollbar.set
 
         # STATUS -------------------------------------------------------------
         frame_status = Frame(parent)
         frame_status.grid(column=0, row=1, sticky="ew")
 
-        btn = Button(frame_status, text="settings")
+        btn = Button(frame_status, text="Delete")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = lambda: None
-        btn["state"] = "disabled"
         btn.pack(side="left")
 
-        self.status_found_ip = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
-        self.status_found_ip.pack(side="left")
-        self.listbox_found_ip.bind("<<ListboxSelect>>", self.change_status_found_ip)
+        self.status_ip_found = ttk.Label(frame_status, text="...SELECT item...", anchor="w")
+        self.status_ip_found.pack(side="left")
+        self.listbox_ip_found.bind("<<ListboxSelect>>", self.change_status_ip_found)
 
-        self.fill_listbox_found_ip()
+        self.fill_listbox_ip_found()
         return
 
-    def fill_listbox_found_ip(self):
+    def fill_listbox_ip_found(self):
         with self.lock:
-            the_listbox = self.listbox_found_ip
+            the_listbox = self.listbox_ip_found
             self._listbox_clear(the_listbox)
 
             the_dict = self.logic.ip_found_dict
@@ -430,19 +429,19 @@ class Gui(Frame):
                         the_listbox.itemconfig('end', fg="#FF0000")
         return
 
-    def found_ip_reset(self):
+    def ip_found_reset(self):
         self.logic.clear_data()
-        self.fill_listbox_found_ip()
+        self.fill_listbox_ip_found()
         return
 
-    def change_status_found_ip(self, event):
-        if self.listbox_found_ip.curselection() != ():
-            selected_list = self.listbox_found_ip.curselection()
-            selected_item_text = self.listbox_found_ip.get(selected_list)
+    def change_status_ip_found(self, event):
+        if self.listbox_ip_found.curselection() != ():
+            selected_list = self.listbox_ip_found.curselection()
+            selected_item_text = self.listbox_ip_found.get(selected_list)
             for key in self.logic.ip_found_dict:
                 for mac in self.logic.ip_found_dict[key]:
                     if mac in selected_item_text:
-                        self.status_found_ip["text"] = f"{str(key)} [{mac}]"
+                        self.status_ip_found["text"] = f"{str(key)} [{mac}]"
                         return
         return
 

@@ -26,7 +26,7 @@ class Logic:
         # initiate None funcs for gui collaboration
         self.func_fill_listbox_adapters = lambda: None
         self.func_fill_listbox_ranges = lambda: None
-        self.func_fill_listbox_found_ip = lambda: None
+        self.func_fill_listbox_ip_found = lambda: None
 
         self.hostname = platform.node()
 
@@ -159,7 +159,7 @@ class Logic:
         self.count_ip_found = 0
         self.time_last_cycle = 0
 
-        self.func_fill_listbox_found_ip()
+        self.func_fill_listbox_ip_found()
         return
 
     def get_main_status_dict(self):
@@ -412,7 +412,7 @@ class Logic:
             self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
 
             self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
-            self.func_fill_listbox_found_ip()
+            self.func_fill_listbox_ip_found()
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
