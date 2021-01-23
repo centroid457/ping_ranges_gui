@@ -435,6 +435,9 @@ class Gui(Frame):
         key1, key2 = self._listbox_get_selected_key(the_listbox=self.listbox_ip_found, the_dict=self.logic.ip_found_dict, deep_key="mac")
         if None not in (key1, key2):
             del self.logic.ip_found_dict[key1][key2]
+            if len(self.logic.ip_found_dict[key1]) == 0:
+                del self.logic.ip_found_dict[key1]
+
             self.ip_found_fill_listbox()
             self.status_ip_found["text"] = self.TEXT_SELECT_ITEM
         return
