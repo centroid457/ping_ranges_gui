@@ -239,9 +239,9 @@ class Logic:
         return
 
     def ranges_all_control(self, disable=False, enable=False):
-        if disable:
-            for net in self.ranges_active_dict:
-                return
+        for the_range in self.ranges_active_dict:
+            self.ranges_active_dict[the_range]["use"] = False if disable else True if enable else None
+        return
 
     # ###########################################################
     # SCAN
