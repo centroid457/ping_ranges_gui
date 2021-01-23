@@ -166,16 +166,16 @@ class Logic:
         self.ip_ranges_use_adapters = ip_ranges_use_adapters
 
         # do not use WAS_LOST! it is useless!
-        self.ip_ranges_active_dict = {}    # ={RANGE_TUPLE: {use:, active:, info:,   start:, end:,}}
+        self.ip_ranges_active_dict = {}    # ={RANGE_TUPLE: {use:, active:, info:,   ip_start:, ip_finish:,}}
 
         # use adapters nets
         for net in self.adapter_net_dict:
             self.ip_ranges_active_dict.update({(str(net[0]), str(net[-1])): {
-                    "info": f"[AdapterNet:{str(net)}]",
+                    "info": f"[Adapter:{str(net)}]",
                     "use": True if ip_ranges_use_adapters else False,
                     "active": True if self.adapter_net_dict[net].get("active", True) else False,
-                    "start": str(net[0]),
-                    "end": str(net[-1])}})
+                    "ip_start": str(net[0]),
+                    "ip_finish": str(net[-1])}})
 
         # use input nets
         if ip_ranges is not None:
@@ -185,8 +185,8 @@ class Logic:
             self.ip_ranges_active_dict.update({my_range: {"info": "Input",
                                                           "use": True,
                                                           "active": True,
-                                                          "start": str(my_range[0]),
-                                                          "end": str(my_range[-1])}})
+                                                          "ip_start": str(my_range[0]),
+                                                          "ip_finish": str(my_range[-1])}})
 
         self.func_fill_listbox_ranges()
         # print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
@@ -202,8 +202,8 @@ class Logic:
             self._dict_safely_update(the_dict, "info", f"[AdapterNet:{str(net)}]")
             self._dict_safely_update(the_dict, "use", True if self.ip_ranges_use_adapters and the_dict.get("use", True) else False)
             self._dict_safely_update(the_dict, "active", True if self.adapter_net_dict[net].get("active", True) else False)
-            self._dict_safely_update(the_dict, "start", str(net[0]))
-            self._dict_safely_update(the_dict, "end", str(net[-1]))
+            self._dict_safely_update(the_dict, "ip_start", str(net[0]))
+            self._dict_safely_update(the_dict, "ip_finish", str(net[-1]))
 
         self.func_fill_listbox_ranges()
         return
@@ -307,11 +307,11 @@ class Logic:
     # PING
     @contracts.contract(ip_range=tuple)
     def ping_ip_range(self, ip_range):
-        ip_start = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["start"])
-        ip_end = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["end"])
+        ip_start = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["ip_start"])
+        ip_finish = ipaddress.ip_address(self.ip_ranges_active_dict[ip_range]["ip_finish"])
         ip_current = ip_start
 
-        while ip_current <= ip_end and not self.flag_scan_stop:
+        while ip_current <= ip_finish and not self.flag_scan_stop:
             self.ping_ip_start_thread(ip_current)
             ip_current = ip_current + 1
         return

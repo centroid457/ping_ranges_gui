@@ -291,8 +291,8 @@ class Gui(Frame):
                                 active_mark.ljust(2, " ") +
                                 str(the_range).ljust(37, " ") +
                                 str(the_dict[the_range].get("info", "")).ljust(30, " ") +
-                                str(the_dict[the_range].get("start", "")).ljust(16, " ") +
-                                str(the_dict[the_range].get("end", "")).ljust(16, " ")
+                                str(the_dict[the_range].get("ip_start", "")).ljust(16, " ") +
+                                str(the_dict[the_range].get("ip_finish", "")).ljust(16, " ")
                                )
             # change visual
             if use_mark == "-" or active_mark == "-":
@@ -304,8 +304,8 @@ class Gui(Frame):
     def range_restore_default(self, use_key=None):
         key = self._get_selected_key_range() if use_key is None else use_key
         if key is not None:
-            self.logic.ip_ranges_active_dict[key]["start"] = key[0]
-            self.logic.ip_ranges_active_dict[key]["end"] = key[-1]
+            self.logic.ip_ranges_active_dict[key]["ip_start"] = key[0]
+            self.logic.ip_ranges_active_dict[key]["ip_finish"] = key[-1]
             self.logic.ip_ranges_active_dict[key]["use"] = True
             self.fill_listbox_ranges()
         return
