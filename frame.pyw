@@ -40,7 +40,7 @@ class Gui(Frame):
         self.window_move_to_center()
 
     def logic_connect(self):
-        self.logic = logic.Logic(ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False)
+        self.logic = logic.Logic(ip_ranges_use_adapters=True)
 
     def gui_root_configure(self):
         if self.root != self.parent:      # if it is independent window (without insertion in outside project)
