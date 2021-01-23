@@ -35,11 +35,6 @@ class Logic:
         # save first started ranges
         self.ip_ranges_input_list = ip_tuples_list
         self.apply_ranges(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters)
-
-        if start_scan_loop:
-            self.scan_loop()
-        elif start_scan:
-            self.scan_onсe()
         return
 
     # ###########################################################
