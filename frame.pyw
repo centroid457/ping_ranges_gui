@@ -342,7 +342,7 @@ class Gui(Frame):
         btn["command"] = self.logic.scan_stop
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="CLEAR")
+        btn = Button(frame_header, text="CLEAR all found data")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.ip_found_reset
         btn.pack(side="left", fill="y")
@@ -442,16 +442,30 @@ class Gui(Frame):
     # #################################################
     # frame MAIN STATUS
     def main_status_fill_frame(self, parent):
-        self.main_status_lbl_dict = {}      # collect all itself lables
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
 
+        self.main_status_lbl_dict = {}      # collect all itself lables
         the_dict = self.logic.get_main_status_dict()
-        for key in the_dict:
-            lbl = Label(parent)
-            lbl["text"] = f"{key}=[{the_dict[key]}]"
-            #print(lbl)
+
+        # HEADER -------------------------------------------------------------
+        frame_header = Frame(parent, relief="groove", borderwidth=4)
+        # frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
+
+        for key, val in the_dict.items():
+            lbl = Label(frame_header)
+            lbl["text"] = f"{key}=[{val}]"
             lbl.pack()
 
             self.main_status_lbl_dict.update({key: lbl})
+
+        # STATUS -------------------------------------------------------------
+        frame_status = Frame(parent, relief="groove", borderwidth=4)
+        frame_status.grid(column=0, row=1, sticky="ew")
+
+        self.lbl_main_status_total = Label(frame_status)
+        self.lbl_main_status_total["text"] = str([val for val in the_dict.values()])
+        self.lbl_main_status_total.pack(side="left")
 
         threading.Thread(target=self.main_status_fill_frame_refresh, daemon=True).start()
         return
@@ -463,6 +477,7 @@ class Gui(Frame):
                 # print(key, lbl, the_dict[key])
                 lbl_obj["text"] = f"{key}=[{str(the_dict[key])}]"
             time.sleep(1)
+            self.lbl_main_status_total["text"] = str([str(val) for val in the_dict.values()])
         return
 
     # #################################################
