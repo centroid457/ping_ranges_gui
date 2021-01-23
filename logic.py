@@ -20,8 +20,7 @@ ip_tuples_list_default = [
 
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))")
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True,
-                 start_scan=False, start_scan_loop=False):
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True):
 
         # initiate None funcs for gui collaboration
         self.func_fill_listbox_adapters = lambda: None
@@ -35,10 +34,7 @@ class Logic:
 
         # save first started ranges
         self.ip_ranges_input_list = ip_tuples_list
-        self.apply_ranges(ip_tuples_list,
-                            ip_ranges_use_adapters=ip_ranges_use_adapters,
-                            start_scan=False,
-                            start_scan_loop=False)
+        self.apply_ranges(ip_tuples_list, ip_ranges_use_adapters=ip_ranges_use_adapters)
 
         if start_scan_loop:
             self.scan_loop()
@@ -170,7 +166,7 @@ class Logic:
     # ###########################################################
     # RANGES
     @contracts.contract(ip_ranges="None|(list(tuple))")
-    def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True, start_scan=False, start_scan_loop=False):
+    def apply_ranges(self, ip_ranges=None, ip_ranges_use_adapters=True):
 
         # do not use WAS_LOST! it is useless!
         self.ip_ranges_active_dict = {}        # ={RANGE_TUPLE: {active:, info:,    start:, end:,}}
@@ -179,7 +175,8 @@ class Logic:
         for net in self.adapter_net_dict:
             self.ip_ranges_active_dict.update({(str(net[0]), str(net[-1])): {
                     "info": f"[AdapterNet:{str(net)}]",
-                    "active": True if all((ip_ranges_use_adapters, self.adapter_net_dict[net].get("active", True))) else False,
+                    "use": True if ip_ranges_use_adapters else False,
+                    "active": True if self.adapter_net_dict[net].get("active", True) else False,
                     "start": str(net[0]),
                     "end": str(net[-1])}})
 
@@ -189,20 +186,16 @@ class Logic:
 
         for my_range in self.ip_ranges_input_list:
             self.ip_ranges_active_dict.update({my_range: {"info": "Input",
+                                                          "use": True,
                                                           "active": True,
                                                           "start": str(my_range[0]),
                                                           "end": str(my_range[-1])}})
 
         # self.clear_data()
 
-        if start_scan_loop:
-            self.scan_loop()
-        elif start_scan:
-            self.scan_onсe()
-
         self.func_fill_listbox_ranges()
         # print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
-        return self.ip_ranges_active_dict
+        return
 
     def ranges_reset_to_started(self):
         self.adapters_detect()
@@ -462,7 +455,8 @@ class Logic:
 # MAIN CODE
 if __name__ == '__main__':
     access_this_module_as_import = False
-    sample = Logic(start_scan=True)
+    sample = Logic()
+    sample.scan_onсe()
 
     # input("Press ENTER to exit")
 else:
