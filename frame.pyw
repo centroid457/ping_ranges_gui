@@ -319,13 +319,8 @@ class Gui(Frame):
         return
 
     def ranges_change_status(self, event):
-        if self.listbox_ranges.curselection() != ():
-            selected_list = self.listbox_ranges.curselection()
-            selected_item_text = self.listbox_ranges.get(selected_list)
-            for key in self.logic.ip_ranges_active_dict:
-                if str(key) in selected_item_text:
-                    self.status_ranges["text"] = str(key)
-                    return
+        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ip_ranges_active_dict)
+        self.status_ranges["text"] = str(key)
         return
 
     # #################################################
@@ -438,8 +433,8 @@ class Gui(Frame):
         self.ip_found_fill_listbox()
         return
 
-    def ip_found_delete_line(self):
-        key = self._listbox_get_selected_key(the_listbox=, the_dict=)
+    def ip_found_delete_line(self):     # todo: finish!
+        key = self._listbox_get_selected_key(the_listbox=None, the_dict=None)
         del self.logic.ip_found_dict[key]
         self.ip_found_fill_listbox()
         return
@@ -472,14 +467,13 @@ class Gui(Frame):
 
     # #################################################
     # rest
-
     def _listbox_get_selected_key(self, the_listbox, the_dict):
         if the_listbox.curselection() != ():
             selected_list = the_listbox.curselection()
             selected_item_text = the_listbox.get(selected_list)
 
             for key in the_dict:
-                if str(key) in range_selected_text:
+                if str(key) in selected_item_text:
                     return key
         return None
 
