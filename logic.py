@@ -24,9 +24,9 @@ class Logic:
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ip_ranges_use_adapters=True):
 
         # initiate None funcs for gui collaboration
-        self.func_fill_listbox_adapters = lambda: None
-        self.func_fill_listbox_ranges = lambda: None
-        self.func_fill_listbox_ip_found = lambda: None
+        self.func_adapters_fill_listbox = lambda: None
+        self.func_ranges_fill_listbox = lambda: None
+        self.func_ip_found_fill_listbox = lambda: None
 
         self.hostname = platform.node()
 
@@ -121,7 +121,7 @@ class Logic:
                     self.adapter_dict[adapter]["was_lost"] = True
                     self.adapter_net_dict.update({net: {"active": False}})
 
-        self.func_fill_listbox_adapters()
+        self.func_adapters_fill_listbox()
         print(self.adapter_dict)
         print(self.adapter_net_dict)
         print(self.adapter_ip_dict)
@@ -159,7 +159,7 @@ class Logic:
         self.count_ip_found = 0
         self.time_last_cycle = 0
 
-        self.func_fill_listbox_ip_found()
+        self.func_ip_found_fill_listbox()
         return
 
     def get_main_status_dict(self):
@@ -208,7 +208,7 @@ class Logic:
                                                           "ip_start": str(my_range[0]),
                                                           "ip_finish": str(my_range[-1])}})
 
-        self.func_fill_listbox_ranges()
+        self.func_ranges_fill_listbox()
         # print("APPLY ranges=ip_ranges_active_dict=======", self.ip_ranges_active_dict)
         return
 
@@ -225,7 +225,7 @@ class Logic:
             self._dict_safely_update(the_dict, "ip_start", str(net[0]))
             self._dict_safely_update(the_dict, "ip_finish", str(net[-1]))
 
-        self.func_fill_listbox_ranges()
+        self.func_ranges_fill_listbox()
         return
 
     def ranges_reset_to_started(self):
@@ -412,7 +412,7 @@ class Logic:
             self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
 
             self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
-            self.func_fill_listbox_ip_found()
+            self.func_ip_found_fill_listbox()
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
