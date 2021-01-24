@@ -112,6 +112,8 @@ class Adapters:
                 cls.ip_margin_list.append(net[-1])
 
         Adapters.FUNC_FILL_LISTBOX()
+        for adapter_name in cls.name_obj_dict:
+            print(adapter_name)
         print("*"*80)
 
 
@@ -124,13 +126,11 @@ class Ranges():
     input_tuple_list = []
 
     tuple_obj_dict = {}
-    str_list = []
 
     @contracts.contract(range_tuple="tuple[1|2]", info=str)
     def __init__(self, range_tuple=None, info="input"):
         if range_tuple not in Ranges.tuple_obj_dict:
             Ranges.tuple_obj_dict.update({range_tuple: self})
-            Ranges.str_list.append(str(range_tuple))
 
             self.range_tuple = range_tuple
             self.str_range = str(range_tuple)
@@ -144,7 +144,6 @@ class Ranges():
     def __del__(self):
         if hasattr(self, "range_tuple"):
             Ranges.tuple_obj_dict.pop(self.range_tuple)
-            Ranges.str_list.remove(self.str_range)
 
     @classmethod
     def clear(cls):
@@ -165,6 +164,8 @@ class Ranges():
                 cls.add_range_tuple(range_tuple=my_range)
 
         cls.FUNC_FILL_LISTBOX()
+        for my_range in cls.tuple_obj_dict:
+            print(my_range)
         return
 
     @classmethod
@@ -184,7 +185,7 @@ class Ranges():
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
-        new_range_obj = cls(range_tuple=range_tuple)
+        cls(range_tuple=range_tuple)
 
     @classmethod
     def ranges_all_control(cls, disable=False, enable=False):
@@ -213,6 +214,13 @@ class Ranges():
 
 
 
+
+
+
+
+
+
+
 # #################################################
 # LOGIC
 # #################################################
@@ -227,7 +235,6 @@ class Logic:
 
         self.clear_data()
         Adapters.update_clear()
-
         Ranges.ranges_apply_clear(ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
         return
 
@@ -236,7 +243,7 @@ class Logic:
     def clear_data(self):
         # INITIATE LIMITS
         self.limit_ping_timewait_ms = 100   # BEST=100
-        self.limit_ping_thread = 300        # BEST=300   (but don't break your phone WiFi!!! - it was provider problem))
+        self.limit_ping_thread = 300        # BEST=300
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
@@ -303,6 +310,12 @@ class Logic:
         self.flag_scan_manual_stop = False
         self.flag_scan_is_finished = False
 
+
+
+
+
+
+        exit()
         self.ranges_check_adapters()
 
         for ip_range in self.ranges_active_dict:
