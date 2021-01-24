@@ -363,7 +363,7 @@ class Logic:
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_ip(self, ip):
         # DONT START DIRECTLY!!! USE ONLY THROUGH THREADING!
-        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-w", str(self.limit_ping_timewait_ms)]
+        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-l", "0", "-w", str(self.limit_ping_timewait_ms)]
         """
         -4 = ipv4
         -n = requests count
@@ -382,6 +382,7 @@ class Logic:
 
         if sp_ping.returncode != 0 and ip in self.ip_found_dict:
             self._mark_nonactive_mac(ip=ip)
+            return
 
         elif sp_ping.returncode == 0:
             # get MAC at first!
@@ -396,6 +397,19 @@ class Logic:
 
             self._dict_safely_update(self.ip_found_dict[ip], mac, {})
             self._mark_nonactive_mac(ip=ip, mac_except=mac)
+
+            # found time response in ms
+            mask = r'.*\sвремя\S(\S+)мс\s.*'
+            match = False
+            for line in sp_ping.stdout.readlines():
+                match = re.search(mask, line)
+                if match:
+                    time_response = match[1]
+                    self._dict_safely_update(self.ip_found_dict[ip][mac], "time_response", time_response)
+                    break
+            if not match:
+                self._mark_nonactive_mac(ip=ip)
+                return
 
             # get IP+HOSTNAME
             mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'

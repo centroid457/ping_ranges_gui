@@ -369,7 +369,7 @@ class Gui(Frame):
 
         lbl = Label(frame_header)
         lbl["text"] = "FOUND IP:\n" \
-                        "[active-wasLost-ip-mac-hostname-vendorDev-osVer]"
+                        "[active-wasLost-timeResponse-ip-mac-hostname-vendorDev-osVer]"
         lbl.pack()
 
         # BODY --------------------------------------------------------------
@@ -408,14 +408,16 @@ class Gui(Frame):
                     active_mark = "+" if the_dict[ip][mac].get("active", False) else "-"
                     was_lost = the_dict[ip][mac].get("was_lost", False)
                     was_lost_mark = "lost" if was_lost else ""
+                    time_response = the_dict[ip][mac].get("time_response", "")
                     hostname = the_dict[ip][mac].get("hostname", "")
                     vendor = the_dict[ip][mac].get("vendor", "")
                     os = the_dict[ip][mac].get("os", "")
                     the_listbox.insert('end',
-                                         active_mark.ljust(2, " ") +
+                                         active_mark.ljust(1, " ") +
                                          was_lost_mark.ljust(5, " ") +
+                                         str(time_response).ljust(3, " ") +
                                          str(ip).ljust(16, " ") +
-                                         str(mac).ljust(20, " ") +
+                                         str(mac).ljust(19, " ") +
                                          hostname.ljust(15, " ") +
                                          vendor.ljust(20, " ") +
                                          os
