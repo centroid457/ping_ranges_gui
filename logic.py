@@ -414,6 +414,11 @@ class Logic:
                 self._mark_nonactive_mac(ip=ip)
                 return
 
+            # =====================================================================
+            # go out if exists
+            if self.ip_found_dict[ip][mac].get("hostname", None) is not None:
+                return
+
             # ---------------------------------------------------------------------
             # get HOSTNAME(+IP)
             if ip in self.adapter_ip_dict:
