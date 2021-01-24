@@ -81,7 +81,7 @@ class Logic:
             if key_part in ["Описание."]:       # found new adapter
                 adapter_new = part_result
                 self._dict_safely_update(self.adapter_dict, adapter_new, {})
-                mac, ip, mask, gateway = None, None, None, None    # reset if detected new adaprer line
+                mac, ip, mask, gateway = None, None, None, None    # reset if detected new adapter line
             elif key_part in ["Физический"]:
                 mac = part_result
                 self._dict_safely_update(self.adapter_dict[adapter_new], "mac", mac)
