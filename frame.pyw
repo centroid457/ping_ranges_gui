@@ -32,7 +32,7 @@ class Gui(Frame):
         self.create_gui_structure()
         # implement fill listbox funcs
         logic.Adapters.FUNC_FILL_LISTBOX = self.adapters_fill_listbox
-        self.logic.func_ranges_fill_listbox = self.ranges_fill_listbox
+        logic.Ranges.FUNC_FILL_LISTBOX = self.ranges_fill_listbox
         self.logic.func_ip_found_fill_listbox = self.ip_found_fill_listbox
         # start initial scan_once
         self.logic.scan_onсe_thread()
