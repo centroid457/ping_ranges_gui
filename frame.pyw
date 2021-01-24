@@ -31,7 +31,7 @@ class Gui(Frame):
         self.logic = logic.Logic(ranges_use_adapters_bool=True)
         self.create_gui_structure()
         # implement fill listbox funcs
-        logic.Adapters.func_fill_listbox = self.adapters_fill_listbox
+        logic.Adapters.FUNC_FILL_LISTBOX = self.adapters_fill_listbox
         self.logic.func_ranges_fill_listbox = self.ranges_fill_listbox
         self.logic.func_ip_found_fill_listbox = self.ip_found_fill_listbox
         # start initial scan_once
