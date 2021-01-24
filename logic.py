@@ -19,6 +19,7 @@ ip_tuples_list_default = [
     ]
 
 
+
 class Logic:
     @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters=bool)
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters=True):
