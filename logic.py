@@ -26,30 +26,55 @@ lock = threading.Lock()
 # #################################################
 class Adapters:
     FUNC_FILL_LISTBOX = lambda: None
+    name_obj_dict = {}
 
-    def __init__(self):
-        self.update_clear()
+    ip_margin_list = []
 
-    def clear(self):
-        self.data_dict = {}          # ={ADAPTER_NAME: {mac:, ip:, mask:, gateway:,    active:, was_lost:, }}
-        self.net_dict = {}      # ={NET:{gateway:, active: }}
-        self.ip_dict = {}       # ={IP:{mac:, mask:,    active:, was_lost:, }}
-        self.ip_margin_list = []     # zero and broadcast ips
+    @contracts.contract(adapter_name=str)
+    def __init__(self, adapter_name):
+        if adapter_name not in Adapters.name_obj_dict:
+            Adapters.name_obj_dict.update({adapter_name: self})
 
-        self.gateway_list = []  #
+            self.name = adapter_name
+            self.active = None
+            self.was_lost = False
+            self.mac = None
+            self.ip = None
+            self.mask = None
+            self.gateway = None
+            self.net = None
 
-    def detect(self):
+    def __del__(self):
+        if hasattr(self, "name"):
+            Adapters.name_obj_dict.pop(self.name)
+
+    @classmethod
+    def clear(cls):
+        for obj in cls.name_obj_dict.values():
+            del obj
+
+    @classmethod
+    def update(cls):
+        cls.detect()
+
+    @classmethod
+    def update_clear(cls):
+        cls.clear()
+        cls.detect()
+
+    @classmethod
+    def detect(cls):
         # INITIATE work
-        adapter_new = None  # cumulative var!
-        for adapter in self.data_dict:           # clear all active flags
-            if self.data_dict[adapter].get("active", None):
-                self.data_dict[adapter]["active"] = False
+        adapter_name = None  # cumulative var!
+        for adapter_obj in cls.name_obj_dict.values():           # clear all active flags
+            adapter_obj.active = False
+        adapter_obj = None
 
         # START work
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         for line in sp_ipconfig.stdout.readlines():
-            # find out data = generate data_dict
+            # find out data = generate data
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
             if len(line_striped_splited) == 1 or line_striped_splited[1] == "":   # exclude Blank or have no data lines
@@ -62,62 +87,32 @@ class Adapters:
             part_result = part_2
 
             # -----------------------------------------------------------
-            # CREATION self.data_dict
+            # CREATION cls.data_dict
             if key_part in ["Описание."]:       # found new adapter
-                adapter_new = part_result
-                _dict_safely_update(self.data_dict, adapter_new, {})
-                mac, ip, mask, gateway = None, None, None, None    # reset if detected new adapter line
+                adapter_name = part_result
+                adapter_obj = cls(adapter_name)
             elif key_part in ["Физический"]:
-                mac = part_result
-                _dict_safely_update(self.data_dict[adapter_new], "mac", mac)
+                adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
-                ip = part_result.split("(")[0]
-                _dict_safely_update(self.data_dict[adapter_new], "ip", ip)
-                _dict_safely_update(self.data_dict[adapter_new], "active", True)
+                adapter_obj.ip = part_result.split("(")[0]
+                adapter_obj.active = True
             elif key_part in ["Маска"]:
-                mask = part_result
-                _dict_safely_update(self.data_dict[adapter_new], "mask", mask)
+                adapter_obj.mask = part_result
             elif key_part in ["Основной"]:
-                gateway = part_result
-                _dict_safely_update(self.data_dict[adapter_new], "gateway", gateway)
-                if gateway != "":
-                    self.gateway_list.append(ipaddress.ip_address(gateway))
+                adapter_obj.gateway = part_result
 
         # use data from found active adapters
-        for adapter, data_dict in self.data_dict.items():
-            if data_dict.get("ip", None) is not None:
-                ip = ipaddress.ip_address(data_dict["ip"])
-
-                mask = data_dict.get("mask", None)
-                mac = data_dict.get("mac", None)
-                gateway = data_dict.get("gateway", None)
-
+        for adapter_obj in cls.name_obj_dict.values():
+            if adapter_obj.ip is not None:
+                ip = ipaddress.ip_address(adapter_obj.ip)
+                mask = adapter_obj.mask
                 net = ipaddress.ip_network((str(ip), mask), strict=False)
-                data_dict["net"] = net
-                self.net_dict.update({net: {"gateway": gateway}})
-                self.ip_margin_list.append(net[0])
-                self.ip_margin_list.append(net[-1])
-
-                _dict_safely_update(self.ip_dict, ip, {})
-                _dict_safely_update(self.ip_dict[ip], "mac", mac)
-                _dict_safely_update(self.ip_dict[ip], "mask", mask)
-
-                if not data_dict.get("active", True):
-                    self.data_dict[adapter]["was_lost"] = True
-                    self.net_dict.update({net: {"active": False}})
+                adapter_obj.net = net
+                cls.ip_margin_list.append(net[0])
+                cls.ip_margin_list.append(net[-1])
 
         Adapters.FUNC_FILL_LISTBOX()
-        print(self.data_dict)
-        print(self.net_dict)
-        print(self.ip_dict)
         print("*"*80)
-
-    def update(self):
-        self.detect()
-
-    def update_clear(self):
-        self.clear()
-        self.detect()
 
 
 # ###########################################################
@@ -131,7 +126,7 @@ class Ranges():
     tuple_obj_dict = {}
     str_list = []
 
-    @contracts.contract(range_tuple="tuple(str, str)", info=str)
+    @contracts.contract(range_tuple="tuple[1|2]", info=str)
     def __init__(self, range_tuple=None, info="input"):
         if range_tuple not in Ranges.tuple_obj_dict:
             Ranges.tuple_obj_dict.update({range_tuple: self})
@@ -148,7 +143,7 @@ class Ranges():
 
     def __del__(self):
         if hasattr(self, "range_tuple"):
-            Ranges.tuple_obj_dict.remove(self.range_tuple)
+            Ranges.tuple_obj_dict.pop(self.range_tuple)
             Ranges.str_list.remove(self.str_range)
 
     @classmethod
@@ -175,15 +170,17 @@ class Ranges():
     @classmethod
     def add_update_adapters_ranges(cls):
         Adapters.update()
-        for net in Adapters.net_dict:
-            range_tuple = (str(net[0]), str(net[-1]))
-            if range_tuple not in cls.tuple_obj_dict:
-                range_obj = cls(range_tuple=range_tuple, info=f"*Adapter*")
-            else:
-                range_obj = cls.tuple_obj_dict[range_tuple]
+        for adapter_obj in Adapters.name_obj_dict.values():
+            if adapter_obj.net not in (None, ""):
+                net = adapter_obj.net
+                range_tuple = (str(net[0]), str(net[-1]))
+                if range_tuple not in cls.tuple_obj_dict:
+                    range_obj = cls(range_tuple=range_tuple, info=f"*Adapter*")
+                else:
+                    range_obj = cls.tuple_obj_dict[range_tuple]
 
-            range_obj.use = True if cls.use_adapters_bool else False
-            range_obj.active = True if Adapters.net_dict[net].get("active", True) else False
+                range_obj.use = True if cls.use_adapters_bool else False
+                range_obj.active = True if adapter_obj.active else False
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
@@ -202,7 +199,15 @@ class Ranges():
         cls.ranges_apply_clear(ranges_list=cls.input_tuple_list, use_adapters_bool=cls.use_adapters_bool)
         return
 
-
+    @classmethod
+    def range_control(cls, range_tuple, use=None, active=None):
+        if range_tuple in cls.tuple_obj_dict:
+            if use is not None:
+                cls.tuple_obj_dict[range_tuple].use = use
+            if active is not None:
+                cls.tuple_obj_dict[range_tuple].active = active
+        cls.FUNC_FILL_LISTBOX()
+        return
 
 
 
@@ -221,13 +226,9 @@ class Logic:
         self.hostname = platform.node()
 
         self.clear_data()
-        self.adapters = Adapters()
+        Adapters.update_clear()
 
-        # input
-        self.ranges_use_adapters_bool = ranges_use_adapters_bool
-        self.ranges_input_list = ip_tuples_list
-        self.ranges_input_default_list = copy.deepcopy(self.ranges_input_list)
-        self.ranges_apply_clear(ip_tuples_list, ranges_use_adapters_bool=ranges_use_adapters_bool)
+        Ranges.ranges_apply_clear(ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
         return
 
     # ###########################################################
