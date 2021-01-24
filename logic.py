@@ -47,6 +47,7 @@ class Adapters:
     def __del__(self):
         if hasattr(self, "name"):
             Adapters.name_obj_dict.pop(self.name)
+            Adapters.FUNC_FILL_LISTBOX()
 
     @classmethod
     def clear(cls):
@@ -111,7 +112,7 @@ class Adapters:
                 cls.ip_margin_list.append(net[0])
                 cls.ip_margin_list.append(net[-1])
 
-        Adapters.FUNC_FILL_LISTBOX()
+        cls.FUNC_FILL_LISTBOX()
         for adapter_name in cls.name_obj_dict:
             print(adapter_name)
         print("*"*80)
@@ -133,7 +134,7 @@ class Ranges():
             Ranges.tuple_obj_dict.update({range_tuple: self})
 
             self.range_tuple = range_tuple
-            self.str_range = str(range_tuple)
+            self.range_str = str(range_tuple)
 
             self.use = True
             self.active = True
@@ -144,6 +145,7 @@ class Ranges():
     def __del__(self):
         if hasattr(self, "range_tuple"):
             Ranges.tuple_obj_dict.pop(self.range_tuple)
+            Ranges.FUNC_FILL_LISTBOX()
 
     @classmethod
     def clear(cls):
@@ -182,10 +184,12 @@ class Ranges():
 
                 range_obj.use = True if cls.use_adapters_bool else False
                 range_obj.active = True if adapter_obj.active else False
+        cls.FUNC_FILL_LISTBOX()
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
         cls(range_tuple=range_tuple)
+        cls.FUNC_FILL_LISTBOX()
 
     @classmethod
     def ranges_all_control(cls, disable=False, enable=False):
@@ -198,7 +202,7 @@ class Ranges():
     @classmethod
     def ranges_reset_to_started(cls):
         cls.ranges_apply_clear(ranges_list=cls.input_tuple_list, use_adapters_bool=cls.use_adapters_bool)
-        return
+        cls.FUNC_FILL_LISTBOX()
 
     @classmethod
     def range_control(cls, range_tuple, use=None, active=None):
@@ -211,153 +215,73 @@ class Ranges():
         return
 
 
+# ###########################################################
+# HOSTS
+# ###########################################################
+class Hosts():
+    FUNC_FILL_LISTBOX = lambda: None
 
+    mac_obj_dict = {}
 
+    @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
+    def __init__(self, ip, mac):
+        with lock:
+            if mac not in Hosts.mac_obj_dict:
+                Hosts.mac_obj_dict.update({mac: self})
 
+                self.mac = mac
+                self.ip = ip
 
+                self.active = True
+                self.was_lost = False
+                self.hostname = None
+                self.vendor = None
+                self.os = None
+                self.time_response = None
 
+                self.count_ping = 0
+                self.count_lost = 0
+                self.count_response = 0
 
+                Hosts.ip_explore_and_fill_data(ip)
 
+    def __del__(self):
+        if hasattr(self, "mac"):
+            Hosts.mac_obj_dict.pop(self.mac)
+            Hosts.FUNC_FILL_LISTBOX()
 
+    @classmethod
+    @contracts.contract(ip=ipaddress.IPv4Address)
+    def ping_check(cls, ip):
 
-
-# #################################################
-# LOGIC
-# #################################################
-class Logic:
-    @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters_bool=bool)
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool=True):
-
-        # initiate None funcs for gui collaboration
-        self.func_ip_found_fill_listbox = lambda: None
-
-        self.hostname = platform.node()
-
-        self.clear_data()
-        Adapters.update_clear()
-        Ranges.ranges_apply_clear(ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
         return
 
-    # ###########################################################
-    # RESET
-    def clear_data(self):
-        # INITIATE LIMITS
-        self.limit_ping_timewait_ms = 100   # BEST=100
-        self.limit_ping_thread = 300        # BEST=300
-        # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
-        # but it can overload you CPU!
-        # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
-
-        # FLAGS
-        self.flag_scan_is_finished = False
-        self.flag_scan_manual_stop = False
-
-        # SETS/DICTS/LISTS
-        self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,  active:, was_lost:, time_response:, vendor:, os:,}}}
-        self.ip_last_scanned = None
-        self.ip_last_answered = None
-
-        # self.ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in ranges_apply_clear
-
-        # COUNTERS
-        self.count_scan_cycles = 0
-        self.count_ip_scanned = 0
-        self.count_ip_found_additions = 0
-        self.time_last_cycle = 0
-
-        self.func_ip_found_fill_listbox()
+    @classmethod
+    @contracts.contract(ip=ipaddress.IPv4Address)
+    def get_mac(cls, ip):
         return
 
-    def get_main_status_dict(self):
-        the_dict = {
-            "limit_ping_timewait_ms": self.limit_ping_timewait_ms,
-            "limit_ping_thread": self.limit_ping_thread,
+    @classmethod
+    @contracts.contract(ip=ipaddress.IPv4Address)
+    def ip_explore_and_fill_data(cls, ip):
+        cls.FUNC_FILL_LISTBOX()
 
-            "count_scan_cycles": self.count_scan_cycles,
-            "threads_active_count": threading.active_count(),
-            "time_last_cycle": self.time_last_cycle,
+    @classmethod
+    def clear_all(cls):
+        for obj in cls.mac_obj_dict.values():
+            del obj
 
-            "flag_scan_manual_stop": self.flag_scan_manual_stop,
-            "flag_scan_is_finished": self.flag_scan_is_finished,
-
-            "ip_last_scanned": self.ip_last_scanned,
-            "ip_last_answered": self.ip_last_answered,
-
-            "count_ip_scanned": self.count_ip_scanned,
-            "count_ip_found_additions": self.count_ip_found_additions,
-            "count_ip_found_real": sum([len(self.ip_found_dict[keys]) for keys in self.ip_found_dict])
-        }
-        return the_dict
-
-    # ###########################################################
-    # SCAN
-    def scan_onсe_thread(self):
-        thread_name_scan_once = "scan_once"
-
-        # start only one thread
-        for thread in threading.enumerate():
-            if thread.name.startswith(thread_name_scan_once):
-                return
-
-        threading.Thread(target=self.scan_onсe, daemon=True, name=thread_name_scan_once).start()
-        return
-
-    def scan_onсe(self):
-        self.count_scan_cycles += 1
-        time_start = time.time()
-        self.rescan_found()
-
-        self.flag_scan_manual_stop = False
-        self.flag_scan_is_finished = False
+    @classmethod
+    @contracts.contract(mac=str)
+    def clear_mac(cls, mac):
+        cls.mac_obj_dict.pop(mac)
+        cls.FUNC_FILL_LISTBOX()
 
 
 
 
 
 
-        exit()
-        self.ranges_check_adapters()
-
-        for ip_range in self.ranges_active_dict:
-            if self.ranges_active_dict[ip_range]["use"] and self.ranges_active_dict[ip_range]["active"]:
-                self.ping_ip_range(ip_range)
-
-        # WAIT ALL PING THREADS FINISHED
-        for thread in threading.enumerate():
-            if thread.name.startswith("ping"):
-                thread.join()
-
-        self.flag_scan_is_finished = True
-        self.time_last_cycle = round(time.time() - time_start, 3)
-
-        print("*"*80)
-        print("time_last_cycle", self.time_last_cycle)
-        print("ip_found_dict", self.ip_found_dict)
-        return
-
-    def scan_loop_thread(self):
-        thread_name_scan_loop = "scan_loop"
-
-        # start only one thread
-        for thread in threading.enumerate():
-            if thread.name.startswith(thread_name_scan_loop):
-                return
-
-        threading.Thread(target=self.scan_loop, daemon=True, name=thread_name_scan_loop).start()
-        return
-
-    def scan_loop(self):
-        self.flag_scan_manual_stop = False
-        while not self.flag_scan_manual_stop:
-            self.scan_onсe()
-            time.sleep(1)
-
-    def scan_stop(self):
-        self.flag_scan_manual_stop = True
-
-    def rescan_found(self):
-        for ip in self.ip_found_dict:
-            self.ping_ip_start_thread(ip)
 
     # ###########################################################
     # PING
@@ -522,6 +446,160 @@ class Logic:
             return {"hostname": hostname, "mac": mac, "vendor": vendor, "os": os}
         except:
             return {"vendor": "install Nmap.EXE", "os": "install Nmap.EXE"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# #################################################
+# LOGIC
+# #################################################
+class Logic:
+    @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters_bool=bool)
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool=True):
+
+        # initiate None funcs for gui collaboration
+        self.func_ip_found_fill_listbox = lambda: None
+
+        self.hostname = platform.node()
+
+        self.clear_data()
+        Adapters.update_clear()
+        Ranges.ranges_apply_clear(ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
+        return
+
+    # ###########################################################
+    # RESET
+    def clear_data(self):
+        # INITIATE LIMITS
+        self.limit_ping_timewait_ms = 100   # BEST=100
+        self.limit_ping_thread = 300        # BEST=300
+        # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
+        # but it can overload you CPU!
+        # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
+
+        # FLAGS
+        self.flag_scan_is_finished = False
+        self.flag_scan_manual_stop = False
+
+        # SETS/DICTS/LISTS
+        self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,  active:, was_lost:, time_response:, vendor:, os:,}}}
+        self.ip_last_scanned = None
+        self.ip_last_answered = None
+
+        # self.ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in ranges_apply_clear
+
+        # COUNTERS
+        self.count_scan_cycles = 0
+        self.count_ip_scanned = 0
+        self.count_ip_found_additions = 0
+        self.time_last_cycle = 0
+
+        self.func_ip_found_fill_listbox()
+        return
+
+    def get_main_status_dict(self):
+        the_dict = {
+            "limit_ping_timewait_ms": self.limit_ping_timewait_ms,
+            "limit_ping_thread": self.limit_ping_thread,
+
+            "count_scan_cycles": self.count_scan_cycles,
+            "threads_active_count": threading.active_count(),
+            "time_last_cycle": self.time_last_cycle,
+
+            "flag_scan_manual_stop": self.flag_scan_manual_stop,
+            "flag_scan_is_finished": self.flag_scan_is_finished,
+
+            "ip_last_scanned": self.ip_last_scanned,
+            "ip_last_answered": self.ip_last_answered,
+
+            "count_ip_scanned": self.count_ip_scanned,
+            "count_ip_found_additions": self.count_ip_found_additions,
+            "count_ip_found_real": sum([len(self.ip_found_dict[keys]) for keys in self.ip_found_dict])
+        }
+        return the_dict
+
+    # ###########################################################
+    # SCAN
+    def scan_onсe_thread(self):
+        thread_name_scan_once = "scan_once"
+
+        # start only one thread
+        for thread in threading.enumerate():
+            if thread.name.startswith(thread_name_scan_once):
+                return
+
+        threading.Thread(target=self.scan_onсe, daemon=True, name=thread_name_scan_once).start()
+        return
+
+    def scan_onсe(self):
+        self.count_scan_cycles += 1
+        time_start = time.time()
+        self.rescan_found()
+
+        self.flag_scan_manual_stop = False
+        self.flag_scan_is_finished = False
+
+
+
+
+
+
+        exit()
+        self.ranges_check_adapters()
+
+        for ip_range in self.ranges_active_dict:
+            if self.ranges_active_dict[ip_range]["use"] and self.ranges_active_dict[ip_range]["active"]:
+                self.ping_ip_range(ip_range)
+
+        # WAIT ALL PING THREADS FINISHED
+        for thread in threading.enumerate():
+            if thread.name.startswith("ping"):
+                thread.join()
+
+        self.flag_scan_is_finished = True
+        self.time_last_cycle = round(time.time() - time_start, 3)
+
+        print("*"*80)
+        print("time_last_cycle", self.time_last_cycle)
+        print("ip_found_dict", self.ip_found_dict)
+        return
+
+    def scan_loop_thread(self):
+        thread_name_scan_loop = "scan_loop"
+
+        # start only one thread
+        for thread in threading.enumerate():
+            if thread.name.startswith(thread_name_scan_loop):
+                return
+
+        threading.Thread(target=self.scan_loop, daemon=True, name=thread_name_scan_loop).start()
+        return
+
+    def scan_loop(self):
+        self.flag_scan_manual_stop = False
+        while not self.flag_scan_manual_stop:
+            self.scan_onсe()
+            time.sleep(1)
+
+    def scan_stop(self):
+        self.flag_scan_manual_stop = True
+
+    def rescan_found(self):
+        for ip in self.ip_found_dict:
+            self.ping_ip_start_thread(ip)
 
 
 # ###########################################################
