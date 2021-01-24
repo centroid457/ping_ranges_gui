@@ -386,7 +386,7 @@ class Logic:
 
         elif sp_ping.returncode == 0:
             # ---------------------------------------------------------------------
-            # get MAC at first!
+            # get MAC = use first!!!
             mac = self._get_mac(ip)
             if mac is None:     # don't pay attention if have not mac! just an accident!
                 return
@@ -426,7 +426,7 @@ class Logic:
                     # print(match, ip, line)
                     if match:
                         hostname = match[1]
-                        self.ip_found_dict[ip][mac]["hostname"] = hostname
+                        self.ip_found_dict[ip][mac]["hostname"] = f"*{hostname}*"
                         break
 
                 if not match:
