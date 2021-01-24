@@ -229,7 +229,7 @@ class Logic:
 
     def ranges_check_adapters(self):
         # it will update existed or fill not existed (if was found changes in adapters!)
-        self.adapters.detect()
+        self.adapters.update()
         for net in self.adapters.net_dict:
             _dict_safely_update(self.ranges_active_dict, (str(net[0]), str(net[-1])), {})
 
@@ -245,7 +245,7 @@ class Logic:
 
     def ranges_reset_to_started(self):
         self.ranges_input_list = self.ranges_input_default_list
-        self.adapters.detect()
+        self.adapters.update()
         self.ranges_apply()
         return
 

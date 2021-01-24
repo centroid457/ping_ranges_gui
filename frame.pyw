@@ -143,7 +143,7 @@ class Gui(Frame):
         frame_header = Frame(parent, relief="groove", borderwidth=4)
         frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
-        btn = Button(frame_header, text="RESET")
+        btn = Button(frame_header, text="Clear RESET")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.adapters_reset
         btn.pack(side="left", fill="y")
@@ -213,11 +213,11 @@ class Gui(Frame):
         return
 
     def adapters_reset(self):
-        self.logic.clear_adapters()
+        self.logic.adapters.update_clear()
         self.adapters_fill_listbox()
 
     def adapters_refresh(self):
-        self.logic.adapters_detect()
+        self.logic.adapters.update()
         self.adapters_fill_listbox()
 
     def adapters_change_status(self, event):
