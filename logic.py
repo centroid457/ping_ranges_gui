@@ -417,7 +417,7 @@ class Logic:
             # ---------------------------------------------------------------------
             # get HOSTNAME(+IP)
             if ip in self.adapter_ip_dict:
-                self.ip_found_dict[ip][mac]["hostname"] = self.hostname
+                self.ip_found_dict[ip][mac]["hostname"] = f"*{self.hostname}*"
             else:
                 mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
                 match = False
@@ -426,7 +426,7 @@ class Logic:
                     # print(match, ip, line)
                     if match:
                         hostname = match[1]
-                        self.ip_found_dict[ip][mac]["hostname"] = f"*{hostname}*"
+                        self.ip_found_dict[ip][mac]["hostname"] = hostname
                         break
 
                 if not match:
