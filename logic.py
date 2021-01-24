@@ -25,7 +25,7 @@ lock = threading.Lock()
 # ADAPTERS
 # #################################################
 class Adapters:
-    func_fill_listbox = lambda: None
+    FUNC_FILL_LISTBOX = lambda: None
 
     def __init__(self):
         self.update_clear()
@@ -106,7 +106,7 @@ class Adapters:
                     self.data_dict[adapter]["was_lost"] = True
                     self.net_dict.update({net: {"active": False}})
 
-        Adapters.func_fill_listbox()
+        Adapters.FUNC_FILL_LISTBOX()
         print(self.data_dict)
         print(self.net_dict)
         print(self.ip_dict)
