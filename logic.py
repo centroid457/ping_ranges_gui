@@ -147,7 +147,7 @@ class Logic:
         self.flag_scan_manual_stop = False
 
         # SETS/DICTS/LISTS
-        self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,   active:, was_lost:, }}}
+        self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,  active:, was_lost:, time_response:, vendor:, os:,}}}
         self.ip_last_scanned = None
         self.ip_last_answered = None
 
@@ -385,20 +385,23 @@ class Logic:
             return
 
         elif sp_ping.returncode == 0:
+            # ---------------------------------------------------------------------
             # get MAC at first!
             mac = self._get_mac(ip)
             if mac is None:     # don't pay attention if have not mac! just an accident!
                 return
 
+            # ---------------------------------------------------------------------
+            # fill result dict by initial keys for found ip
             print(f"***************hit=[{ip}]")
             self.ip_last_answered = ip
 
             self._dict_safely_update(self.ip_found_dict, ip, {})
-
             self._dict_safely_update(self.ip_found_dict[ip], mac, {})
             self._mark_nonactive_mac(ip=ip, mac_except=mac)
 
-            # found time response in ms
+            # ---------------------------------------------------------------------
+            # get TIME_RESPONSE in ms
             mask = r'.*\sвремя\S(\S+)мс\s.*'
             match = False
             for line in sp_ping.stdout.readlines():
@@ -411,22 +414,27 @@ class Logic:
                 self._mark_nonactive_mac(ip=ip)
                 return
 
-            # get IP+HOSTNAME
-            mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
-            match = False
-            for line in sp_ping.stdout.readlines():
-                match = re.search(mask, line)
-                # print(match, ip, line)
-                if match:
-                    hostname = match[1]
-                    self._dict_safely_update(self.ip_found_dict[ip][mac], "hostname", hostname)
-                    break
+            # ---------------------------------------------------------------------
+            # get HOSTNAME(+IP)
+            if ip in self.adapter_ip_dict:
+                self.ip_found_dict[ip][mac]["hostname"] = self.hostname
+            else:
+                mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
+                match = False
+                for line in sp_ping.stdout.readlines():
+                    match = re.search(mask, line)
+                    # print(match, ip, line)
+                    if match:
+                        hostname = match[1]
+                        self.ip_found_dict[ip][mac]["hostname"] = hostname
+                        break
 
-            if not match:
-                # some devises don't have hostname! and "ping -a" can't resolve it!
-                self._dict_safely_update(self.ip_found_dict[ip][mac], "hostname", "NoNameDevice")
+                if not match:
+                    # some devises don't have hostname! and "ping -a" can't resolve it!
+                    self._dict_safely_update(self.ip_found_dict[ip][mac], "hostname", "NoNameDevice")
 
-            # NMAP=OS+VENDOR
+            # ---------------------------------------------------------------------
+            # NMAP=get OS+VENDOR
             nmap_dict = self._use_nmap(ip)
             vendor = nmap_dict.get("vendor", None)
             os = nmap_dict.get("os", None)
