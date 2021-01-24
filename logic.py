@@ -18,54 +18,38 @@ ip_tuples_list_default = [
         ("192.168.43.207", )
     ]
 
+lock = threading.Lock()
 
 
-class Logic:
-    @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters=bool)
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters=True):
+# #################################################
+# ADAPTERS
+# #################################################
+class Adapters:
+    func_fill_listbox = lambda: None
 
-        # initiate None funcs for gui collaboration
-        self.func_adapters_fill_listbox = lambda: None
-        self.func_ranges_fill_listbox = lambda: None
-        self.func_ip_found_fill_listbox = lambda: None
+    def __init__(self):
+        self.update_clear()
 
-        self.hostname = platform.node()
+    def clear(self):
+        self.data_dict = {}          # ={ADAPTER_NAME: {mac:, ip:, mask:, gateway:,    active:, was_lost:, }}
+        self.net_dict = {}      # ={NET:{gateway:, active: }}
+        self.ip_dict = {}       # ={IP:{mac:, mask:,    active:, was_lost:, }}
+        self.ip_margin_list = []     # zero and broadcast ips
 
-        self.clear_data()
-        self.clear_adapters()
+        self.gateway_list = []  #
 
-        # input
-        self.ranges_use_adapters = ranges_use_adapters
-        self.ranges_input_list = ip_tuples_list
-        self.ranges_input_default_list = copy.deepcopy(self.ranges_input_list)
-        self.ranges_apply(ip_tuples_list, ranges_use_adapters=ranges_use_adapters)
-        return
-
-    # ###########################################################
-    # ADAPTERS
-    def clear_adapters(self):
-        self.adapter_dict = {}          # ={ADAPTER_NAME: {mac:, ip:, mask:, gateway:,    active:, was_lost:, }}
-        self.adapter_net_dict = {}      # ={NET:{gateway:, active: }}
-        self.adapter_ip_dict = {}       # ={IP:{mac:, mask:,    active:, was_lost:, }}
-        self.adapter_ip_margin_list = []     # zero and broadcast ips
-
-        self.adapter_gateway_list = []  #
-        self.adapter_gateway_time_response_list = []
-
-        self.adapters_detect()
-
-    def adapters_detect(self):
+    def detect(self):
         # INITIATE work
         adapter_new = None  # cumulative var!
-        for adapter in self.adapter_dict:           # clear all active flags
-            if self.adapter_dict[adapter].get("active", None):
-                self.adapter_dict[adapter]["active"] = False
+        for adapter in self.data_dict:           # clear all active flags
+            if self.data_dict[adapter].get("active", None):
+                self.data_dict[adapter]["active"] = False
 
         # START work
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
         for line in sp_ipconfig.stdout.readlines():
-            # find out data = generate adapter_dict
+            # find out data = generate data_dict
             line_striped = line.strip()
             line_striped_splited = line_striped.split(":")
             if len(line_striped_splited) == 1 or line_striped_splited[1] == "":   # exclude Blank or have no data lines
@@ -78,58 +62,86 @@ class Logic:
             part_result = part_2
 
             # -----------------------------------------------------------
-            # CREATION self.adapter_dict
+            # CREATION self.data_dict
             if key_part in ["Описание."]:       # found new adapter
                 adapter_new = part_result
-                self._dict_safely_update(self.adapter_dict, adapter_new, {})
+                _dict_safely_update(self.data_dict, adapter_new, {})
                 mac, ip, mask, gateway = None, None, None, None    # reset if detected new adapter line
             elif key_part in ["Физический"]:
                 mac = part_result
-                self._dict_safely_update(self.adapter_dict[adapter_new], "mac", mac)
+                _dict_safely_update(self.data_dict[adapter_new], "mac", mac)
             elif key_part in ["IPv4-адрес."]:
                 ip = part_result.split("(")[0]
-                self._dict_safely_update(self.adapter_dict[adapter_new], "ip", ip)
-                self._dict_safely_update(self.adapter_dict[adapter_new], "active", True)
+                _dict_safely_update(self.data_dict[adapter_new], "ip", ip)
+                _dict_safely_update(self.data_dict[adapter_new], "active", True)
             elif key_part in ["Маска"]:
                 mask = part_result
-                self._dict_safely_update(self.adapter_dict[adapter_new], "mask", mask)
+                _dict_safely_update(self.data_dict[adapter_new], "mask", mask)
             elif key_part in ["Основной"]:
                 gateway = part_result
-                self._dict_safely_update(self.adapter_dict[adapter_new], "gateway", gateway)
+                _dict_safely_update(self.data_dict[adapter_new], "gateway", gateway)
                 if gateway != "":
-                    self.adapter_gateway_list.append(ipaddress.ip_address(gateway))
+                    self.gateway_list.append(ipaddress.ip_address(gateway))
 
         # use data from found active adapters
-        for adapter, adapter_data_dict in self.adapter_dict.items():
-            if adapter_data_dict.get("ip", None) is not None:
-                ip = ipaddress.ip_address(adapter_data_dict["ip"])
+        for adapter, data_dict in self.data_dict.items():
+            if data_dict.get("ip", None) is not None:
+                ip = ipaddress.ip_address(data_dict["ip"])
 
-                mask = adapter_data_dict.get("mask", None)
-                mac = adapter_data_dict.get("mac", None)
-                gateway = adapter_data_dict.get("gateway", None)
+                mask = data_dict.get("mask", None)
+                mac = data_dict.get("mac", None)
+                gateway = data_dict.get("gateway", None)
 
                 net = ipaddress.ip_network((str(ip), mask), strict=False)
-                adapter_data_dict["net"] = net
-                self.adapter_net_dict.update({net: {"gateway": gateway}})
-                self.adapter_ip_margin_list.append(net[0])
-                self.adapter_ip_margin_list.append(net[-1])
+                data_dict["net"] = net
+                self.net_dict.update({net: {"gateway": gateway}})
+                self.ip_margin_list.append(net[0])
+                self.ip_margin_list.append(net[-1])
 
-                self._dict_safely_update(self.adapter_ip_dict, ip, {})
-                self._dict_safely_update(self.adapter_ip_dict[ip], "mac", mac)
-                self._dict_safely_update(self.adapter_ip_dict[ip], "mask", mask)
+                _dict_safely_update(self.ip_dict, ip, {})
+                _dict_safely_update(self.ip_dict[ip], "mac", mac)
+                _dict_safely_update(self.ip_dict[ip], "mask", mask)
 
-                if not adapter_data_dict.get("active", True):
-                    self.adapter_dict[adapter]["was_lost"] = True
-                    self.adapter_net_dict.update({net: {"active": False}})
+                if not data_dict.get("active", True):
+                    self.data_dict[adapter]["was_lost"] = True
+                    self.net_dict.update({net: {"active": False}})
 
-        self.func_adapters_fill_listbox()
-        print(self.adapter_dict)
-        print(self.adapter_net_dict)
-        print(self.adapter_ip_dict)
+        Adapters.func_fill_listbox()
+        print(self.data_dict)
+        print(self.net_dict)
+        print(self.ip_dict)
         print("*"*80)
 
-        # DO NOT NEED!!!
-        # self.start_daemon_sensor_gateway()  # todo: delete or use only as info_daemon
+    def update(self):
+        self.detect()
+
+    def update_clear(self):
+        self.clear()
+        self.detect()
+
+
+# #################################################
+# LOGIC
+# #################################################
+class Logic:
+    @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters_bool=bool)
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool=True):
+
+        # initiate None funcs for gui collaboration
+        self.func_ranges_fill_listbox = lambda: None
+        self.func_ip_found_fill_listbox = lambda: None
+
+        self.hostname = platform.node()
+
+        self.clear_data()
+        self.adapters = Adapters()
+
+        # input
+        self.ranges_use_adapters_bool = ranges_use_adapters_bool
+        self.ranges_input_list = ip_tuples_list
+        self.ranges_input_default_list = copy.deepcopy(self.ranges_input_list)
+        self.ranges_apply(ip_tuples_list, ranges_use_adapters_bool=ranges_use_adapters_bool)
+        return
 
     # ###########################################################
     # RESET
@@ -140,8 +152,6 @@ class Logic:
         # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
         # but it can overload you CPU!
         # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
-
-        self.lock = threading.Lock()
 
         # FLAGS
         self.flag_scan_is_finished = False
@@ -186,19 +196,19 @@ class Logic:
 
     # ###########################################################
     # RANGES
-    @contracts.contract(ranges="None|(list(tuple))", ranges_use_adapters=bool)
-    def ranges_apply(self, ranges=None, ranges_use_adapters=True):
-        self.ranges_use_adapters = ranges_use_adapters
+    @contracts.contract(ranges="None|(list(tuple))", ranges_use_adapters_bool=bool)
+    def ranges_apply(self, ranges=None, ranges_use_adapters_bool=True):
+        self.ranges_use_adapters_bool = ranges_use_adapters_bool
 
         # do not use WAS_LOST! it is useless!
         self.ranges_active_dict = {}    # ={RANGE_TUPLE: {use:, active:, info:,   ip_start:, ip_finish:,}}
 
         # use adapters nets
-        for net in self.adapter_net_dict:
+        for net in self.adapters.net_dict:
             self.ranges_active_dict.update({(str(net[0]), str(net[-1])): {
                     "info": f"[Adapter:{str(net)}]",
-                    "use": True if ranges_use_adapters else False,
-                    "active": True if self.adapter_net_dict[net].get("active", True) else False,
+                    "use": True if ranges_use_adapters_bool else False,
+                    "active": True if self.adapters.net_dict[net].get("active", True) else False,
                     "ip_start": str(net[0]),
                     "ip_finish": str(net[-1])}})
 
@@ -219,23 +229,23 @@ class Logic:
 
     def ranges_check_adapters(self):
         # it will update existed or fill not existed (if was found changes in adapters!)
-        self.adapters_detect()
-        for net in self.adapter_net_dict:
-            self._dict_safely_update(self.ranges_active_dict, (str(net[0]), str(net[-1])), {})
+        self.adapters.detect()
+        for net in self.adapters.net_dict:
+            _dict_safely_update(self.ranges_active_dict, (str(net[0]), str(net[-1])), {})
 
             the_dict = self.ranges_active_dict[(str(net[0]), str(net[-1]))]
-            self._dict_safely_update(the_dict, "info", f"[AdapterNet:{str(net)}]")
-            self._dict_safely_update(the_dict, "use", True if self.ranges_use_adapters and the_dict.get("use", True) else False)
-            self._dict_safely_update(the_dict, "active", True if self.adapter_net_dict[net].get("active", True) else False)
-            self._dict_safely_update(the_dict, "ip_start", str(net[0]))
-            self._dict_safely_update(the_dict, "ip_finish", str(net[-1]))
+            _dict_safely_update(the_dict, "info", f"[AdapterNet:{str(net)}]")
+            _dict_safely_update(the_dict, "use", True if self.ranges_use_adapters_bool and the_dict.get("use", True) else False)
+            _dict_safely_update(the_dict, "active", True if self.adapters.net_dict[net].get("active", True) else False)
+            _dict_safely_update(the_dict, "ip_start", str(net[0]))
+            _dict_safely_update(the_dict, "ip_finish", str(net[-1]))
 
         self.func_ranges_fill_listbox()
         return
 
     def ranges_reset_to_started(self):
         self.ranges_input_list = self.ranges_input_default_list
-        self.adapters_detect()
+        self.adapters.detect()
         self.ranges_apply()
         return
 
@@ -248,32 +258,6 @@ class Logic:
 
     # ###########################################################
     # SCAN
-    def start_daemon_sensor_gateway(self):
-        active_thread_names_list = [thread_obj.name for thread_obj in threading.enumerate()]
-        for gateway in (*self.adapter_gateway_list, "ya.ru"):
-            if str(gateway) not in active_thread_names_list:
-                threading.Thread(target=self._sensor_gateway, name=str(gateway), args=(gateway, ), daemon=True).start()
-        return
-
-    def _sensor_gateway(self, gateway):
-        cmd_list = ["ping", "-4", str(gateway), "-t", "-l", "1", "-w", "1000"]
-        sp_sensor = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
-        sp_sensor.stdout.readline()
-        sp_sensor.stdout.readline()
-        time_response = 1000
-
-        while sp_sensor.poll() is None:
-            line = sp_sensor.stdout.readline()[:-1]
-            if line != "":
-                # print(line)
-                print(threading.active_count(), self.count_ip_scanned, self.ip_last_scanned, self.ip_last_answered)
-            if line in ["Превышен интервал ожидания для запроса.", ]:
-                time_response = 1000
-                # self.limit_ping_thread = 5
-                sp_sensor.kill()
-            self.adapter_gateway_time_response_list.append(time_response)
-        return
-
     def scan_onсe_thread(self):
         thread_name_scan_once = "scan_once"
 
@@ -353,7 +337,7 @@ class Logic:
     def ping_ip_start_thread(self, ip):
         thread_name_ping = "ping"
 
-        if ip in self.adapter_ip_margin_list:
+        if ip in self.adapters.ip_margin_list:
             return
         while threading.active_count() > self.limit_ping_thread:
             # print(threading.active_count())
@@ -397,8 +381,12 @@ class Logic:
             print(f"***************hit=[{ip}]")
             self.ip_last_answered = ip
 
-            self._dict_safely_update(self.ip_found_dict, ip, {})
-            self._dict_safely_update(self.ip_found_dict[ip], mac, {})
+            _dict_safely_update(self.ip_found_dict, ip, {})
+
+            if self.ip_found_dict[ip].get(mac, None) is not None:
+                self.count_ip_found_additions += 1
+
+            _dict_safely_update(self.ip_found_dict[ip], mac, {})
             self._mark_nonactive_mac(ip=ip, mac_except=mac)
 
             # ---------------------------------------------------------------------
@@ -409,7 +397,7 @@ class Logic:
                 match = re.search(mask, line)
                 if match:
                     time_response = match[1]
-                    self._dict_safely_update(self.ip_found_dict[ip][mac], "time_response", time_response)
+                    _dict_safely_update(self.ip_found_dict[ip][mac], "time_response", time_response)
                     break
             if not match:
                 self._mark_nonactive_mac(ip=ip)
@@ -422,7 +410,7 @@ class Logic:
 
             # ---------------------------------------------------------------------
             # get HOSTNAME(+IP)
-            if ip in self.adapter_ip_dict:
+            if ip in self.adapters.ip_dict:
                 self.ip_found_dict[ip][mac]["hostname"] = f"*{self.hostname}*"
             else:
                 mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
@@ -437,20 +425,20 @@ class Logic:
 
                 if not match:
                     # some devises don't have hostname! and "ping -a" can't resolve it!
-                    self._dict_safely_update(self.ip_found_dict[ip][mac], "hostname", "NoNameDevice")
+                    _dict_safely_update(self.ip_found_dict[ip][mac], "hostname", "NoNameDevice")
 
             # ---------------------------------------------------------------------
             # NMAP=get OS+VENDOR
             nmap_dict = self._use_nmap(ip)
             vendor = nmap_dict.get("vendor", None)
             os = nmap_dict.get("os", None)
-            self._dict_safely_update(self.ip_found_dict[ip][mac], "vendor", vendor)
-            self._dict_safely_update(self.ip_found_dict[ip][mac], "os", os)
+            _dict_safely_update(self.ip_found_dict[ip][mac], "vendor", vendor)
+            _dict_safely_update(self.ip_found_dict[ip][mac], "os", os)
 
             # mark as active
-            self._dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
+            _dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
 
-            self.ip_found_dict = self._sort_dict_by_keys(self.ip_found_dict)
+            self.ip_found_dict = _sort_dict_by_keys(self.ip_found_dict)
             self.func_ip_found_fill_listbox()
         return
 
@@ -465,9 +453,9 @@ class Logic:
                 return match[0]
 
         # if not returned before, try to find in adapters
-        adapter_ip_data = self.adapter_ip_dict.get(ip, None)
-        if adapter_ip_data is not None:
-            return adapter_ip_data.get("mac", None)
+        ip_data = self.adapters.ip_dict.get(ip, None)
+        if ip_data is not None:
+            return ip_data.get("mac", None)
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
@@ -475,9 +463,9 @@ class Logic:
         for mac in self.ip_found_dict[ip]:
             if mac != mac_except:   # change all except the one!
                 # mark as None-Active
-                self._dict_safely_update(self.ip_found_dict[ip][mac], "active", False)
+                _dict_safely_update(self.ip_found_dict[ip][mac], "active", False)
                 # mark as WasLost
-                self._dict_safely_update(self.ip_found_dict[ip][mac], "was_lost", True)  # clear only by clear found data!
+                _dict_safely_update(self.ip_found_dict[ip][mac], "was_lost", True)  # clear only by clear found data!
         return
 
     @contracts.contract(ip=ipaddress.IPv4Address, returns=dict)
@@ -496,27 +484,24 @@ class Logic:
         except:
             return {"vendor": "install Nmap.EXE", "os": "install Nmap.EXE"}
 
-    # ###########################################################
-    # DICT managers
-    @contracts.contract(the_dict=dict)
-    def _dict_safely_update(self, the_dict, key, val):
-        with self.lock:
-            if key in ["active", "was_lost"]:      # use direct insertion!
-                the_dict[key] = val
 
-            elif val not in [None, ""] and the_dict.get(key, None) is None:   # use safe insertion!
-                the_dict[key] = val
+# ###########################################################
+# DICT managers
+@contracts.contract(the_dict=dict)
+def _dict_safely_update(the_dict, key, val):
+    with lock:
+        if key in ["active", "was_lost"]:      # use direct insertion!
+            the_dict[key] = val
 
-                if the_dict is self.ip_found_dict:      # increase counter for found ip
-                    self.count_ip_found_additions += 1
+        elif val not in [None, ""] and the_dict.get(key, None) is None:   # use safe insertion!
+            the_dict[key] = val
 
-    @contracts.contract(the_dict=dict)
-    def _sort_dict_by_keys(self, the_dict):
-        # sorting dict by keys
-        sorted_dict_keys_list = sorted(the_dict)
-        sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
-        return sorted_dict
-
+@contracts.contract(the_dict=dict)
+def _sort_dict_by_keys(the_dict):
+    # sorting dict by keys
+    sorted_dict_keys_list = sorted(the_dict)
+    sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
+    return sorted_dict
 
 # ###########################################################
 # MAIN CODE

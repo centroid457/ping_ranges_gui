@@ -28,10 +28,10 @@ class Gui(Frame):
 
         self.lock = threading.Lock()
 
-        self.logic = logic.Logic(ranges_use_adapters=True)
+        self.logic = logic.Logic(ranges_use_adapters_bool=True)
         self.create_gui_structure()
         # implement fill listbox funcs
-        self.logic.func_adapters_fill_listbox = self.adapters_fill_listbox
+        logic.Adapters.func_fill_listbox = self.adapters_fill_listbox
         self.logic.func_ranges_fill_listbox = self.ranges_fill_listbox
         self.logic.func_ip_found_fill_listbox = self.ip_found_fill_listbox
         # start initial scan_once
@@ -189,7 +189,7 @@ class Gui(Frame):
         the_listbox = self.listbox_adapters
         self._listbox_clear(the_listbox)
 
-        the_dict = self.logic.adapter_dict
+        the_dict = self.logic.adapters.data_dict
         for adapter in the_dict:
             active_mark = "+" if the_dict[adapter].get("active", False) else "-"
             was_lost = the_dict[adapter].get("was_lost", False)
@@ -224,7 +224,7 @@ class Gui(Frame):
         if self.listbox_adapters.curselection() != ():
             selected_list = self.listbox_adapters.curselection()
             selected_item_text = self.listbox_adapters.get(selected_list)
-            for key in self.logic.adapter_dict:
+            for key in self.logic.adapters.data_dict:
                 if key in selected_item_text:
                     self.status_adapters["text"] = key
                     return
