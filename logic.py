@@ -27,11 +27,14 @@ lock = threading.Lock()
 class Adapters:
     FUNC_FILL_LISTBOX = lambda: None
     name_obj_dict = {}
-
+    ip_localhost_list = []
     ip_margin_list = []
+    hostname = platform.node()
 
+    # -----------------------------------------------------------
+    # INSTANCE
     @contracts.contract(adapter_name=str)
-    def add_instance(self, adapter_name):
+    def add_instance_if_not(self, adapter_name):
         # return instance new or existed!
         if adapter_name not in Adapters.name_obj_dict:
             Adapters.name_obj_dict.update({adapter_name: self})
@@ -79,6 +82,8 @@ class Adapters:
         # finally
         return None
 
+    # -----------------------------------------------------------
+    # GENERATE DATA
     @classmethod
     def detect(cls):
         # INITIATE work
@@ -107,12 +112,14 @@ class Adapters:
             # CREATION cls.data_dict
             if key_part in ["Описание."]:       # found new adapter
                 adapter_name = part_result
-                adapter_obj = cls().add_instance(adapter_name)
+                adapter_obj = cls().add_instance_if_not(adapter_name)
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
-                adapter_obj.ip = part_result.split("(")[0]
+                ip = part_result.split("(")[0]
+                adapter_obj.ip = ip
                 adapter_obj.active = True
+                cls.ip_localhost_list.append(ip)
             elif key_part in ["Маска"]:
                 adapter_obj.mask = part_result
             elif key_part in ["Основной"]:
@@ -144,8 +151,10 @@ class Ranges():
 
     tuple_obj_dict = {}
 
+    # -----------------------------------------------------------
+    # INSTANCE
     @contracts.contract(range_tuple="tuple[1|2]", info=str)
-    def add_instance(self, range_tuple=None, info="input"):
+    def add_instance_if_not(self, range_tuple=None, info="input"):
         # return instance new or existed!
         if range_tuple not in Ranges.tuple_obj_dict:
             Ranges.tuple_obj_dict.update({range_tuple: self})
@@ -184,6 +193,8 @@ class Ranges():
         # finally
         return None
 
+    # -----------------------------------------------------------
+    # GENERATE DATA
     @classmethod
     @contracts.contract(ranges_list="None|(list(tuple))", use_adapters_bool=bool)
     def ranges_apply_clear(cls, ranges_list=None, use_adapters_bool=True):
@@ -209,18 +220,14 @@ class Ranges():
             if adapter_obj.net not in (None, ""):
                 net = adapter_obj.net
                 range_tuple = (str(net[0]), str(net[-1]))
-                if range_tuple not in cls.tuple_obj_dict:
-                    range_obj = cls().add_instance(range_tuple=range_tuple, info=f"*Adapter*")
-                else:
-                    range_obj = cls.tuple_obj_dict[range_tuple]
-
+                range_obj = cls().add_instance_if_not(range_tuple=range_tuple, info=f"*Adapter*")
                 range_obj.use = True if cls.use_adapters_bool else False
                 range_obj.active = True if adapter_obj.active else False
         cls.FUNC_FILL_LISTBOX()
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
-        cls().add_instance(range_tuple=range_tuple)
+        cls().add_instance_if_not(range_tuple=range_tuple)
         cls.FUNC_FILL_LISTBOX()
 
     @classmethod
@@ -252,11 +259,24 @@ class Ranges():
 # ###########################################################
 class Hosts():
     FUNC_FILL_LISTBOX = lambda: None
+    flag_scan_manual_stop = False
+    ip_last_scanned = None
+    count_ip_scanned = 0
 
     mac_obj_dict = {}
 
+    # LIMITS
+    limit_ping_timewait_ms = 100  # BEST=100
+    limit_ping_thread = 300  # BEST=300
+    # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
+    # but it can overload you CPU!
+    # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
+
+    # -----------------------------------------------------------
+    # INSTANCE
     @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
-    def add_instance(self, ip, mac):
+    def add_instance_if_not(self, ip, mac):
+        # return instance new or existed!
         with lock:
             if mac not in Hosts.mac_obj_dict:
                 Hosts.mac_obj_dict.update({mac: self})
@@ -274,8 +294,9 @@ class Hosts():
                 self.count_ping = 0
                 self.count_lost = 0
                 self.count_response = 0
-
-                Hosts.ip_explore_and_fill_data(ip)
+                return self
+            else:
+                return Hosts.mac_obj_dict[mac]
 
     def del_instance(self):
         Hosts.mac_obj_dict.pop(self.mac)
@@ -305,12 +326,8 @@ class Hosts():
         # finally
         return None
 
-    @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address)
-    def ping_check(cls, ip):
-
-        return
-
+    # -----------------------------------------------------------
+    # correct!
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
     def get_mac(cls, ip):
@@ -321,41 +338,35 @@ class Hosts():
     def ip_explore_and_fill_data(cls, ip):
         cls.FUNC_FILL_LISTBOX()
 
-
-
-
-
-
-
-    # ###########################################################
-    # PING
+    # -----------------------------------------------------------
+    # GENERATE DATA
+    @classmethod
     @contracts.contract(ip_range=tuple)
-    def ping_ip_range(self, ip_range):
-        ip_start = ipaddress.ip_address(self.ranges_active_dict[ip_range]["ip_start"])
-        ip_finish = ipaddress.ip_address(self.ranges_active_dict[ip_range]["ip_finish"])
+    def ping_range(cls, ip_range):
+        ip_start = ipaddress.ip_address(str(ip_range[0]))
+        ip_finish = ipaddress.ip_address(str(ip_range[-1]))
         ip_current = ip_start
 
-        while ip_current <= ip_finish and not self.flag_scan_manual_stop:
-            self.ping_ip_start_thread(ip_current)
+        while ip_current <= ip_finish and not cls.flag_scan_manual_stop:
+            cls.ping_start_thread(ip_current)
             ip_current = ip_current + 1
         return
 
+    @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
-    def ping_ip_start_thread(self, ip):
+    def ping_start_thread(cls, ip):
         thread_name_ping = "ping"
-
-        if ip in self.adapters.ip_margin_list:
-            return
-        while threading.active_count() > self.limit_ping_thread:
-            # print(threading.active_count())
-            time.sleep(0.01)    # USE=0.01
-        threading.Thread(target=self.ping_ip, args=(ip,), daemon=True, name=thread_name_ping).start()
+        if ip not in Adapters.ip_margin_list:
+            while threading.active_count() > cls.limit_ping_thread:
+                time.sleep(0.1)    # USE=0.01
+            threading.Thread(target=cls.ping, args=(ip,), daemon=True, name=thread_name_ping).start()
         return
 
+    @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
-    def ping_ip(self, ip):
+    def ping(cls, ip):
         # DONT START DIRECTLY!!! USE ONLY THROUGH THREADING!
-        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-l", "0", "-w", str(self.limit_ping_timewait_ms)]
+        cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-l", "0", "-w", str(cls.limit_ping_timewait_ms)]
         """
         -4 = ipv4
         -n = requests count
@@ -366,117 +377,112 @@ class Hosts():
         -w = waiting time
         """
 
-        self.ip_last_scanned = ip
-        self.count_ip_scanned += 1
+        cls.ip_last_scanned = ip
+        cls.count_ip_scanned += 1
         sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
         sp_ping.wait()
+        ping_readlines = sp_ping.stdout.readlines()
         time.sleep(0.001)   # very necessary =0.001 was good! maybe not need)
 
-        if sp_ping.returncode != 0 and ip in self.ip_found_dict:
-            self._mark_nonactive_mac(ip=ip)
-            return
+        if sp_ping.returncode != 0:
+            cls._mark_nonactive_ip(ip)
 
         elif sp_ping.returncode == 0:
             # ---------------------------------------------------------------------
             # get MAC = use first!!!
-            mac = self._get_mac(ip)
+            mac = cls._get_mac(ip)
             if mac is None:     # don't pay attention if have not mac! just an accident!
                 return
-
-            # ---------------------------------------------------------------------
-            # fill result dict by initial keys for found ip
-            print(f"***************hit=[{ip}]")
-            self.ip_last_answered = ip
-
-            _dict_safely_update(self.ip_found_dict, ip, {})
-
-            if self.ip_found_dict[ip].get(mac, None) is not None:
-                self.count_ip_found_additions += 1
-
-            _dict_safely_update(self.ip_found_dict[ip], mac, {})
-            self._mark_nonactive_mac(ip=ip, mac_except=mac)
+            else:
+                host_obj = cls().add_instance_if_not(ip=ip, mac=mac)
 
             # ---------------------------------------------------------------------
             # get TIME_RESPONSE in ms
             mask = r'.*\sвремя\S(\S+)мс\s.*'
             match = False
-            for line in sp_ping.stdout.readlines():
+            for line in ping_readlines:
                 match = re.search(mask, line)
                 if match:
-                    time_response = match[1]
-                    _dict_safely_update(self.ip_found_dict[ip][mac], "time_response", time_response)
+                    host_obj.time_response = match[1]
                     break
             if not match:
-                self._mark_nonactive_mac(ip=ip)
+                cls._mark_nonactive_ip(ip)
                 return
+
+            # ---------------------------------------------------------------------
+            # fill result dict by initial keys for found ip
+            print(f"***************hit=[{ip}]")
+            cls.ip_last_answered = ip
+            cls._mark_nonactive_ip(ip=ip, mac_except=mac)
 
             # =====================================================================
             # go out if exists
-            if self.ip_found_dict[ip][mac].get("hostname", None) is not None:
+            if host_obj.hostname is not None:
                 return
 
             # ---------------------------------------------------------------------
             # get HOSTNAME(+IP)
-            if ip in self.adapters.ip_dict:
-                self.ip_found_dict[ip][mac]["hostname"] = f"*{self.hostname}*"
+            if ip in Adapters.ip_localhost_list:
+                host_obj.hostname = f"*{Adapters.hostname}*"
             else:
                 mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
                 match = False
-                for line in sp_ping.stdout.readlines():
+                for line in ping_readlines:
                     match = re.search(mask, line)
-                    # print(match, ip, line)
                     if match:
-                        hostname = match[1]
-                        self.ip_found_dict[ip][mac]["hostname"] = hostname
+                        host_obj.hostname = match[1]
                         break
 
                 if not match:
                     # some devises don't have hostname! and "ping -a" can't resolve it!
-                    _dict_safely_update(self.ip_found_dict[ip][mac], "hostname", "NoNameDevice")
+                    host_obj.hostname = "NoNameDevice"
 
             # ---------------------------------------------------------------------
             # NMAP=get OS+VENDOR
-            nmap_dict = self._use_nmap(ip)
-            vendor = nmap_dict.get("vendor", None)
-            os = nmap_dict.get("os", None)
-            _dict_safely_update(self.ip_found_dict[ip][mac], "vendor", vendor)
-            _dict_safely_update(self.ip_found_dict[ip][mac], "os", os)
+            nmap_dict = cls._use_nmap(ip)
+            host_obj.os = nmap_dict.get("os", None)
+            host_obj.vendor = nmap_dict.get("vendor", None)
 
-            # mark as active
-            _dict_safely_update(self.ip_found_dict[ip][mac], "active", True)
-
-            self.ip_found_dict = _sort_dict_by_keys(self.ip_found_dict)
-            self.func_ip_found_fill_listbox()
+            # ---------------------------------------------------------------------
+            # UPDATE LISTBOX
+            cls.FUNC_FILL_LISTBOX()
         return
 
+    # -----------------------------------------------------------
+    # AUXILIARY
+    @classmethod
+    @contracts.contract(ip=ipaddress.IPv4Address, except_mac="None|str")
+    def _mark_nonactive_ip(cls, ip, except_mac=None):
+        for obj in cls.mac_obj_dict.values():
+            if obj.ip == ip:
+                obj.active = False if obj.mac != except_mac else True
+        return
+
+    @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
-    def _get_mac(self, ip):
+    def _get_mac(cls, ip):
+        # attempt 1 -----------------
         sp_mac = subprocess.Popen(f"arp -a {str(ip)}", text=True, stdout=subprocess.PIPE, encoding="cp866")
-        arp_lines = sp_mac.stdout.readlines()
-        for line in arp_lines:
-            # print(line)
-            match = re.search(r"[0-9a-fA-F]{2}(?:[:-][0-9a-fA-F]{2}){5}", line)
+        arp_readlines = sp_mac.stdout.readlines()
+        mask = r"[0-9a-fA-F]{2}(?:[:-][0-9a-fA-F]{2}){5}"
+        for line in arp_readlines:
+            match = re.search(mask, line)
             if match is not None:
                 return match[0]
 
+        # attempt 2 -----------------
         # if not returned before, try to find in adapters
-        ip_data = self.adapters.ip_dict.get(ip, None)
-        if ip_data is not None:
-            return ip_data.get("mac", None)
-        return
+        if ip in Adapters.ip_localhost_list:
+            for adapter_obj in Adapters.name_obj_dict.values():
+                if adapter_obj.ip == ip:
+                    return adapter_obj.mac
 
-    @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
-    def _mark_nonactive_mac(self, ip, mac_except=None):
-        for mac in self.ip_found_dict[ip]:
-            if mac != mac_except:   # change all except the one!
-                # mark as None-Active
-                _dict_safely_update(self.ip_found_dict[ip][mac], "active", False)
-                # mark as WasLost
-                _dict_safely_update(self.ip_found_dict[ip][mac], "was_lost", True)  # clear only by clear found data!
-        return
+        # attempt 3 -----------------
+        return None
 
+    @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address, returns=dict)
-    def _use_nmap(self, ip):
+    def _use_nmap(cls, ip):
         try:
             ip = str(ip)
 
@@ -507,6 +513,20 @@ class Hosts():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # #################################################
 # LOGIC
 # #################################################
@@ -517,8 +537,6 @@ class Logic:
         # initiate None funcs for gui collaboration
         self.func_ip_found_fill_listbox = lambda: None
 
-        self.hostname = platform.node()
-
         self.clear_data()
         Adapters.update_clear()
         Ranges.ranges_apply_clear(ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
@@ -527,13 +545,6 @@ class Logic:
     # ###########################################################
     # RESET
     def clear_data(self):
-        # INITIATE LIMITS
-        self.limit_ping_timewait_ms = 100   # BEST=100
-        self.limit_ping_thread = 300        # BEST=300
-        # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
-        # but it can overload you CPU!
-        # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
-
         # FLAGS
         self.flag_scan_is_finished = False
         self.flag_scan_manual_stop = False
@@ -548,7 +559,6 @@ class Logic:
         # COUNTERS
         self.count_scan_cycles = 0
         self.count_ip_scanned = 0
-        self.count_ip_found_additions = 0
         self.time_last_cycle = 0
 
         self.func_ip_found_fill_listbox()
@@ -570,7 +580,6 @@ class Logic:
             "ip_last_answered": self.ip_last_answered,
 
             "count_ip_scanned": self.count_ip_scanned,
-            "count_ip_found_additions": self.count_ip_found_additions,
             "count_ip_found_real": sum([len(self.ip_found_dict[keys]) for keys in self.ip_found_dict])
         }
         return the_dict
