@@ -108,7 +108,6 @@ class Adapters:
             if key_part in ["Описание."]:       # found new adapter
                 adapter_name = part_result
                 adapter_obj = cls().add_instance(adapter_name)
-                print(adapter_obj)
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
