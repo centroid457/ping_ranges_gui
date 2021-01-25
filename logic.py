@@ -44,8 +44,6 @@ class Adapters:
             self.mask = None
             self.gateway = None
             self.net = None
-
-            print("+++++++", self.mac)
             return self
         else:
             return Adapters.name_obj_dict[adapter_name]
@@ -113,7 +111,6 @@ class Adapters:
                 print(adapter_obj)
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
-                print("+++", adapter_obj.mac)
             elif key_part in ["IPv4-адрес."]:
                 adapter_obj.ip = part_result.split("(")[0]
                 adapter_obj.active = True
