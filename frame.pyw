@@ -28,17 +28,25 @@ class Gui(Frame):
 
         self.lock = threading.Lock()
 
-        self.logic = logic.Logic(ranges_use_adapters_bool=True)
+        self.logic_connect()
+
         self.create_gui_structure()
         # implement fill listbox funcs
-        logic.Adapters.FUNC_FILL_LISTBOX = self.adapters_fill_listbox
-        logic.Ranges.FUNC_FILL_LISTBOX = self.ranges_fill_listbox
-        self.logic.func_ip_found_fill_listbox = self.ip_found_fill_listbox
+        self.logic_adapters.UPDATE_LISTBOX = self.adapters_fill_listbox
+        self.logic_ranges.UPDATE_LISTBOX = self.ranges_fill_listbox
+        self.logic_hosts.UPDATE_LISTBOX = self.ip_found_fill_listbox
+
         # start initial scan_once
-        self.logic.scan_onсe_thread()
+        self.logic_scan.scan_onсe_thread()
 
         self.gui_root_configure()
         self.window_move_to_center()
+
+    def logic_connect(self):
+        self.logic_scan = logic.Scan(ranges_use_adapters_bool=True)
+        self.logic_adapters = logic.Adapters
+        self.logic_ranges = logic.Ranges
+        self.logic_hosts = logic.Hosts
 
     def gui_root_configure(self):
         if self.root != self.parent:      # if it is independent window (without insertion in outside project)
@@ -155,7 +163,7 @@ class Gui(Frame):
 
         lbl = Label(frame_header)
         lbl["text"] = f"Found ADAPTERS " \
-                        f"on [{self.logic.hostname}]-hostname:\n" \
+                        f"on [{logic.Adapters.hostname}]-hostname:\n" \
                         "[active-was_lost-mac-ip-mask-gateway-KEYname]"
         lbl.pack()
 
@@ -189,23 +197,24 @@ class Gui(Frame):
         the_listbox = self.listbox_adapters
         self._listbox_clear(the_listbox)
 
-        the_dict = self.logic.adapters.data_dict
-        for adapter in the_dict:
-            active_mark = "+" if the_dict[adapter].get("active", False) else "-"
-            was_lost = the_dict[adapter].get("was_lost", False)
+        obj_set = self.logic_adapters.name_obj_dict.values()
+        for obj in obj_set:
+            active = obj.active
+            active_mark = "+" if active else "-"
+            was_lost = obj.was_lost
             was_lost_mark = "lost" if was_lost else ""
             the_listbox.insert('end',
                                  active_mark.ljust(2, " ") +
                                  was_lost_mark.ljust(5, " ") +
-                                 the_dict[adapter].get("mac", "").ljust(24, " ") +
-                                 the_dict[adapter].get("ip", "").ljust(16, " ") +
-                                 the_dict[adapter].get("mask", "").ljust(16, " ") +
-                                 the_dict[adapter].get("gateway", "").ljust(16, " ") +
-                                 adapter
+                                 str(obj.mac).ljust(24, " ") +
+                                 str(obj.ip).ljust(16, " ") +
+                                 str(obj.mask).ljust(16, " ") +
+                                 str(obj.gateway).ljust(16, " ") +
+                                 obj.name
                                  )
-            if active_mark == "+":
+            if active:
                 the_listbox.itemconfig('end', bg="#55FF55")
-            elif active_mark == "-" and was_lost:
+            elif not active and was_lost:
                 the_listbox.itemconfig('end', bg="#FF9999")
 
             if was_lost:
@@ -213,18 +222,18 @@ class Gui(Frame):
         return
 
     def adapters_reset(self):
-        self.logic.adapters.update_clear()
+        self.logic_adapters.update_clear()
         self.adapters_fill_listbox()
 
     def adapters_refresh(self):
-        self.logic.adapters.update()
+        self.logic_adapters.update()
         self.adapters_fill_listbox()
 
     def adapters_change_status(self, event):
         if self.listbox_adapters.curselection() != ():
             selected_list = self.listbox_adapters.curselection()
             selected_item_text = self.listbox_adapters.get(selected_list)
-            for key in self.logic.adapters.data_dict:
+            for key in self.logic_adapters:
                 if key in selected_item_text:
                     self.status_adapters["text"] = key
                     return
@@ -243,17 +252,17 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="RESET to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.logic.ranges_reset_to_started
+        btn["command"] = self.logic_ranges.ranges_reset_to_started
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="DISABLE all")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = lambda: self.logic.ranges_all_control(disable=True)
+        btn["command"] = lambda: self.logic_ranges.ranges_all_control(disable=True)
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="ENABLE all")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = lambda: self.logic.ranges_all_control(enable=True)
+        btn["command"] = lambda: self.logic_ranges.ranges_all_control(enable=True)
         btn.pack(side="left", fill="y")
 
         lbl = Label(frame_header)
@@ -276,17 +285,17 @@ class Gui(Frame):
 
         btn = Button(frame_status, text="CLEAR to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.range_restore_default
+        btn["command"] = self.range_restore_default     # todo:!!!!
         btn.pack(side="left")
 
         btn = Button(frame_status, text="ENABLE/DISABLE")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.range_switch_activity
+        btn["command"] = self.range_switch_activity      # todo:!!!!
         btn.pack(side="left")
 
         self.status_ranges = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
         self.status_ranges.pack(side="left")
-        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
+        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)      # todo:!!!!
 
         self.ranges_fill_listbox()
         return
