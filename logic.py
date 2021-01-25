@@ -223,7 +223,7 @@ class Hosts():
     mac_obj_dict = {}
 
     @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
-    def __init__(self, ip, mac):
+    def add_instance(self, ip, mac):
         with lock:
             if mac not in Hosts.mac_obj_dict:
                 Hosts.mac_obj_dict.update({mac: self})
@@ -244,10 +244,9 @@ class Hosts():
 
                 Hosts.ip_explore_and_fill_data(ip)
 
-    def __del__(self):
-        if hasattr(self, "mac"):
-            Hosts.mac_obj_dict.pop(self.mac)
-            Hosts.FUNC_FILL_LISTBOX()
+    def del_instance(self):
+        Hosts.mac_obj_dict.pop(self.mac)
+        Hosts.FUNC_FILL_LISTBOX()
 
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
@@ -268,7 +267,7 @@ class Hosts():
     @classmethod
     def clear_all(cls):
         for obj in cls.mac_obj_dict.values():
-            del obj
+            obj.del_instance()
 
     @classmethod
     @contracts.contract(mac=str)
