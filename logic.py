@@ -69,6 +69,19 @@ class Adapters:
         cls.detect()
 
     @classmethod
+    def get_instance_from_text(cls, text):
+        # most correct finding
+        for obj in cls.name_obj_dict.values():
+            if obj.mac not in (None, "") and obj.mac in text:
+                return obj
+        # try auxiliary finding
+        for key in cls.name_obj_dict:
+            if str(key) not in (None, "") and str(key) in text:
+                return obj
+        # finally
+        return None
+
+    @classmethod
     def detect(cls):
         # INITIATE work
         adapter_name = None  # cumulative var!
@@ -161,6 +174,19 @@ class Ranges():
     def clear(cls):
         for obj in cls.tuple_obj_dict.values():
             obj.del_instance()
+
+    @classmethod
+    def get_instance_from_text(cls, text):
+        # most correct finding
+        for obj in cls.tuple_obj_dict.values():
+            if obj.range_str not in (None, "") and obj.range_str in text:
+                return obj
+        # try auxiliary finding
+        for key in cls.tuple_obj_dict:
+            if str(key) not in (None, "") and str(key) in text:
+                return obj
+        # finally
+        return None
 
     @classmethod
     @contracts.contract(ranges_list="None|(list(tuple))", use_adapters_bool=bool)
@@ -269,6 +295,19 @@ class Hosts():
     def clear_mac(cls, mac):
         cls.mac_obj_dict.pop(mac)
         cls.FUNC_FILL_LISTBOX()
+
+    @classmethod
+    def get_instance_from_text(cls, text):
+        # most correct finding
+        for obj in cls.mac_obj_dict.values():
+            if obj.mac not in (None, "") and obj.mac in text:
+                return obj
+        # try auxiliary finding
+        for key in cls.mac_obj_dict:
+            if str(key) not in (None, "") and str(key) in text:
+                return obj
+        # finally
+        return None
 
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
