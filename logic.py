@@ -249,6 +249,17 @@ class Hosts():
         Hosts.FUNC_FILL_LISTBOX()
 
     @classmethod
+    def clear_all(cls):
+        for obj in cls.mac_obj_dict.values():
+            obj.del_instance()
+
+    @classmethod
+    @contracts.contract(mac=str)
+    def clear_mac(cls, mac):
+        cls.mac_obj_dict.pop(mac)
+        cls.FUNC_FILL_LISTBOX()
+
+    @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_check(cls, ip):
 
@@ -262,17 +273,6 @@ class Hosts():
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ip_explore_and_fill_data(cls, ip):
-        cls.FUNC_FILL_LISTBOX()
-
-    @classmethod
-    def clear_all(cls):
-        for obj in cls.mac_obj_dict.values():
-            obj.del_instance()
-
-    @classmethod
-    @contracts.contract(mac=str)
-    def clear_mac(cls, mac):
-        cls.mac_obj_dict.pop(mac)
         cls.FUNC_FILL_LISTBOX()
 
 
