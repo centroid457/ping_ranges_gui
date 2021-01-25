@@ -31,7 +31,7 @@ class Adapters:
     ip_margin_list = []
 
     @contracts.contract(adapter_name=str)
-    def __init__(self, adapter_name):
+    def add_instance(self, adapter_name):
         if adapter_name not in Adapters.name_obj_dict:
             Adapters.name_obj_dict.update({adapter_name: self})
 
@@ -44,15 +44,14 @@ class Adapters:
             self.gateway = None
             self.net = None
 
-    def __del__(self):
-        if hasattr(self, "name"):
-            Adapters.name_obj_dict.pop(self.name)
-            Adapters.FUNC_FILL_LISTBOX()
+    def del_instance(self):
+        Adapters.name_obj_dict.pop(self.name)
+        Adapters.FUNC_FILL_LISTBOX()
 
     @classmethod
     def clear(cls):
         for obj in cls.name_obj_dict.values():
-            del obj
+            obj.del_instance()
 
     @classmethod
     def update(cls):
@@ -91,7 +90,7 @@ class Adapters:
             # CREATION cls.data_dict
             if key_part in ["Описание."]:       # found new adapter
                 adapter_name = part_result
-                adapter_obj = cls(adapter_name)
+                adapter_obj = cls().add_instance(adapter_name)
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
@@ -129,7 +128,7 @@ class Ranges():
     tuple_obj_dict = {}
 
     @contracts.contract(range_tuple="tuple[1|2]", info=str)
-    def __init__(self, range_tuple=None, info="input"):
+    def add_instance(self, range_tuple=None, info="input"):
         if range_tuple not in Ranges.tuple_obj_dict:
             Ranges.tuple_obj_dict.update({range_tuple: self})
 
@@ -142,15 +141,15 @@ class Ranges():
             self.ip_start_str = range_tuple[0]
             self.ip_finish_str = range_tuple[-1]
 
-    def __del__(self):
-        if hasattr(self, "range_tuple"):
-            Ranges.tuple_obj_dict.pop(self.range_tuple)
-            Ranges.FUNC_FILL_LISTBOX()
+
+    def del_instance(self):
+        Ranges.tuple_obj_dict.pop(self.range_tuple)
+        Ranges.FUNC_FILL_LISTBOX()
 
     @classmethod
     def clear(cls):
         for obj in cls.tuple_obj_dict.values():
-            del obj
+            obj.del_instance()
 
     @classmethod
     @contracts.contract(ranges_list="None|(list(tuple))", use_adapters_bool=bool)
@@ -178,7 +177,7 @@ class Ranges():
                 net = adapter_obj.net
                 range_tuple = (str(net[0]), str(net[-1]))
                 if range_tuple not in cls.tuple_obj_dict:
-                    range_obj = cls(range_tuple=range_tuple, info=f"*Adapter*")
+                    range_obj = cls().add_instance(range_tuple=range_tuple, info=f"*Adapter*")
                 else:
                     range_obj = cls.tuple_obj_dict[range_tuple]
 
@@ -188,7 +187,7 @@ class Ranges():
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
-        cls(range_tuple=range_tuple)
+        cls().add_instance(range_tuple=range_tuple)
         cls.FUNC_FILL_LISTBOX()
 
     @classmethod
