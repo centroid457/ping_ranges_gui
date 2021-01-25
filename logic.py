@@ -28,7 +28,7 @@ class Adapters:
     name_obj_dict = {}
 
     UPDATE_LISTBOX = lambda: None
-    ip_localhost_list = []
+    ip_localhost_set = set()
     ip_margin_list = []
     hostname = platform.node()
 
@@ -123,10 +123,10 @@ class Adapters:
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
-                ip = part_result.split("(")[0]
+                ip = ipaddress.ip_address(part_result.split("(")[0])
                 adapter_obj.ip = ip
                 adapter_obj.active = True
-                cls.ip_localhost_list.append(ip)
+                cls.ip_localhost_set.update({ip})
             elif key_part in ["Маска"]:
                 adapter_obj.mask = part_result
             elif key_part in ["Основной"]:
@@ -403,6 +403,7 @@ class Hosts():
             # ---------------------------------------------------------------------
             # get MAC = use first!!!
             mac = cls._get_mac(ip)
+
             if mac is None:     # don't pay attention if have not mac! just an accident!
                 return
             else:
@@ -436,7 +437,7 @@ class Hosts():
 
             # ---------------------------------------------------------------------
             # get HOSTNAME(+IP)
-            if ip in Adapters.ip_localhost_list:
+            if ip in Adapters.ip_localhost_set:
                 host_obj.hostname = f"*{Adapters.hostname}*"
             else:
                 mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
@@ -483,7 +484,7 @@ class Hosts():
 
         # attempt 2 -----------------
         # if not returned before, try to find in adapters
-        if ip in Adapters.ip_localhost_list:
+        if ip in Adapters.ip_localhost_set:
             for adapter_obj in Adapters.name_obj_dict.values():
                 if adapter_obj.ip == ip:
                     return adapter_obj.mac
