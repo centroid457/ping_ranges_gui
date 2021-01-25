@@ -71,15 +71,19 @@ class Adapters:
 
     @classmethod
     def get_instance_from_text(cls, text):
+        # attempt 1 -----------------
         # most correct finding
         for obj in cls.name_obj_dict.values():
             if obj.mac not in (None, "") and obj.mac in text:
                 return obj
+
+        # attempt 2 -----------------
         # try auxiliary finding
         for key in cls.name_obj_dict:
             if str(key) not in (None, "") and str(key) in text:
-                return obj
-        # finally
+                return cls.name_obj_dict[key]
+
+        # attempt 3 -----------------
         return None
 
     # -----------------------------------------------------------
@@ -182,15 +186,19 @@ class Ranges():
 
     @classmethod
     def get_instance_from_text(cls, text):
+        # attempt 1 -----------------
         # most correct finding
         for obj in cls.tuple_obj_dict.values():
             if obj.range_str not in (None, "") and obj.range_str in text:
                 return obj
+
+        # attempt 2 -----------------
         # try auxiliary finding
         for key in cls.tuple_obj_dict:
             if str(key) not in (None, "") and str(key) in text:
-                return obj
-        # finally
+                return cls.tuple_obj_dict[key]
+
+        # attempt 3 -----------------
         return None
 
     # -----------------------------------------------------------
@@ -259,11 +267,13 @@ class Ranges():
 # ###########################################################
 class Hosts():
     FUNC_FILL_LISTBOX = lambda: None
-    flag_scan_manual_stop = False
     ip_last_scanned = None
-    count_ip_scanned = 0
+    ip_last_answered = None
 
     mac_obj_dict = {}
+
+    flag_scan_manual_stop = False
+    count_ip_scanned = 0
 
     # LIMITS
     limit_ping_timewait_ms = 100  # BEST=100
@@ -315,15 +325,19 @@ class Hosts():
 
     @classmethod
     def get_instance_from_text(cls, text):
+        # attempt 1 -----------------
         # most correct finding
         for obj in cls.mac_obj_dict.values():
             if obj.mac not in (None, "") and obj.mac in text:
                 return obj
+
+        # attempt 2 -----------------
         # try auxiliary finding
         for key in cls.mac_obj_dict:
             if str(key) not in (None, "") and str(key) in text:
-                return obj
-        # finally
+                return cls.mac_obj_dict[key]
+
+        # attempt 3 -----------------
         return None
 
     # -----------------------------------------------------------
@@ -498,91 +512,50 @@ class Hosts():
             return {"vendor": "install Nmap.EXE", "os": "install Nmap.EXE"}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # #################################################
-# LOGIC
+# SCAN
 # #################################################
-class Logic:
+class Scan:
     @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters_bool=bool)
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool=True):
 
-        # initiate None funcs for gui collaboration
-        self.func_ip_found_fill_listbox = lambda: None
-
-        self.clear_data()
         Adapters.update_clear()
-        Ranges.ranges_apply_clear(ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
+        Ranges.ranges_apply_clear(ip_tuples_list=ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
+
+        self.flag_scan_is_finished = False
+        self.count_scan_cycles = 0
+        self.time_last_cycle = 0
         return
 
     # ###########################################################
-    # RESET
-    def clear_data(self):
-        # FLAGS
-        self.flag_scan_is_finished = False
-        self.flag_scan_manual_stop = False
-
-        # SETS/DICTS/LISTS
-        self.ip_found_dict = {}         # ={IP:{MAC:{hostname:,  active:, was_lost:, time_response:, vendor:, os:,}}}
-        self.ip_last_scanned = None
-        self.ip_last_answered = None
-
-        # self.ranges_active_dict = []  # DO NOT CLEAR IT!!! update it in ranges_apply_clear
-
-        # COUNTERS
-        self.count_scan_cycles = 0
-        self.count_ip_scanned = 0
-        self.time_last_cycle = 0
-
-        self.func_ip_found_fill_listbox()
-        return
-
     def get_main_status_dict(self):
         the_dict = {
-            "limit_ping_timewait_ms": self.limit_ping_timewait_ms,
-            "limit_ping_thread": self.limit_ping_thread,
-
             "count_scan_cycles": self.count_scan_cycles,
             "threads_active_count": threading.active_count(),
             "time_last_cycle": self.time_last_cycle,
 
-            "flag_scan_manual_stop": self.flag_scan_manual_stop,
+            "flag_scan_manual_stop": Hosts.flag_scan_manual_stop,
             "flag_scan_is_finished": self.flag_scan_is_finished,
 
-            "ip_last_scanned": self.ip_last_scanned,
-            "ip_last_answered": self.ip_last_answered,
+            "ip_last_scanned": Hosts.ip_last_scanned,
+            "ip_last_answered": Hosts.ip_last_answered,
 
-            "count_ip_scanned": self.count_ip_scanned,
-            "count_ip_found_real": sum([len(self.ip_found_dict[keys]) for keys in self.ip_found_dict])
+            "count_ip_scanned": Hosts.count_ip_scanned,
+            "count_ip_found_real": len(Hosts.mac_obj_dict)
         }
         return the_dict
+
+
+
+
+
+
+
+
+
+
+
+
 
     # ###########################################################
     # SCAN
@@ -604,7 +577,6 @@ class Logic:
 
         self.flag_scan_manual_stop = False
         self.flag_scan_is_finished = False
-
 
 
 
@@ -655,29 +627,16 @@ class Logic:
             self.ping_ip_start_thread(ip)
 
 
-# ###########################################################
-# DICT managers
-@contracts.contract(the_dict=dict)
-def _dict_safely_update(the_dict, key, val):
-    with lock:
-        if key in ["active", "was_lost"]:      # use direct insertion!
-            the_dict[key] = val
 
-        elif val not in [None, ""] and the_dict.get(key, None) is None:   # use safe insertion!
-            the_dict[key] = val
 
-@contracts.contract(the_dict=dict)
-def _sort_dict_by_keys(the_dict):
-    # sorting dict by keys
-    sorted_dict_keys_list = sorted(the_dict)
-    sorted_dict = dict(zip(sorted_dict_keys_list, [the_dict[value] for value in sorted_dict_keys_list]))
-    return sorted_dict
+
+
 
 # ###########################################################
 # MAIN CODE
 if __name__ == '__main__':
     access_this_module_as_import = False
-    sample = Logic()
+    sample = Scan()
     sample.scan_onсe()
 
     # input("Press ENTER to exit")
