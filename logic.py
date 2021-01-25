@@ -32,6 +32,7 @@ class Adapters:
 
     @contracts.contract(adapter_name=str)
     def add_instance(self, adapter_name):
+        # return instance new or existed!
         if adapter_name not in Adapters.name_obj_dict:
             Adapters.name_obj_dict.update({adapter_name: self})
 
@@ -43,6 +44,11 @@ class Adapters:
             self.mask = None
             self.gateway = None
             self.net = None
+
+            print("+++++++", self.mac)
+            return self
+        else:
+            return Adapters.name_obj_dict[adapter_name]
 
     def del_instance(self):
         Adapters.name_obj_dict.pop(self.name)
@@ -91,8 +97,10 @@ class Adapters:
             if key_part in ["Описание."]:       # found new adapter
                 adapter_name = part_result
                 adapter_obj = cls().add_instance(adapter_name)
+                print(adapter_obj)
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
+                print("+++", adapter_obj.mac)
             elif key_part in ["IPv4-адрес."]:
                 adapter_obj.ip = part_result.split("(")[0]
                 adapter_obj.active = True
@@ -129,6 +137,7 @@ class Ranges():
 
     @contracts.contract(range_tuple="tuple[1|2]", info=str)
     def add_instance(self, range_tuple=None, info="input"):
+        # return instance new or existed!
         if range_tuple not in Ranges.tuple_obj_dict:
             Ranges.tuple_obj_dict.update({range_tuple: self})
 
@@ -140,7 +149,9 @@ class Ranges():
             self.info = info
             self.ip_start_str = range_tuple[0]
             self.ip_finish_str = range_tuple[-1]
-
+            return self
+        else:
+            return Ranges.tuple_obj_dict[range_tuple]
 
     def del_instance(self):
         Ranges.tuple_obj_dict.pop(self.range_tuple)
