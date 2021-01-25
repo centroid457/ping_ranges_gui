@@ -25,8 +25,9 @@ lock = threading.Lock()
 # ADAPTERS
 # #################################################
 class Adapters:
-    FUNC_FILL_LISTBOX = lambda: None
     name_obj_dict = {}
+
+    UPDATE_LISTBOX = lambda: None
     ip_localhost_list = []
     ip_margin_list = []
     hostname = platform.node()
@@ -40,6 +41,7 @@ class Adapters:
             Adapters.name_obj_dict.update({adapter_name: self})
 
             self.name = adapter_name
+
             self.active = None
             self.was_lost = False
             self.mac = None
@@ -47,13 +49,14 @@ class Adapters:
             self.mask = None
             self.gateway = None
             self.net = None
+
             return self
         else:
             return Adapters.name_obj_dict[adapter_name]
 
     def del_instance(self):
         Adapters.name_obj_dict.pop(self.name)
-        Adapters.FUNC_FILL_LISTBOX()
+        Adapters.UPDATE_LISTBOX()
 
     @classmethod
     def clear(cls):
@@ -139,7 +142,7 @@ class Adapters:
                 cls.ip_margin_list.append(net[0])
                 cls.ip_margin_list.append(net[-1])
 
-        cls.FUNC_FILL_LISTBOX()
+        cls.UPDATE_LISTBOX()
         for adapter_name in cls.name_obj_dict:
             print(adapter_name)
         print("*"*80)
@@ -149,11 +152,11 @@ class Adapters:
 # RANGES
 # ###########################################################
 class Ranges():
-    FUNC_FILL_LISTBOX = lambda: None
+    tuple_obj_dict = {}
+
+    UPDATE_LISTBOX = lambda: None
     use_adapters_bool = None
     input_tuple_list = []
-
-    tuple_obj_dict = {}
 
     # -----------------------------------------------------------
     # INSTANCE
@@ -171,13 +174,14 @@ class Ranges():
             self.info = info
             self.ip_start_str = range_tuple[0]
             self.ip_finish_str = range_tuple[-1]
+
             return self
         else:
             return Ranges.tuple_obj_dict[range_tuple]
 
     def del_instance(self):
         Ranges.tuple_obj_dict.pop(self.range_tuple)
-        Ranges.FUNC_FILL_LISTBOX()
+        Ranges.UPDATE_LISTBOX()
 
     @classmethod
     def clear(cls):
@@ -204,7 +208,7 @@ class Ranges():
     # -----------------------------------------------------------
     # GENERATE DATA
     @classmethod
-    @contracts.contract(ranges_list="None|(list(tuple))", use_adapters_bool=bool)
+    @contracts.contract(ranges_list="None|(list(tuple[1|2]))", use_adapters_bool=bool)
     def ranges_apply_clear(cls, ranges_list=None, use_adapters_bool=True):
         cls.use_adapters_bool = use_adapters_bool
 
@@ -216,7 +220,7 @@ class Ranges():
             for my_range in cls.input_tuple_list:
                 cls.add_range_tuple(range_tuple=my_range)
 
-        cls.FUNC_FILL_LISTBOX()
+        cls.UPDATE_LISTBOX()
         for my_range in cls.tuple_obj_dict:
             print(my_range)
         return
@@ -231,25 +235,26 @@ class Ranges():
                 range_obj = cls().add_instance_if_not(range_tuple=range_tuple, info=f"*Adapter*")
                 range_obj.use = True if cls.use_adapters_bool else False
                 range_obj.active = True if adapter_obj.active else False
-        cls.FUNC_FILL_LISTBOX()
+        cls.UPDATE_LISTBOX()
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
         cls().add_instance_if_not(range_tuple=range_tuple)
-        cls.FUNC_FILL_LISTBOX()
+        cls.UPDATE_LISTBOX()
+
+    # -----------------------------------------------------------
+    # CONTROL
+    @classmethod
+    def ranges_reset_to_started(cls):
+        cls.ranges_apply_clear(ranges_list=cls.input_tuple_list, use_adapters_bool=cls.use_adapters_bool)
 
     @classmethod
     def ranges_all_control(cls, disable=False, enable=False):
         for range_obj in cls.tuple_obj_dict.values():
             range_obj.use = False if disable else True if enable else None
 
-        cls.FUNC_FILL_LISTBOX()
+        cls.UPDATE_LISTBOX()
         return
-
-    @classmethod
-    def ranges_reset_to_started(cls):
-        cls.ranges_apply_clear(ranges_list=cls.input_tuple_list, use_adapters_bool=cls.use_adapters_bool)
-        cls.FUNC_FILL_LISTBOX()
 
     @classmethod
     def range_control(cls, range_tuple, use=None, active=None):
@@ -258,7 +263,7 @@ class Ranges():
                 cls.tuple_obj_dict[range_tuple].use = use
             if active is not None:
                 cls.tuple_obj_dict[range_tuple].active = active
-        cls.FUNC_FILL_LISTBOX()
+        cls.UPDATE_LISTBOX()
         return
 
 
@@ -266,12 +271,11 @@ class Ranges():
 # HOSTS
 # ###########################################################
 class Hosts():
-    FUNC_FILL_LISTBOX = lambda: None
-    ip_last_scanned = None
-    ip_last_answered = None
-
     mac_obj_dict = {}
 
+    UPDATE_LISTBOX = lambda: None
+    ip_last_scanned = None
+    ip_last_answered = None
     flag_scan_manual_stop = False
     count_ip_scanned = 0
 
@@ -300,28 +304,27 @@ class Hosts():
                 self.vendor = None
                 self.os = None
                 self.time_response = None
-
                 self.count_ping = 0
                 self.count_lost = 0
                 self.count_response = 0
+
                 return self
             else:
                 return Hosts.mac_obj_dict[mac]
 
     def del_instance(self):
         Hosts.mac_obj_dict.pop(self.mac)
-        Hosts.FUNC_FILL_LISTBOX()
+        Hosts.UPDATE_LISTBOX()
+
+    @classmethod
+    @contracts.contract(mac=str)
+    def clear_mac(cls, mac):
+        cls.mac_obj_dict[mac].del_instance()
 
     @classmethod
     def clear_all(cls):
         for obj in cls.mac_obj_dict.values():
             obj.del_instance()
-
-    @classmethod
-    @contracts.contract(mac=str)
-    def clear_mac(cls, mac):
-        cls.mac_obj_dict.pop(mac)
-        cls.FUNC_FILL_LISTBOX()
 
     @classmethod
     def get_instance_from_text(cls, text):
@@ -341,18 +344,6 @@ class Hosts():
         return None
 
     # -----------------------------------------------------------
-    # correct!
-    @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address)
-    def get_mac(cls, ip):
-        return
-
-    @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address)
-    def ip_explore_and_fill_data(cls, ip):
-        cls.FUNC_FILL_LISTBOX()
-
-    # -----------------------------------------------------------
     # GENERATE DATA
     @classmethod
     @contracts.contract(ip_range=tuple)
@@ -365,6 +356,11 @@ class Hosts():
             cls.ping_start_thread(ip_current)
             ip_current = ip_current + 1
         return
+
+    @classmethod
+    def ping_found(cls):
+        for obj in cls.mac_obj_dict.values():
+            cls.ping_start_thread(obj.ip)
 
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
@@ -400,8 +396,10 @@ class Hosts():
 
         if sp_ping.returncode != 0:
             cls._mark_nonactive_ip(ip)
+            cls.UPDATE_LISTBOX()
+            return
 
-        elif sp_ping.returncode == 0:
+        if sp_ping.returncode == 0:
             # ---------------------------------------------------------------------
             # get MAC = use first!!!
             mac = cls._get_mac(ip)
@@ -421,6 +419,7 @@ class Hosts():
                     break
             if not match:
                 cls._mark_nonactive_ip(ip)
+                cls.UPDATE_LISTBOX()
                 return
 
             # ---------------------------------------------------------------------
@@ -432,6 +431,7 @@ class Hosts():
             # =====================================================================
             # go out if exists
             if host_obj.hostname is not None:
+                cls.UPDATE_LISTBOX()
                 return
 
             # ---------------------------------------------------------------------
@@ -456,20 +456,17 @@ class Hosts():
             nmap_dict = cls._use_nmap(ip)
             host_obj.os = nmap_dict.get("os", None)
             host_obj.vendor = nmap_dict.get("vendor", None)
-
-            # ---------------------------------------------------------------------
-            # UPDATE LISTBOX
-            cls.FUNC_FILL_LISTBOX()
+            cls.UPDATE_LISTBOX()
         return
 
     # -----------------------------------------------------------
     # AUXILIARY
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address, except_mac="None|str")
-    def _mark_nonactive_ip(cls, ip, except_mac=None):
+    @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
+    def _mark_nonactive_ip(cls, ip, mac_except=None):
         for obj in cls.mac_obj_dict.values():
             if obj.ip == ip:
-                obj.active = False if obj.mac != except_mac else True
+                obj.active = False if obj.mac != mac_except else True
         return
 
     @classmethod
@@ -518,16 +515,15 @@ class Hosts():
 class Scan:
     @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters_bool=bool)
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool=True):
-
-        Adapters.update_clear()
-        Ranges.ranges_apply_clear(ip_tuples_list=ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
-
         self.flag_scan_is_finished = False
         self.count_scan_cycles = 0
         self.time_last_cycle = 0
+
+        Adapters.update_clear()
+        Ranges.ranges_apply_clear(ranges_list=ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
         return
 
-    # ###########################################################
+    # -----------------------------------------------------------
     def get_main_status_dict(self):
         the_dict = {
             "count_scan_cycles": self.count_scan_cycles,
@@ -545,24 +541,11 @@ class Scan:
         }
         return the_dict
 
-
-
-
-
-
-
-
-
-
-
-
-
-    # ###########################################################
-    # SCAN
+    # #################################################
     def scan_onсe_thread(self):
         thread_name_scan_once = "scan_once"
 
-        # start only one thread
+        # start only one ONCE-thread
         for thread in threading.enumerate():
             if thread.name.startswith(thread_name_scan_once):
                 return
@@ -571,23 +554,18 @@ class Scan:
         return
 
     def scan_onсe(self):
-        self.count_scan_cycles += 1
         time_start = time.time()
-        self.rescan_found()
 
-        self.flag_scan_manual_stop = False
+        self.count_scan_cycles += 1
+        Hosts.flag_scan_manual_stop = False
         self.flag_scan_is_finished = False
 
+        Hosts.ping_found()
+        Adapters.update()
 
-
-
-
-        exit()
-        self.ranges_check_adapters()
-
-        for ip_range in self.ranges_active_dict:
-            if self.ranges_active_dict[ip_range]["use"] and self.ranges_active_dict[ip_range]["active"]:
-                self.ping_ip_range(ip_range)
+        for range_obj in Ranges.tuple_obj_dict.values():
+            if range_obj.use and range_obj.active:
+                Hosts.ping_range(range_obj.range_tuple)
 
         # WAIT ALL PING THREADS FINISHED
         for thread in threading.enumerate():
@@ -599,7 +577,7 @@ class Scan:
 
         print("*"*80)
         print("time_last_cycle", self.time_last_cycle)
-        print("ip_found_dict", self.ip_found_dict)
+        print("ip_found", [(obj.ip, obj.mac) for obj in Hosts.mac_obj_dict.values()])
         return
 
     def scan_loop_thread(self):
@@ -614,31 +592,23 @@ class Scan:
         return
 
     def scan_loop(self):
-        self.flag_scan_manual_stop = False
-        while not self.flag_scan_manual_stop:
+        Hosts.flag_scan_manual_stop = False
+        while not Hosts.flag_scan_manual_stop:
             self.scan_onсe()
             time.sleep(1)
 
     def scan_stop(self):
-        self.flag_scan_manual_stop = True
-
-    def rescan_found(self):
-        for ip in self.ip_found_dict:
-            self.ping_ip_start_thread(ip)
-
-
-
-
-
+        Hosts.flag_scan_manual_stop = True
 
 
 # ###########################################################
 # MAIN CODE
+# ###########################################################
 if __name__ == '__main__':
     access_this_module_as_import = False
     sample = Scan()
-    sample.scan_onсe()
+    sample.scan_onсe_thread()
 
-    # input("Press ENTER to exit")
+    input("Press ENTER to exit")
 else:
     access_this_module_as_import = True
