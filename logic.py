@@ -525,7 +525,7 @@ class Hosts():
 # SCAN = main class!
 # #################################################
 class Scan:
-    @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters_bool=bool)
+    @contracts.contract(ip_tuples_list="None|(list(None|tuple))", ranges_use_adapters_bool=bool)
     def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool=True):
         self.flag_scan_is_finished = False
         self.count_scan_cycles = 0

@@ -29,7 +29,7 @@ class Gui(Frame):
         self.lock = threading.Lock()
 
         # CONNECT TO LOGIC
-        self.logic = logic.Scan(ip_tuples_list=[], ranges_use_adapters_bool=True)
+        self.logic = logic.Scan(ip_tuples_list=None, ranges_use_adapters_bool=True)
 
         self.create_gui_structure()
 
