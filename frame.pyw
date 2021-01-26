@@ -221,7 +221,7 @@ class Gui(Frame):
         return
 
     def adapters_change_status(self, event):
-        obj = self._listbox_get_selected_obj(self.listbox_adapters, self.logic.adapters.get_instance_from_text)
+        obj = self._listbox_get_selected_obj(self.listbox_adapters, self.logic.adapters.instance_get_from_text)
         if obj is not None:
             self.status_adapters["text"] = obj.name
         return
@@ -272,7 +272,7 @@ class Gui(Frame):
 
         btn = Button(frame_status, text="CLEAR to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.range_restore_default()
+        btn["command"] = self.range_restore_default
         btn.pack(side="left")
 
         btn = Button(frame_status, text="use ENABLE/DISABLE")
@@ -304,8 +304,8 @@ class Gui(Frame):
                                 active_mark.ljust(2, " ") +
                                 obj.range_str.ljust(37, " ") +
                                 str(obj.info).ljust(30, " ") +
-                                str(obj.ip_start).ljust(16, " ") +
-                                str(obj.ip_finish).ljust(16, " ")
+                                str(obj.ip_start_str).ljust(16, " ") +
+                                str(obj.ip_finish_str).ljust(16, " ")
                                )
             # change visual
             if not use or not active:
@@ -315,7 +315,7 @@ class Gui(Frame):
         return
 
     def range_restore_default(self):
-        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.get_instance_from_text)
+        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.instance_get_from_text)
         if obj is not None:
             obj.ip_start = obj.range_tuple[0]
             obj.ip_finish = obj.range_tuple[-1]
@@ -325,16 +325,16 @@ class Gui(Frame):
         return
 
     def range_switch_use(self):
-        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.get_instance_from_text)
+        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.instance_get_from_text)
         if obj is not None:
             obj.use = not obj.use
             self.ranges_fill_listbox()
         return
 
     def ranges_change_status(self, event):
-        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.get_instance_from_text)
+        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.instance_get_from_text)
         if obj is not None:
-            self.status_ranges["text"] = obj.name
+            self.status_ranges["text"] = obj.range_str
         return
 
     # #################################################
@@ -426,9 +426,9 @@ class Gui(Frame):
                                      str(time_response).ljust(3, " ") +
                                      str(ip).ljust(16, " ") +
                                      str(mac).ljust(19, " ") +
-                                     hostname.ljust(15, " ") +
-                                     vendor.ljust(20, " ") +
-                                     os)
+                                     str(hostname).ljust(15, " ") +
+                                     str(vendor).ljust(20, " ") +
+                                     str(os))
 
                 if active:
                     the_listbox.itemconfig('end', bg="#55FF55")
@@ -440,15 +440,15 @@ class Gui(Frame):
         return
 
     def ip_found_change_status(self, event):
-        obj = self._listbox_get_selected_obj(self.listbox_ip_found, self.logic.hosts.get_instance_from_text)
+        obj = self._listbox_get_selected_obj(self.listbox_ip_found, self.logic.hosts.instance_get_from_text)
         if obj is not None:
-            self.status_ranges["text"] = obj.name
+            self.status_ip_found["text"] = f"{obj.ip}__{obj.mac}"
         return
 
     def ip_found_delete_line(self):
-        obj = self._listbox_get_selected_obj(self.listbox_ip_found, self.logic.hosts.get_instance_from_text)
+        obj = self._listbox_get_selected_obj(self.listbox_ip_found, self.logic.hosts.instance_get_from_text)
         if obj is not None:
-            obj.del_instance()
+            obj._instance_del()
         return
 
     # #################################################
@@ -494,11 +494,11 @@ class Gui(Frame):
 
     # #################################################
     # rest
-    def _listbox_get_selected_obj(self, the_listbox, func_get_instance_from_text):
+    def _listbox_get_selected_obj(self, the_listbox, func_instance_get_from_text):
         if the_listbox.curselection() != ():
             selected_list = the_listbox.curselection()
             selected_item_text = the_listbox.get(selected_list)
-            obj = func_get_instance_from_text(selected_item_text)
+            obj = func_instance_get_from_text(selected_item_text)
             return obj
         return None
 
