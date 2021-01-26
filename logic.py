@@ -35,7 +35,7 @@ class Adapters:
     # -----------------------------------------------------------
     # INSTANCE
     @contracts.contract(adapter_name=str)
-    def _add_instance_if_not(self, adapter_name):
+    def _instance_add_if_not(self, adapter_name):
         # return instance new or existed!
         if adapter_name not in Adapters.name_obj_dict:
             Adapters.name_obj_dict.update({adapter_name: self})
@@ -54,14 +54,14 @@ class Adapters:
         else:
             return Adapters.name_obj_dict[adapter_name]
 
-    def _del_instance(self):
+    def _instance_del(self):
         Adapters.name_obj_dict.pop(self.name)
         Adapters.UPDATE_LISTBOX()
 
     @classmethod
     def clear(cls):
         for obj in cls.name_obj_dict.values():
-            obj._del_instance()
+            obj._instance_del()
 
     @classmethod
     def update(cls):
@@ -88,6 +88,11 @@ class Adapters:
 
         # attempt 3 -----------------
         return None
+
+    def instance_print(self):
+        for attr in dir(self):
+            if not attr.startswith("_") and not callable(getattr(self, attr)):
+                print(f"{attr}=[{getattr(self, attr)}]")
 
     # -----------------------------------------------------------
     # GENERATE DATA
@@ -119,7 +124,7 @@ class Adapters:
             # CREATION cls.data_dict
             if key_part in ["Описание."]:       # found new adapter
                 adapter_name = part_result
-                adapter_obj = cls()._add_instance_if_not(adapter_name)
+                adapter_obj = cls()._instance_add_if_not(adapter_name)
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
@@ -161,7 +166,7 @@ class Ranges():
     # -----------------------------------------------------------
     # INSTANCE
     @contracts.contract(range_tuple="tuple[1|2]", info=str)
-    def _add_instance_if_not(self, range_tuple=None, info="input"):
+    def _instance_add_if_not(self, range_tuple=None, info="input"):
         # return instance new or existed!
         if range_tuple not in Ranges.tuple_obj_dict:
             Ranges.tuple_obj_dict.update({range_tuple: self})
@@ -179,14 +184,14 @@ class Ranges():
         else:
             return Ranges.tuple_obj_dict[range_tuple]
 
-    def _del_instance(self):
+    def _instance_del(self):
         Ranges.tuple_obj_dict.pop(self.range_tuple)
         Ranges.UPDATE_LISTBOX()
 
     @classmethod
     def clear(cls):
         for obj in cls.tuple_obj_dict.values():
-            obj._del_instance()
+            obj._instance_del()
 
     @classmethod
     def get_instance_from_text(cls, text):
@@ -204,6 +209,11 @@ class Ranges():
 
         # attempt 3 -----------------
         return None
+
+    def instance_print(self):
+        for attr in dir(self):
+            if not attr.startswith("_") and not callable(getattr(self, attr)):
+                print(f"{attr}=[{getattr(self, attr)}]")
 
     # -----------------------------------------------------------
     # GENERATE DATA
@@ -232,14 +242,14 @@ class Ranges():
             if adapter_obj.net not in (None, ""):
                 net = adapter_obj.net
                 range_tuple = (str(net[0]), str(net[-1]))
-                range_obj = cls()._add_instance_if_not(range_tuple=range_tuple, info=f"*Adapter*")
+                range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info=f"*Adapter*")
                 range_obj.use = True if cls.use_adapters_bool else False
                 range_obj.active = True if adapter_obj.active else False
         cls.UPDATE_LISTBOX()
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
-        cls()._add_instance_if_not(range_tuple=range_tuple)
+        cls()._instance_add_if_not(range_tuple=range_tuple)
         cls.UPDATE_LISTBOX()
 
     # -----------------------------------------------------------
@@ -290,7 +300,7 @@ class Hosts():
     # -----------------------------------------------------------
     # INSTANCE
     @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
-    def _add_instance_if_not(self, ip, mac):
+    def _instance_add_if_not(self, ip, mac):
         # return instance new or existed!
         with lock:
             if mac not in Hosts.mac_obj_dict:
@@ -314,7 +324,7 @@ class Hosts():
             else:
                 return Hosts.mac_obj_dict[mac]
 
-    def _del_instance(self):
+    def _instance_del(self):
         Hosts.mac_obj_dict.pop(self.mac)
         Hosts.ip_found_list.remove(ip)
         Hosts.UPDATE_LISTBOX()
@@ -322,19 +332,19 @@ class Hosts():
     @classmethod
     @contracts.contract(mac=str)
     def del_mac(cls, mac):
-        cls.mac_obj_dict[mac]._del_instance()
+        cls.mac_obj_dict[mac]._instance_del()
 
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
     def del_ip(cls, ip):
         for obj in cls.mac_obj_dict.values():
             if obj.ip == ip:
-                obj._del_instance()
+                obj._instance_del()
 
     @classmethod
     def clear_all(cls):
         for obj in cls.mac_obj_dict.values():
-            obj._del_instance()
+            obj._instance_del()
 
     @classmethod
     def get_instance_from_text(cls, text):
@@ -352,6 +362,11 @@ class Hosts():
 
         # attempt 3 -----------------
         return None
+
+    def instance_print(self):
+        for attr in dir(self):
+            if not attr.startswith("_") and not callable(getattr(self, attr)):
+                print(f"{attr}=[{getattr(self, attr)}]")
 
     # -----------------------------------------------------------
     # GENERATE DATA
@@ -418,7 +433,7 @@ class Hosts():
             if mac is None:     # don't pay attention if have not mac! just an accident!
                 return
             else:
-                host_obj = cls()._add_instance_if_not(ip=ip, mac=mac)
+                host_obj = cls()._instance_add_if_not(ip=ip, mac=mac)
 
             # ---------------------------------------------------------------------
             # get TIME_RESPONSE in ms
