@@ -29,7 +29,7 @@ class Adapters:
 
     UPDATE_LISTBOX = lambda: None
     ip_localhost_set = set()
-    ip_margin_list = []
+    ip_margin_set = set()
     hostname = platform.node()
 
     # -----------------------------------------------------------
@@ -62,7 +62,7 @@ class Adapters:
     def clear(cls):
         cls.name_obj_dict.clear()
         cls.ip_localhost_set = set()
-        cls.ip_margin_list = []
+        cls.ip_margin_set = set()
 
     @classmethod
     def update(cls):
@@ -103,11 +103,11 @@ class Adapters:
         adapter_name = None  # cumulative var!
         for adapter_obj in cls.name_obj_dict.values():           # clear all active flags
             adapter_obj.active = False
-        adapter_obj = None
 
         # START work
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
 
+        adapter_obj = None
         for line in sp_ipconfig.stdout.readlines():
             # find out data = generate data
             line_striped = line.strip()
@@ -145,8 +145,8 @@ class Adapters:
                 mask = adapter_obj.mask
                 net = ipaddress.ip_network((str(ip), mask), strict=False)
                 adapter_obj.net = net
-                cls.ip_margin_list.append(net[0])
-                cls.ip_margin_list.append(net[-1])
+                cls.ip_margin_set.update({net[0]})
+                cls.ip_margin_set.update({net[-1]})
 
         cls.UPDATE_LISTBOX()
         for adapter_name in cls.name_obj_dict:
@@ -395,7 +395,7 @@ class Hosts():
     @contracts.contract(ip=ipaddress.IPv4Address)
     def ping_start_thread(cls, ip):
         thread_name_ping = "ping"
-        if ip not in Adapters.ip_margin_list:
+        if ip not in Adapters.ip_margin_set:
             while threading.active_count() > cls.limit_ping_thread:
                 time.sleep(0.1)    # USE=0.01
             threading.Thread(target=cls._ping, args=(ip,), daemon=True, name=thread_name_ping).start()
