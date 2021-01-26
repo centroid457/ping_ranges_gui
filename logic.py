@@ -543,6 +543,9 @@ class Scan:
         return the_dict
 
     # #################################################
+    def scan_stop(self):
+        Hosts.flag_scan_manual_stop = True
+
     def scan_onсe_thread(self):
         thread_name_scan_once = "scan_once"
 
@@ -551,10 +554,21 @@ class Scan:
             if thread.name.startswith(thread_name_scan_once):
                 return
 
-        threading.Thread(target=self.scan_onсe, daemon=True, name=thread_name_scan_once).start()
+        threading.Thread(target=self._scan_onсe, daemon=True, name=thread_name_scan_once).start()
         return
 
-    def scan_onсe(self):
+    def scan_loop_thread(self):
+        thread_name_scan_loop = "scan_loop"
+
+        # start only one thread
+        for thread in threading.enumerate():
+            if thread.name.startswith(thread_name_scan_loop):
+                return
+
+        threading.Thread(target=self._scan_loop, daemon=True, name=thread_name_scan_loop).start()
+        return
+
+    def _scan_onсe(self):
         time_start = time.time()
 
         self.count_scan_cycles += 1
@@ -581,25 +595,11 @@ class Scan:
         print("ip_found", [(obj.ip, obj.mac) for obj in Hosts.mac_obj_dict.values()])
         return
 
-    def scan_loop_thread(self):
-        thread_name_scan_loop = "scan_loop"
-
-        # start only one thread
-        for thread in threading.enumerate():
-            if thread.name.startswith(thread_name_scan_loop):
-                return
-
-        threading.Thread(target=self.scan_loop, daemon=True, name=thread_name_scan_loop).start()
-        return
-
-    def scan_loop(self):
+    def _scan_loop(self):
         Hosts.flag_scan_manual_stop = False
         while not Hosts.flag_scan_manual_stop:
-            self.scan_onсe()
+            self._scan_onсe()
             time.sleep(1)
-
-    def scan_stop(self):
-        Hosts.flag_scan_manual_stop = True
 
 
 # ###########################################################
