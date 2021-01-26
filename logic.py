@@ -337,8 +337,11 @@ class Hosts():
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
     def del_ip(cls, ip):
+        del_obj_list = []
         for obj in cls.mac_obj_dict.values():
             if obj.ip == ip:
+                del_obj_list.append(obj)
+        for obj in del_obj_list:
                 obj._instance_del()
 
     @classmethod
