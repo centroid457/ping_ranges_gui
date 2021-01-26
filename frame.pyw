@@ -208,6 +208,7 @@ class Gui(Frame):
                                  str(obj.ip).ljust(16, " ") +
                                  str(obj.mask).ljust(16, " ") +
                                  str(obj.gateway).ljust(16, " ") +
+                                 str(obj.net).ljust(17, " ") +
                                  obj.name)
             if active:
                 the_listbox.itemconfig('end', bg="#55FF55")

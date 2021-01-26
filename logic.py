@@ -249,7 +249,6 @@ class Ranges():
                 range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info=f"*Adapter*")
                 range_obj.use = True if cls.use_adapters_bool else False
                 range_obj.active = True if adapter_obj.active else False
-        cls.UPDATE_LISTBOX()
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
