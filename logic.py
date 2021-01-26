@@ -178,7 +178,7 @@ class Ranges():
             self.range_tuple = range_tuple
             self.range_str = str(range_tuple)
 
-            self.use = True
+            self.use = None
             self.active = True
             self.info = info
             self.ip_start_str = range_tuple[0]
@@ -253,7 +253,7 @@ class Ranges():
                 net = adapter_obj.net
                 range_tuple = (str(net[0]), str(net[-1]))
                 range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info=f"*Adapter*")
-                range_obj.use = True if cls.use_adapters_bool else False
+                range_obj.use = True if cls.use_adapters_bool and range_obj.use is not False else False
                 range_obj.active = True if adapter_obj.active else False
 
     @classmethod
