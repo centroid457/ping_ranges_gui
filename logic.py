@@ -261,8 +261,6 @@ class Ranges():
         cls()._instance_add_if_not(range_tuple=range_tuple)
         cls.UPDATE_LISTBOX()
 
-
-
     # -----------------------------------------------------------
     # CONTROL
     @classmethod
