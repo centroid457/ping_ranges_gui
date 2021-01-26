@@ -63,6 +63,7 @@ class Adapters:
         cls.name_obj_dict.clear()
         cls.ip_localhost_set = set()
         cls.ip_margin_set = set()
+        cls.UPDATE_LISTBOX()
 
     @classmethod
     def update(cls):
@@ -194,6 +195,7 @@ class Ranges():
     @classmethod
     def clear(cls):
         cls.tuple_obj_dict.clear()
+        cls.UPDATE_LISTBOX()
 
     @classmethod
     def instance_get_from_text(cls, text):
@@ -350,6 +352,11 @@ class Hosts():
     def clear_all(cls):
         cls.mac_obj_dict.clear()
         cls.ip_found_list = []
+        cls.ip_last_scanned = None
+        cls.ip_last_answered = None
+        cls.flag_scan_manual_stop = False
+        cls.count_ip_scanned = 0
+        cls.UPDATE_LISTBOX()
 
     @classmethod
     def instance_get_from_text(cls, text):
