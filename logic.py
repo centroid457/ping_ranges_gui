@@ -302,8 +302,8 @@ class Hosts():
     @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
     def _instance_add_if_not(self, ip, mac):
         # return instance new or existed!
-        with lock:
-            if mac not in Hosts.mac_obj_dict:
+        if mac not in Hosts.mac_obj_dict:
+            with lock:
                 Hosts.mac_obj_dict.update({mac: self})
                 Hosts.ip_found_list.append(ip)
 
@@ -321,8 +321,8 @@ class Hosts():
                 self.count_response = 0
 
                 return self
-            else:
-                return Hosts.mac_obj_dict[mac]
+        else:
+            return Hosts.mac_obj_dict[mac]
 
     def _instance_del(self):
         Hosts.mac_obj_dict.pop(self.mac)
@@ -381,13 +381,13 @@ class Hosts():
 
         ip_current = ip_start
         while ip_current <= ip_finish and not cls.flag_scan_manual_stop:
-            if ip_current not in cls.ip_found_list:   # don't ping if found! it will ping at first in ping_found func!!!
+            if ip_current not in cls.ip_found_list:   # don't ping if found! it will ping at first in ping_found_hosts func!!!
                 cls.ping_start_thread(ip_current)
             ip_current = ip_current + 1
         return
 
     @classmethod
-    def ping_found(cls):
+    def ping_found_hosts(cls):
         for obj in cls.mac_obj_dict.values():
             cls.ping_start_thread(obj.ip)
 
@@ -423,7 +423,7 @@ class Hosts():
         ping_readlines = sp_ping.stdout.readlines()
         time.sleep(0.001)   # very necessary =0.001 was good! maybe not need)
 
-        if sp_ping.returncode != 0:
+        if sp_ping.returncode != 0 and ip in cls.ip_found_list:
             cls._mark_nonactive_ip(ip)
             cls.UPDATE_LISTBOX()
             return
@@ -609,7 +609,7 @@ class Scan:
         self.hosts.flag_scan_manual_stop = False
         self.flag_scan_is_finished = False
 
-        self.hosts.ping_found()
+        self.hosts.ping_found_hosts()
         self.adapters.update()
 
         for range_obj in self.ranges.tuple_obj_dict.values():
