@@ -483,13 +483,16 @@ class Gui(Frame):
         return
 
     def main_status_fill_frame_refresh(self):
+        mark_work_list = ["*", "-"]
+        mark_work_step = True
         while True:
             the_dict = self.logic.get_main_status_dict()
             for key, lbl_obj in self.main_status_lbl_dict.items():
-                # print(key, lbl, the_dict[key])
                 lbl_obj["text"] = f"{key}=[{str(the_dict[key])}]"
 
-            self.lbl_main_status_total["text"] = str([str(val) for val in the_dict.values()])
+            mark_work_step = not mark_work_step
+            self.lbl_main_status_total["text"] = str(mark_work_list[int(mark_work_step)]) +\
+                                                 str([str(val) for val in the_dict.values()])
             time.sleep(1)
         return
 
