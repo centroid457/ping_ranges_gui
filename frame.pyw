@@ -29,9 +29,10 @@ class Gui(Frame):
         self.lock = threading.Lock()
 
         # CONNECT TO LOGIC
-        self.logic = logic.Scan(ranges_use_adapters_bool=True)
+        self.logic = logic.Scan(ip_tuples_list=[], ranges_use_adapters_bool=True)
 
         self.create_gui_structure()
+
         # implement fill listbox funcs
         self.logic.adapters.UPDATE_LISTBOX = self.adapters_fill_listbox
         self.logic.ranges.UPDATE_LISTBOX = self.ranges_fill_listbox
@@ -148,12 +149,12 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="Clear RESET")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.adapters_reset
+        btn["command"] = self.logic.adapters.update_clear
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="REFRESH")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.adapters_refresh
+        btn["command"] = self.logic.adapters.update
         btn.pack(side="left", fill="y")
 
         lbl = Label(frame_header)
@@ -196,42 +197,33 @@ class Gui(Frame):
         for obj in obj_set:
             active = obj.active
             active_mark = "+" if active else "-"
+
             was_lost = obj.was_lost
             was_lost_mark = "lost" if was_lost else ""
+
             the_listbox.insert('end',
-                                 active_mark.ljust(2, " ") +
+                                 active_mark.ljust(1, " ") +
                                  was_lost_mark.ljust(5, " ") +
                                  str(obj.mac).ljust(24, " ") +
                                  str(obj.ip).ljust(16, " ") +
                                  str(obj.mask).ljust(16, " ") +
                                  str(obj.gateway).ljust(16, " ") +
-                                 obj.name
-                                 )
+                                 obj.name)
             if active:
                 the_listbox.itemconfig('end', bg="#55FF55")
             elif not active and was_lost:
                 the_listbox.itemconfig('end', bg="#FF9999")
+            else:
+                pass    # leave non-Color state for nonUsed adapters
 
             if was_lost:
                 the_listbox.itemconfig('end', fg="#FF0000")
         return
 
-    def adapters_reset(self):
-        self.logic.adapters.update_clear()
-        self.adapters_fill_listbox()
-
-    def adapters_refresh(self):
-        self.logic.adapters.update()
-        self.adapters_fill_listbox()
-
     def adapters_change_status(self, event):
-        if self.listbox_adapters.curselection() != ():
-            selected_list = self.listbox_adapters.curselection()
-            selected_item_text = self.listbox_adapters.get(selected_list)
-            for key in self.logic.adapters:
-                if key in selected_item_text:
-                    self.status_adapters["text"] = key
-                    return
+        obj = self._listbox_get_selected_obj(self.listbox_adapters, self.logic.adapters.get_instance_from_text)
+        if obj is not None:
+            self.status_adapters["text"] = obj.name
         return
 
     # #################################################
@@ -280,17 +272,17 @@ class Gui(Frame):
 
         btn = Button(frame_status, text="CLEAR to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.range_restore_default     # todo:!!!!
+        btn["command"] = self.range_restore_default()
         btn.pack(side="left")
 
-        btn = Button(frame_status, text="ENABLE/DISABLE")
+        btn = Button(frame_status, text="use ENABLE/DISABLE")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.range_switch_activity      # todo:!!!!
+        btn["command"] = self.range_switch_use
         btn.pack(side="left")
 
         self.status_ranges = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
         self.status_ranges.pack(side="left")
-        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)      # todo:!!!!
+        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
 
         self.ranges_fill_listbox()
         return
@@ -299,45 +291,50 @@ class Gui(Frame):
         the_listbox = self.listbox_ranges
         self._listbox_clear(the_listbox)
 
-        the_dict = self.logic.ranges_active_dict
-        for the_range in the_dict:
-            use_mark = "+" if the_dict[the_range].get("use", False) else "-"
-            active_mark = "+" if the_dict[the_range].get("active", False) else "-"
+        obj_set = self.logic.ranges.tuple_obj_dict.values()
+        for obj in obj_set:
+            active = obj.active
+            active_mark = "+" if active else "-"
+
+            use = obj.use
+            use_mark = "+" if use else "-"
+
             the_listbox.insert('end',
                                 use_mark.ljust(1, " ") +
                                 active_mark.ljust(2, " ") +
-                                str(the_range).ljust(37, " ") +
-                                str(the_dict[the_range].get("info", "")).ljust(30, " ") +
-                                str(the_dict[the_range].get("ip_start", "")).ljust(16, " ") +
-                                str(the_dict[the_range].get("ip_finish", "")).ljust(16, " ")
+                                obj.range_str.ljust(37, " ") +
+                                str(obj.info).ljust(30, " ") +
+                                str(obj.ip_start).ljust(16, " ") +
+                                str(obj.ip_finish).ljust(16, " ")
                                )
             # change visual
-            if use_mark == "-" or active_mark == "-":
+            if not use or not active:
                 the_listbox.itemconfig('end', bg="#FF9999")
             else:
                 the_listbox.itemconfig('end', bg="#55FF55")
         return
 
-    def range_restore_default(self, use_key=None):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ranges_active_dict)[0] if use_key is None else use_key
-        if key is not None:
-            self.logic.ranges_active_dict[key]["ip_start"] = key[0]
-            self.logic.ranges_active_dict[key]["ip_finish"] = key[-1]
-            self.logic.ranges_active_dict[key]["use"] = True
+    def range_restore_default(self):
+        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.get_instance_from_text)
+        if obj is not None:
+            obj.ip_start = obj.range_tuple[0]
+            obj.ip_finish = obj.range_tuple[-1]
+            obj.use = True
+
             self.ranges_fill_listbox()
         return
 
-    def range_switch_activity(self):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ranges_active_dict)[0]
-        if None not in (key, ):
-            self.logic.ranges_active_dict[key]["use"] = not self.logic.ranges_active_dict[key].get("use", False)
+    def range_switch_use(self):
+        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.get_instance_from_text)
+        if obj is not None:
+            obj.use = not obj.use
             self.ranges_fill_listbox()
         return
 
     def ranges_change_status(self, event):
-        key = self._listbox_get_selected_key(the_listbox=self.listbox_ranges, the_dict=self.logic.ranges_active_dict)[0]
-        if None not in (key, ):
-            self.status_ranges["text"] = str(key)
+        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.get_instance_from_text)
+        if obj is not None:
+            self.status_ranges["text"] = obj.name
         return
 
     # #################################################
@@ -358,7 +355,7 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="CLEAR all found data")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.ip_found_reset
+        btn["command"] = self.logic.hosts.clear_all
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="SCAN ONES")
@@ -406,56 +403,52 @@ class Gui(Frame):
             the_listbox = self.listbox_ip_found
             self._listbox_clear(the_listbox)
 
-            the_dict = self.logic.ip_found_dict
-            for ip in the_dict:
-                for mac in the_dict[ip]:
-                    active_mark = "+" if the_dict[ip][mac].get("active", False) else "-"
-                    was_lost = the_dict[ip][mac].get("was_lost", False)
-                    was_lost_mark = "lost" if was_lost else ""
-                    time_response = the_dict[ip][mac].get("time_response", "")
-                    hostname = the_dict[ip][mac].get("hostname", "")
-                    vendor = the_dict[ip][mac].get("vendor", "")
-                    os = the_dict[ip][mac].get("os", "")
-                    the_listbox.insert('end',
-                                         active_mark.ljust(1, " ") +
-                                         was_lost_mark.ljust(5, " ") +
-                                         str(time_response).ljust(3, " ") +
-                                         str(ip).ljust(16, " ") +
-                                         str(mac).ljust(19, " ") +
-                                         hostname.ljust(15, " ") +
-                                         vendor.ljust(20, " ") +
-                                         os
-                                       )
+            obj_set = self.logic.hosts.mac_obj_dict.values()
+            for obj in obj_set:
+                active = obj.active
+                active_mark = "+" if active else "-"
 
-                    if active_mark == "+":
-                        the_listbox.itemconfig('end', bg="#55FF55")
-                    elif active_mark == "-":
-                        the_listbox.itemconfig('end', bg="#FF9999")
+                was_lost = obj.was_lost
+                was_lost_mark = "lost" if was_lost else ""
 
-                    if was_lost:
-                        the_listbox.itemconfig('end', fg="#FF0000")
+                ip = obj.ip
+                mac = obj.mac
+
+                time_response = obj.time_response
+                hostname = obj.hostname
+                vendor = obj.vendor
+                os = obj.os
+
+
+                the_listbox.insert('end',
+                                     active_mark.ljust(1, " ") +
+                                     was_lost_mark.ljust(5, " ") +
+                                     str(time_response).ljust(3, " ") +
+                                     str(ip).ljust(16, " ") +
+                                     str(mac).ljust(19, " ") +
+                                     hostname.ljust(15, " ") +
+                                     vendor.ljust(20, " ") +
+                                     os)
+
+                if active:
+                    the_listbox.itemconfig('end', bg="#55FF55")
+                elif not active:
+                    the_listbox.itemconfig('end', bg="#FF9999")
+
+                if was_lost:
+                    the_listbox.itemconfig('end', fg="#FF0000")
         return
 
     def ip_found_change_status(self, event):
-        key1, key2 = self._listbox_get_selected_key(the_listbox=self.listbox_ip_found, the_dict=self.logic.ip_found_dict, deep_key="mac")
-        if None not in (key1, key2):
-            self.status_ip_found["text"] = f"{str(key1)} [{key2}]"
-        return
-
-    def ip_found_reset(self):
-        self.logic.clear_data()
-        self.ip_found_fill_listbox()
+        obj = self._listbox_get_selected_obj(self.listbox_ip_found, self.logic.hosts.get_instance_from_text)
+        if obj is not None:
+            self.status_ranges["text"] = obj.name
         return
 
     def ip_found_delete_line(self):
-        key1, key2 = self._listbox_get_selected_key(the_listbox=self.listbox_ip_found, the_dict=self.logic.ip_found_dict, deep_key="mac")
-        if None not in (key1, key2):
-            del self.logic.ip_found_dict[key1][key2]
-            if len(self.logic.ip_found_dict[key1]) == 0:
-                del self.logic.ip_found_dict[key1]
-
-            self.ip_found_fill_listbox()
-            self.status_ip_found["text"] = self.TEXT_SELECT_ITEM
+        obj = self._listbox_get_selected_obj(self.listbox_ip_found, self.logic.hosts.get_instance_from_text)
+        if obj is not None:
+            obj.del_instance()
         return
 
     # #################################################
@@ -475,7 +468,6 @@ class Gui(Frame):
             lbl = Label(frame_header)
             lbl["text"] = f"{key}=[{val}]"
             lbl.pack()
-
             self.main_status_lbl_dict.update({key: lbl})
 
         # STATUS -------------------------------------------------------------
@@ -495,31 +487,25 @@ class Gui(Frame):
             for key, lbl_obj in self.main_status_lbl_dict.items():
                 # print(key, lbl, the_dict[key])
                 lbl_obj["text"] = f"{key}=[{str(the_dict[key])}]"
-            time.sleep(1)
+
             self.lbl_main_status_total["text"] = str([str(val) for val in the_dict.values()])
+            time.sleep(1)
         return
 
     # #################################################
     # rest
-    @contracts.contract(the_dict=dict, deep_key="None|str", returns="None|str|tuple")
-    def _listbox_get_selected_key(self, the_listbox, the_dict, deep_key=None):
+    def _listbox_get_selected_obj(self, the_listbox, func_get_instance_from_text):
         if the_listbox.curselection() != ():
             selected_list = the_listbox.curselection()
             selected_item_text = the_listbox.get(selected_list)
-
-            for key1 in the_dict:
-                if str(key1) in selected_item_text:
-                    if deep_key is None:
-                        return (key1, None)
-                    else:
-                        for key2 in the_dict[key1]:
-                            if str(key2) in selected_item_text:
-                                return (key1, key2)
-        return (None, None)
+            obj = func_get_instance_from_text(selected_item_text)
+            return obj
+        return None
 
     def _listbox_clear(self, listbox):
         listbox.delete(0, listbox.size()-1)
         return
+
 
 if __name__ == '__main__':
     access_this_module_as_import = False
