@@ -60,8 +60,9 @@ class Adapters:
 
     @classmethod
     def clear(cls):
-        for obj in cls.name_obj_dict.values():
-            obj._instance_del()
+        cls.name_obj_dict.clear()
+        cls.ip_localhost_set = set()
+        cls.ip_margin_list = []
 
     @classmethod
     def update(cls):
@@ -73,7 +74,7 @@ class Adapters:
         cls.detect()
 
     @classmethod
-    def get_instance_from_text(cls, text):
+    def instance_get_from_text(cls, text):
         # attempt 1 -----------------
         # most correct finding
         for obj in cls.name_obj_dict.values():
@@ -190,11 +191,10 @@ class Ranges():
 
     @classmethod
     def clear(cls):
-        for obj in cls.tuple_obj_dict.values():
-            obj._instance_del()
+        cls.tuple_obj_dict.clear()
 
     @classmethod
-    def get_instance_from_text(cls, text):
+    def instance_get_from_text(cls, text):
         # attempt 1 -----------------
         # most correct finding
         for obj in cls.tuple_obj_dict.values():
@@ -343,11 +343,11 @@ class Hosts():
 
     @classmethod
     def clear_all(cls):
-        for obj in cls.mac_obj_dict.values():
-            obj._instance_del()
+        cls.mac_obj_dict.clear()
+        cls.ip_found_list = []
 
     @classmethod
-    def get_instance_from_text(cls, text):
+    def instance_get_from_text(cls, text):
         # attempt 1 -----------------
         # most correct finding
         for obj in cls.mac_obj_dict.values():
