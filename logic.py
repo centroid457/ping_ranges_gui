@@ -624,8 +624,8 @@ class Scan:
 if __name__ == '__main__':
     access_this_module_as_import = False
     sample = Scan()
-    sample.scan_onсe_thread()
+    sample._scan_onсe()
 
-    input("Press ENTER to exit")
+    # input("Press ENTER to exit")
 else:
     access_this_module_as_import = True
