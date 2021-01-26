@@ -361,12 +361,12 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="SCAN ONES")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] =self.logic.scan_onсe_thread
+        btn["command"] = self.logic.scan_onсe_thread
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="SCAN LOOP")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] =self.logic.scan_loop_thread
+        btn["command"] = self.logic.scan_loop_thread
         btn.pack(side="left", fill="y")
 
         lbl = Label(frame_header)
@@ -424,7 +424,7 @@ class Gui(Frame):
                 the_listbox.insert('end',
                                      active_mark.ljust(1, " ") +
                                      was_lost_mark.ljust(5, " ") +
-                                     str(time_response).ljust(3, " ") +
+                                     str(time_response).ljust(4, " ") +
                                      str(ip).ljust(16, " ") +
                                      str(mac).ljust(19, " ") +
                                      str(hostname).ljust(15, " ") +

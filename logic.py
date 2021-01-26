@@ -225,8 +225,8 @@ class Ranges():
     @contracts.contract(ranges_list="None|(list(tuple[1|2]))", use_adapters_bool=bool)
     def ranges_apply_clear(cls, ranges_list=None, use_adapters_bool=True):
         cls.use_adapters_bool = use_adapters_bool
-
         cls.clear()
+
         cls.add_update_adapters_ranges()
 
         if ranges_list is not None:
@@ -238,6 +238,12 @@ class Ranges():
         for my_range in cls.tuple_obj_dict:
             print(my_range)
         return
+
+    @classmethod
+    def update(cls):
+        cls.add_update_adapters_ranges()
+        cls.UPDATE_LISTBOX()
+        pass
 
     @classmethod
     def add_update_adapters_ranges(cls):
@@ -254,6 +260,8 @@ class Ranges():
     def add_range_tuple(cls, range_tuple):
         cls()._instance_add_if_not(range_tuple=range_tuple)
         cls.UPDATE_LISTBOX()
+
+
 
     # -----------------------------------------------------------
     # CONTROL
@@ -618,7 +626,7 @@ class Scan:
         self.flag_scan_is_finished = False
 
         self.hosts.ping_found_hosts()
-        self.adapters.update()
+        self.ranges.update()
 
         for range_obj in self.ranges.tuple_obj_dict.values():
             if range_obj.use and range_obj.active:
