@@ -274,6 +274,7 @@ class Hosts():
     mac_obj_dict = {}
 
     UPDATE_LISTBOX = lambda: None
+    ip_found_list = []      # use list! if found 2 mac with same ip - ok! let be 2 items with same ip!!!
     ip_last_scanned = None
     ip_last_answered = None
     flag_scan_manual_stop = False
@@ -294,6 +295,7 @@ class Hosts():
         with lock:
             if mac not in Hosts.mac_obj_dict:
                 Hosts.mac_obj_dict.update({mac: self})
+                Hosts.ip_found_list.append(ip)
 
                 self.mac = mac
                 self.ip = ip
@@ -314,12 +316,20 @@ class Hosts():
 
     def _del_instance(self):
         Hosts.mac_obj_dict.pop(self.mac)
+        Hosts.ip_found_list.remove(ip)
         Hosts.UPDATE_LISTBOX()
 
     @classmethod
     @contracts.contract(mac=str)
-    def clear_mac(cls, mac):
+    def del_mac(cls, mac):
         cls.mac_obj_dict[mac]._del_instance()
+
+    @classmethod
+    @contracts.contract(ip=ipaddress.IPv4Address)
+    def del_ip(cls, ip):
+        for obj in cls.mac_obj_dict.values():
+            if obj.ip == ip:
+                obj._del_instance()
 
     @classmethod
     def clear_all(cls):
@@ -350,10 +360,11 @@ class Hosts():
     def ping_range(cls, ip_range):
         ip_start = ipaddress.ip_address(str(ip_range[0]))
         ip_finish = ipaddress.ip_address(str(ip_range[-1]))
-        ip_current = ip_start
 
+        ip_current = ip_start
         while ip_current <= ip_finish and not cls.flag_scan_manual_stop:
-            cls.ping_start_thread(ip_current)
+            if ip_current not in cls.ip_found_list:   # don't ping if found! it will ping at first in ping_found func!!!
+                cls.ping_start_thread(ip_current)
             ip_current = ip_current + 1
         return
 
@@ -511,7 +522,7 @@ class Hosts():
 
 
 # #################################################
-# SCAN
+# SCAN = main class!
 # #################################################
 class Scan:
     @contracts.contract(ip_tuples_list="None|(list(tuple))", ranges_use_adapters_bool=bool)
