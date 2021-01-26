@@ -28,25 +28,20 @@ class Gui(Frame):
 
         self.lock = threading.Lock()
 
-        self.logic_connect()
+        # CONNECT TO LOGIC
+        self.logic = logic.Scan(ranges_use_adapters_bool=True)
 
         self.create_gui_structure()
         # implement fill listbox funcs
-        self.logic_adapters.UPDATE_LISTBOX = self.adapters_fill_listbox
-        self.logic_ranges.UPDATE_LISTBOX = self.ranges_fill_listbox
-        self.logic_hosts.UPDATE_LISTBOX = self.ip_found_fill_listbox
+        self.logic.adapters.UPDATE_LISTBOX = self.adapters_fill_listbox
+        self.logic.ranges.UPDATE_LISTBOX = self.ranges_fill_listbox
+        self.logic.hosts.UPDATE_LISTBOX = self.ip_found_fill_listbox
 
         # start initial scan_once
-        self.logic_scan.scan_onсe_thread()
+        self.logic.scan_onсe_thread()
 
         self.gui_root_configure()
         self.window_move_to_center()
-
-    def logic_connect(self):
-        self.logic_scan = logic.Scan(ranges_use_adapters_bool=True)
-        self.logic_adapters = logic.Adapters
-        self.logic_ranges = logic.Ranges
-        self.logic_hosts = logic.Hosts
 
     def gui_root_configure(self):
         if self.root != self.parent:      # if it is independent window (without insertion in outside project)
@@ -197,7 +192,7 @@ class Gui(Frame):
         the_listbox = self.listbox_adapters
         self._listbox_clear(the_listbox)
 
-        obj_set = self.logic_adapters.name_obj_dict.values()
+        obj_set = self.logic.adapters.name_obj_dict.values()
         for obj in obj_set:
             active = obj.active
             active_mark = "+" if active else "-"
@@ -222,18 +217,18 @@ class Gui(Frame):
         return
 
     def adapters_reset(self):
-        self.logic_adapters.update_clear()
+        self.logic.adapters.update_clear()
         self.adapters_fill_listbox()
 
     def adapters_refresh(self):
-        self.logic_adapters.update()
+        self.logic.adapters.update()
         self.adapters_fill_listbox()
 
     def adapters_change_status(self, event):
         if self.listbox_adapters.curselection() != ():
             selected_list = self.listbox_adapters.curselection()
             selected_item_text = self.listbox_adapters.get(selected_list)
-            for key in self.logic_adapters:
+            for key in self.logic.adapters:
                 if key in selected_item_text:
                     self.status_adapters["text"] = key
                     return
@@ -252,17 +247,17 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="RESET to started")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.logic_ranges.ranges_reset_to_started
+        btn["command"] = self.logic.ranges.ranges_reset_to_started
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="DISABLE all")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = lambda: self.logic_ranges.ranges_all_control(disable=True)
+        btn["command"] = lambda: self.logic.ranges.ranges_all_control(disable=True)
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="ENABLE all")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = lambda: self.logic_ranges.ranges_all_control(enable=True)
+        btn["command"] = lambda: self.logic.ranges.ranges_all_control(enable=True)
         btn.pack(side="left", fill="y")
 
         lbl = Label(frame_header)

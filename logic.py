@@ -520,8 +520,13 @@ class Scan:
         self.count_scan_cycles = 0
         self.time_last_cycle = 0
 
-        Adapters.update_clear()
-        Ranges.ranges_apply_clear(ranges_list=ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
+        # connect to Classes
+        self.adapters = Adapters
+        self.ranges = Ranges
+        self.hosts = Hosts
+
+        self.adapters.update_clear()
+        self.ranges.ranges_apply_clear(ranges_list=ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
         return
 
     # -----------------------------------------------------------
@@ -531,20 +536,20 @@ class Scan:
             "threads_active_count": threading.active_count(),
             "time_last_cycle": self.time_last_cycle,
 
-            "flag_scan_manual_stop": Hosts.flag_scan_manual_stop,
+            "flag_scan_manual_stop": self.hosts.flag_scan_manual_stop,
             "flag_scan_is_finished": self.flag_scan_is_finished,
 
-            "ip_last_scanned": Hosts.ip_last_scanned,
-            "ip_last_answered": Hosts.ip_last_answered,
+            "ip_last_scanned": self.hosts.ip_last_scanned,
+            "ip_last_answered": self.hosts.ip_last_answered,
 
-            "count_ip_scanned": Hosts.count_ip_scanned,
-            "count_ip_found_real": len(Hosts.mac_obj_dict)
+            "count_ip_scanned": self.hosts.count_ip_scanned,
+            "count_ip_found_real": len(self.hosts.mac_obj_dict)
         }
         return the_dict
 
     # #################################################
     def scan_stop(self):
-        Hosts.flag_scan_manual_stop = True
+        self.hosts.flag_scan_manual_stop = True
 
     def scan_onсe_thread(self):
         thread_name_scan_once = "scan_once"
@@ -572,15 +577,15 @@ class Scan:
         time_start = time.time()
 
         self.count_scan_cycles += 1
-        Hosts.flag_scan_manual_stop = False
+        self.hosts.flag_scan_manual_stop = False
         self.flag_scan_is_finished = False
 
-        Hosts.ping_found()
-        Adapters.update()
+        self.hosts.ping_found()
+        self.adapters.update()
 
-        for range_obj in Ranges.tuple_obj_dict.values():
+        for range_obj in self.ranges.tuple_obj_dict.values():
             if range_obj.use and range_obj.active:
-                Hosts.ping_range(range_obj.range_tuple)
+                self.hosts.ping_range(range_obj.range_tuple)
 
         # WAIT ALL PING THREADS FINISHED
         for thread in threading.enumerate():
@@ -592,12 +597,12 @@ class Scan:
 
         print("*"*80)
         print("time_last_cycle", self.time_last_cycle)
-        print("ip_found", [(obj.ip, obj.mac) for obj in Hosts.mac_obj_dict.values()])
+        print("ip_found", [(obj.ip, obj.mac) for obj in self.hosts.mac_obj_dict.values()])
         return
 
     def _scan_loop(self):
-        Hosts.flag_scan_manual_stop = False
-        while not Hosts.flag_scan_manual_stop:
+        self.hosts.flag_scan_manual_stop = False
+        while not self.hosts.flag_scan_manual_stop:
             self._scan_onсe()
             time.sleep(1)
 
