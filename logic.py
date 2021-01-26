@@ -624,8 +624,6 @@ class Scan:
 if __name__ == '__main__':
     access_this_module_as_import = False
     sample = Scan()
-    sample._scan_onсe()
-
-    # input("Press ENTER to exit")
+    sample._scan_onсe()     # in mainStart use only noneThread scan!!!
 else:
     access_this_module_as_import = True
