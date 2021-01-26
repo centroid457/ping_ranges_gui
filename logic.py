@@ -326,7 +326,7 @@ class Hosts():
 
     def _instance_del(self):
         Hosts.mac_obj_dict.pop(self.mac)
-        Hosts.ip_found_list.remove(ip)
+        Hosts.ip_found_list.remove(self.ip)
         Hosts.UPDATE_LISTBOX()
 
     @classmethod
