@@ -100,9 +100,9 @@ class Adapters:
     @classmethod
     def detect(cls):
         # INITIATE work
-        adapter_name = None  # cumulative var!
-        for adapter_obj in cls.name_obj_dict.values():           # clear all active flags
-            adapter_obj.active = False
+        for obj in cls.name_obj_dict.values():           # clear all active flags
+            if obj.active:
+                obj.active = False
 
         # START work
         sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
@@ -140,13 +140,15 @@ class Adapters:
 
         # use data from found active adapters
         for adapter_obj in cls.name_obj_dict.values():
+            if adapter_obj.active is False:
+                adapter_obj.was_lost = True
+
             if adapter_obj.ip is not None:
                 ip = ipaddress.ip_address(adapter_obj.ip)
                 mask = adapter_obj.mask
                 net = ipaddress.ip_network((str(ip), mask), strict=False)
                 adapter_obj.net = net
-                cls.ip_margin_set.update({net[0]})
-                cls.ip_margin_set.update({net[-1]})
+                cls.ip_margin_set.update({net[0], net[-1]})
 
         cls.UPDATE_LISTBOX()
         for adapter_name in cls.name_obj_dict:
