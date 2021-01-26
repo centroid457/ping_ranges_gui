@@ -91,7 +91,7 @@ class Adapters:
         # attempt 3 -----------------
         return None
 
-    def instance_print(self):
+    def _instance_print(self):
         for attr in dir(self):
             if not attr.startswith("_") and not callable(getattr(self, attr)):
                 print(f"{attr}=[{getattr(self, attr)}]")
@@ -214,7 +214,7 @@ class Ranges():
         # attempt 3 -----------------
         return None
 
-    def instance_print(self):
+    def _instance_print(self):
         for attr in dir(self):
             if not attr.startswith("_") and not callable(getattr(self, attr)):
                 print(f"{attr}=[{getattr(self, attr)}]")
@@ -375,7 +375,7 @@ class Hosts():
         # attempt 3 -----------------
         return None
 
-    def instance_print(self):
+    def _instance_print(self):
         for attr in dir(self):
             if not attr.startswith("_") and not callable(getattr(self, attr)):
                 print(f"{attr}=[{getattr(self, attr)}]")
