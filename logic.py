@@ -61,14 +61,19 @@ class Adapters:
         Adapters.UPDATE_LISTBOX()
 
     @classmethod
-    def clear(cls):
+    def _clear(cls):
         cls.name_obj_dict.clear()
         cls.ip_localhost_set = set()
         cls.ip_margin_set = set()
         cls.UPDATE_LISTBOX()
 
     @classmethod
-    def update(cls):
+    def _update(cls):
+        cls.detect()
+
+    @classmethod
+    def _update_clear(cls):
+        cls._clear()
         cls.detect()
 
     @classmethod
@@ -76,9 +81,9 @@ class Adapters:
         Ranges.add_update_adapters_ranges()
 
     @classmethod
-    def update_clear(cls):
-        cls.clear()
-        cls.detect()
+    def update_clear_with_ranges(cls):
+        cls._clear()
+        Ranges.add_update_adapters_ranges()
 
     @classmethod
     def instance_get_from_text(cls, text):
@@ -201,7 +206,7 @@ class Ranges():
         Ranges._update_listbox()
 
     @classmethod
-    def clear(cls):
+    def _clear(cls):
         cls.tuple_obj_dict.clear()
         cls._update_listbox()
 
@@ -233,7 +238,7 @@ class Ranges():
     @contracts.contract(ranges_list="None|(list(tuple[1|2]))", use_adapters_bool=bool)
     def ranges_apply_clear(cls, ranges_list=None, use_adapters_bool=True):
         cls.use_adapters_bool = use_adapters_bool
-        cls.clear()
+        cls._clear()
 
         cls.add_update_adapters_ranges()
 
@@ -248,12 +253,12 @@ class Ranges():
         return
 
     @classmethod
-    def update(cls):
+    def _update(cls):
         cls.add_update_adapters_ranges()
 
     @classmethod
     def add_update_adapters_ranges(cls):
-        Adapters.update()
+        Adapters._update()
         for adapter_obj in Adapters.name_obj_dict.values():
             if adapter_obj.net not in (None, ""):
                 net = adapter_obj.net
@@ -618,7 +623,7 @@ class Scan:
         self.ranges = Ranges
         self.hosts = Hosts
 
-        self.adapters.update_clear()
+        self.adapters._update_clear()
         self.ranges.ranges_apply_clear(ranges_list=ip_tuples_list, use_adapters_bool=ranges_use_adapters_bool)
         return
 
@@ -674,7 +679,7 @@ class Scan:
         self.flag_scan_is_finished = False
 
         self.hosts.ping_found_hosts()
-        self.ranges.update()
+        self.ranges._update()
 
         for range_obj in self.ranges.tuple_obj_dict.values():
             if range_obj.use and range_obj.active:

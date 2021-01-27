@@ -149,7 +149,7 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="Clear RESET")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.logic.adapters.update_clear
+        btn["command"] = self.logic.adapters.update_clear_with_ranges
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, text="REFRESH")
