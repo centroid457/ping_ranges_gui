@@ -154,7 +154,7 @@ class Gui(Frame):
 
         btn = Button(frame_header, text="REFRESH")
         btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.logic.adapters.update
+        btn["command"] = self.logic.adapters.update_with_ranges
         btn.pack(side="left", fill="y")
 
         lbl = Label(frame_header)
@@ -304,7 +304,7 @@ class Gui(Frame):
                                 use_mark.ljust(1, " ") +
                                 active_mark.ljust(2, " ") +
                                 obj.range_str.ljust(37, " ") +
-                                str(obj.info).ljust(30, " ") +
+                                str(obj.info).ljust(12, " ") +
                                 str(obj.ip_start_str).ljust(16, " ") +
                                 str(obj.ip_finish_str).ljust(16, " ")
                                )
@@ -419,7 +419,6 @@ class Gui(Frame):
                 hostname = obj.hostname
                 vendor = obj.vendor
                 os = obj.os
-
 
                 the_listbox.insert('end',
                                      active_mark.ljust(1, " ") +

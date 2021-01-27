@@ -70,6 +70,10 @@ class Adapters:
         cls.detect()
 
     @classmethod
+    def update_with_ranges(cls):
+        Ranges.add_update_adapters_ranges()
+
+    @classmethod
     def update_clear(cls):
         cls.clear()
         cls.detect()
@@ -242,8 +246,6 @@ class Ranges():
     @classmethod
     def update(cls):
         cls.add_update_adapters_ranges()
-        cls.UPDATE_LISTBOX()
-        pass
 
     @classmethod
     def add_update_adapters_ranges(cls):
@@ -255,6 +257,7 @@ class Ranges():
                 range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info=f"*Adapter*")
                 range_obj.use = True if cls.use_adapters_bool and range_obj.use is not False else False
                 range_obj.active = True if adapter_obj.active else False
+        cls.UPDATE_LISTBOX()
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
