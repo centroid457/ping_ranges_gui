@@ -594,7 +594,7 @@ class Scan:
     def get_main_status_dict(self):
         the_dict = {
             "count_scan_cycles": self.count_scan_cycles,
-            "threads_active_count": threading.active_count(),
+            "threads_active_count (of max)": f"{threading.active_count()}({self.hosts.limit_ping_thread})",
             "time_last_cycle": self.time_last_cycle,
 
             "flag_scan_manual_stop": self.hosts.flag_scan_manual_stop,
