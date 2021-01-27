@@ -5,7 +5,7 @@ import re
 import time
 # import logic       # SEE THE END OF FILE
 import threading
-from tkinter import Tk, Frame, Button, Label, BOTH, Listbox, Scrollbar, filedialog, messagebox, font
+from tkinter import Tk, Frame, Button, Label, BOTH, Listbox, Scrollbar, filedialog, messagebox, font, Entry
 from tkinter import ttk
 
 def start_gui():
@@ -275,21 +275,52 @@ class Gui(Frame):
         frame_status = Frame(parent)
         frame_status.grid(column=0, row=1, sticky="ew")
 
-        btn = Button(frame_status, text="CLEAR to started")
+        frame_status_status = Frame(frame_status)
+        frame_status_status.pack(fill="x")
+        frame_status_correct = Frame(frame_status)
+        frame_status_correct.pack(fill="x")
+
+        # STATUS-1 -------------------------
+        frame = frame_status_status
+
+        btn = Button(frame, text="CLEAR to started")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.range_restore_default
         btn.pack(side="left")
 
-        btn = Button(frame_status, text="use ENABLE/DISABLE")
+        btn = Button(frame, text="use ENABLE/DISABLE")
         btn["bg"] = self.COLOR_BUTTONS
         btn["command"] = self.range_switch_use
         btn.pack(side="left")
 
-        self.status_ranges = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
+        self.status_ranges = ttk.Label(frame, text=self.TEXT_SELECT_ITEM, anchor="w")
         self.status_ranges.pack(side="left")
         self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
 
         self.ranges_fill_listbox()
+
+        # STATUS-2 -------------------------
+        frame = frame_status_correct
+
+        lbl = Label(frame)
+        lbl["text"] = "Range ("
+        lbl.pack(side="left")
+
+        self.entry_start_ip = Entry(frame, width=16)
+        self.entry_start_ip.insert(0, "")
+        self.entry_start_ip.pack(side="left")
+
+        lbl = Label(frame)
+        lbl["text"] = " - "
+        lbl.pack(side="left")
+
+        self.entry_finish_ip = Entry(frame, width=16)
+        self.entry_finish_ip.insert(0, "")
+        self.entry_finish_ip.pack(side="left")
+
+        lbl = Label(frame)
+        lbl["text"] = ")"
+        lbl.pack(side="left")
         return
 
     def ranges_fill_listbox(self):
@@ -339,6 +370,12 @@ class Gui(Frame):
         obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.instance_get_from_text)
         if obj is not None:
             self.status_ranges["text"] = obj.range_str
+
+            self.entry_start_ip.delete(0, "end")
+            self.entry_finish_ip.delete(0, "end")
+            self.entry_start_ip.insert(0, obj.range_tuple[0])
+            self.entry_finish_ip.insert(0, obj.range_tuple[-1])
+
         return
 
     # #################################################
