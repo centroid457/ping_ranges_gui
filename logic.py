@@ -459,7 +459,7 @@ class Hosts():
             # get MAC = use first!!!
             mac = cls._get_mac(ip)
 
-            if mac is None:     # don't pay attention if have not mac! just an accident!
+            if mac is None:     # don't pay attention if have not mac! just an accident(ghost)!
                 return
             else:
                 host_obj = cls()._instance_add_if_not(ip=ip, mac=mac)
@@ -481,6 +481,8 @@ class Hosts():
             # =====================================================================
             # NOW IT IS REAL POINT THAT IP IS REAL ACTIVE!
             print(f"***************hit=[{ip}]")
+            host_obj.active = True
+
             cls.ip_last_answered = ip
             cls._mark_nonactive_ip(ip=ip, mac_except=mac)
 
