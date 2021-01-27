@@ -319,7 +319,6 @@ class Hosts():
     def _instance_add_if_not(self, ip, mac):
         # return instance new or existed!
         if mac not in Hosts.mac_obj_dict:
-            winsound.Beep(1000, 500)
             with lock:
                 Hosts.mac_obj_dict.update({mac: self})
                 Hosts.ip_found_list.append(ip)
@@ -479,14 +478,14 @@ class Hosts():
                 cls.UPDATE_LISTBOX()
                 return
 
-            # ---------------------------------------------------------------------
-            # fill result dict by initial keys for found ip
+            # =====================================================================
+            # NOW IT IS REAL POINT THAT IP IS REAL ACTIVE!
             print(f"***************hit=[{ip}]")
             cls.ip_last_answered = ip
             cls._mark_nonactive_ip(ip=ip, mac_except=mac)
 
-            # =====================================================================
-            # go out if exists
+            # ---------------------------------------------------------------------
+            # go out if exists - this code will execute if instance just start filling! first time!
             if host_obj.hostname is not None:
                 cls.UPDATE_LISTBOX()
                 return
@@ -513,6 +512,10 @@ class Hosts():
             nmap_dict = cls._use_nmap(ip)
             host_obj.os = nmap_dict.get("os", None)
             host_obj.vendor = nmap_dict.get("vendor", None)
+
+            # ---------------------------------------------------------------------
+            # exit
+            winsound.Beep(1000, 500)
             cls.UPDATE_LISTBOX()
         return
 
