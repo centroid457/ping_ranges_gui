@@ -198,12 +198,12 @@ class Ranges():
 
     def _instance_del(self):
         Ranges.tuple_obj_dict.pop(self.range_tuple)
-        Ranges.UPDATE_LISTBOX()
+        Ranges._update_listbox()
 
     @classmethod
     def clear(cls):
         cls.tuple_obj_dict.clear()
-        cls.UPDATE_LISTBOX()
+        cls._update_listbox()
 
     @classmethod
     def instance_get_from_text(cls, text):
@@ -242,7 +242,7 @@ class Ranges():
             for my_range in cls.input_tuple_list:
                 cls.add_range_tuple(range_tuple=my_range)
 
-        cls.UPDATE_LISTBOX()
+        cls._update_listbox()
         for my_range in cls.tuple_obj_dict:
             print(my_range)
         return
@@ -261,12 +261,12 @@ class Ranges():
                 range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info=f"*Adapter*")
                 range_obj.use = True if cls.use_adapters_bool and range_obj.use is not False else False
                 range_obj.active = True if adapter_obj.active else False
-        cls.UPDATE_LISTBOX()
+        cls._update_listbox()
 
     @classmethod
     def add_range_tuple(cls, range_tuple):
         cls()._instance_add_if_not(range_tuple=range_tuple)
-        cls.UPDATE_LISTBOX()
+        cls._update_listbox()
 
     # -----------------------------------------------------------
     # CONTROL
@@ -279,7 +279,7 @@ class Ranges():
         for range_obj in cls.tuple_obj_dict.values():
             range_obj.use = False if disable else True if enable else None
 
-        cls.UPDATE_LISTBOX()
+        cls._update_listbox()
         return
 
     @classmethod
@@ -289,7 +289,23 @@ class Ranges():
                 cls.tuple_obj_dict[range_tuple].use = use
             if active is not None:
                 cls.tuple_obj_dict[range_tuple].active = active
+        cls._update_listbox()
+        return
+
+    # -----------------------------------------------------------
+    # AUXILIARY
+    @classmethod
+    def _update_listbox(cls):
+        cls._sort_dict()
         cls.UPDATE_LISTBOX()
+
+    @classmethod
+    def _sort_dict(cls):
+        the_dict = cls.tuple_obj_dict
+        sorted_dict_keys = sorted(the_dict, key=lambda key: the_dict.get(key).range_tuple)
+        sorted_dict = dict(zip(sorted_dict_keys, [the_dict[value] for value in sorted_dict_keys]))
+
+        cls.tuple_obj_dict = sorted_dict
         return
 
 
