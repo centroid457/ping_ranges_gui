@@ -2,6 +2,7 @@
 
 import contracts
 import re
+import ipaddress
 import time
 # import logic       # SEE THE END OF FILE
 import threading
@@ -278,17 +279,17 @@ class Gui(Frame):
         lbl["text"] = "Range ("
         lbl.pack(side="left")
 
-        self.entry_start_ip = Entry(frame_status, width=13)
-        self.entry_start_ip.insert(0, "")
-        self.entry_start_ip.pack(side="left")
+        self.entry_ip_1 = Entry(frame_status, width=13)
+        self.entry_ip_1.insert(0, "")
+        self.entry_ip_1.pack(side="left")
 
         lbl = Label(frame_status)
         lbl["text"] = " - "
         lbl.pack(side="left")
 
-        self.entry_finish_ip = Entry(frame_status, width=13)
-        self.entry_finish_ip.insert(0, "")
-        self.entry_finish_ip.pack(side="left")
+        self.entry_ip_2 = Entry(frame_status, width=13)
+        self.entry_ip_2.insert(0, "")
+        self.entry_ip_2.pack(side="left")
 
         lbl = Label(frame_status)
         lbl["text"] = ")"
@@ -296,7 +297,7 @@ class Gui(Frame):
 
         # BTN -------------------------
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Apply")
-        btn["command"] = lambda: None
+        btn["command"] = self._ranges_update_entries
         btn.pack(side="left")
 
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Cancel")
@@ -316,8 +317,8 @@ class Gui(Frame):
 
         self.status_ranges = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
         # self.status_ranges.pack(side="left")
-        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
 
+        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
         self.ranges_fill_listbox()
         return
 
@@ -346,11 +347,14 @@ class Gui(Frame):
             else:
                 the_listbox.itemconfig('end', bg="#55FF55")
 
-            # SELECT selected before
-            the_listbox.selection_set(selected_item_list)
-            the_listbox.see(selected_item_list)
-            the_listbox.activate(selected_item_list)
-            the_listbox.selection_anchor(selected_item_list)
+        # SELECT selected before
+        the_listbox.selection_set(selected_item_list)
+        the_listbox.see(selected_item_list)
+        the_listbox.activate(selected_item_list)
+        the_listbox.selection_anchor(selected_item_list)
+
+        self.entry_ip_1["bg"] = "SystemWindow"
+        self.entry_ip_2["bg"] = "SystemWindow"
         return
 
     def range_switch_use(self):
@@ -365,12 +369,37 @@ class Gui(Frame):
         if obj is not None:
             self.status_ranges["text"] = obj.range_str
 
-            self.entry_start_ip.delete(0, "end")
-            self.entry_finish_ip.delete(0, "end")
-            self.entry_start_ip.insert(0, obj.range_tuple[0])
-            self.entry_finish_ip.insert(0, obj.range_tuple[-1])
+            self.entry_ip_1.delete(0, "end")
+            self.entry_ip_2.delete(0, "end")
+            self.entry_ip_1.insert(0, obj.range_tuple[0])
+            self.entry_ip_2.insert(0, obj.range_tuple[-1])
 
+            self.entry_ip_1["bg"] = "SystemWindow"
+            self.entry_ip_2["bg"] = "SystemWindow"
         return
+
+    def _ranges_update_entries(self):
+        text_1 = self.entry_ip_1.get()
+        text_2 = self.entry_ip_2.get()
+
+        mask = r"[^\.\d]"
+        text_1 = re.sub(mask, "", text_1)
+        text_2 = re.sub(mask, "", text_2)
+
+        self.entry_ip_1.delete(0, "end")
+        self.entry_ip_1.insert(0, text_1)
+        self.entry_ip_2.delete(0, "end")
+        self.entry_ip_2.insert(0, text_2)
+
+        try:
+            ipaddress.ip_address(text_1)
+        except:
+            self.entry_ip_1["bg"] = "#FF9999"
+
+        try:
+            ipaddress.ip_address(text_2)
+        except:
+            self.entry_ip_2["bg"] = "#FF9999"
 
     # #################################################
     # frame FOUND IP
