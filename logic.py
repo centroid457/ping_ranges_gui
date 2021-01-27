@@ -348,7 +348,7 @@ class Hosts():
     def _instance_del(self):
         Hosts.mac_obj_dict.pop(self.mac)
         Hosts.ip_found_list.remove(self.ip)
-        Hosts.UPDATE_LISTBOX()
+        Hosts._update_listbox()
 
     @classmethod
     @contracts.contract(mac=str)
@@ -373,7 +373,7 @@ class Hosts():
         cls.ip_last_answered = None
         cls.flag_scan_manual_stop = False
         cls.count_ip_scanned = 0
-        cls.UPDATE_LISTBOX()
+        cls._update_listbox()
 
     @classmethod
     def instance_get_from_text(cls, text):
@@ -451,7 +451,7 @@ class Hosts():
 
         if sp_ping.returncode != 0 and ip in cls.ip_found_list:
             cls._mark_nonactive_ip(ip)
-            cls.UPDATE_LISTBOX()
+            cls._update_listbox()
             return
 
         if sp_ping.returncode == 0:
@@ -475,7 +475,7 @@ class Hosts():
                     break
             if not match:
                 cls._mark_nonactive_ip(ip)
-                cls.UPDATE_LISTBOX()
+                cls._update_listbox()
                 return
 
             # =====================================================================
@@ -489,7 +489,7 @@ class Hosts():
             # ---------------------------------------------------------------------
             # go out if exists - this code will execute if instance just start filling! first time!
             if host_obj.hostname is not None:
-                cls.UPDATE_LISTBOX()
+                cls._update_listbox()
                 return
 
             # ---------------------------------------------------------------------
@@ -518,11 +518,25 @@ class Hosts():
             # ---------------------------------------------------------------------
             # exit
             winsound.Beep(1000, 500)
-            cls.UPDATE_LISTBOX()
+            cls._update_listbox()
         return
 
     # -----------------------------------------------------------
     # AUXILIARY
+    @classmethod
+    def _update_listbox(cls):
+        cls._sort_dict()
+        cls.UPDATE_LISTBOX()
+
+    @classmethod
+    def _sort_dict(cls):
+        the_dict = cls.mac_obj_dict
+        sorted_dict_keys = sorted(the_dict, key=lambda key: the_dict.get(key).ip)
+        sorted_dict = dict(zip(sorted_dict_keys, [the_dict[value] for value in sorted_dict_keys]))
+
+        cls.mac_obj_dict = sorted_dict
+        return
+
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
     def _mark_nonactive_ip(cls, ip, mac_except=None):
