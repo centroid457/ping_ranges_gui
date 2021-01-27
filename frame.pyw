@@ -188,7 +188,7 @@ class Gui(Frame):
 
     def adapters_fill_listbox(self):
         the_listbox = self.listbox_adapters
-        self._listbox_clear(the_listbox)
+        self._listbox_clear_and_get_selected(the_listbox)
 
         obj_set = self.logic.adapters.name_obj_dict.values()
         for obj in obj_set:
@@ -323,7 +323,7 @@ class Gui(Frame):
 
     def ranges_fill_listbox(self):
         the_listbox = self.listbox_ranges
-        self._listbox_clear(the_listbox)
+        selected_item_list = self._listbox_clear_and_get_selected(the_listbox)
 
         obj_set = self.logic.ranges.tuple_obj_dict.values()
         for obj in obj_set:
@@ -345,6 +345,12 @@ class Gui(Frame):
                 the_listbox.itemconfig('end', bg="#FF9999")
             else:
                 the_listbox.itemconfig('end', bg="#55FF55")
+
+            # SELECT selected before
+            the_listbox.selection_set(selected_item_list)
+            the_listbox.see(selected_item_list)
+            the_listbox.activate(selected_item_list)
+            the_listbox.selection_anchor(selected_item_list)
         return
 
     def range_switch_use(self):
@@ -425,7 +431,7 @@ class Gui(Frame):
     def ip_found_fill_listbox(self):
         with self.lock:
             the_listbox = self.listbox_ip_found
-            self._listbox_clear(the_listbox)
+            self._listbox_clear_and_get_selected(the_listbox)
 
             obj_set = self.logic.hosts.mac_obj_dict.values()
             for obj in obj_set:
@@ -534,9 +540,10 @@ class Gui(Frame):
             return obj
         return None
 
-    def _listbox_clear(self, listbox):
-        listbox.delete(0, listbox.size()-1)
-        return
+    def _listbox_clear_and_get_selected(self, the_listbox):
+        selected_item_list = the_listbox.curselection()
+        the_listbox.delete(0, the_listbox.size()-1)
+        return (0,) if selected_item_list == () else selected_item_list
 
 
 if __name__ == '__main__':
