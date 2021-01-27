@@ -29,7 +29,7 @@ class Gui(Frame):
         self.lock = threading.Lock()
 
         # CONNECT TO LOGIC
-        self.logic = logic.Scan(ip_tuples_list=None, ranges_use_adapters_bool=True)
+        self.logic = logic.Scan(ip_tuples_list=None, ranges_use_adapters_bool=False)
 
         self.create_gui_structure()
 
@@ -147,13 +147,11 @@ class Gui(Frame):
         frame_header = Frame(parent, relief="groove", borderwidth=4)
         frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
-        btn = Button(frame_header, text="Clear RESET")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="Clear RESET")
         btn["command"] = self.logic.adapters.update_clear_with_ranges
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="REFRESH")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="REFRESH")
         btn["command"] = self.logic.adapters.update_with_ranges
         btn.pack(side="left", fill="y")
 
@@ -176,8 +174,7 @@ class Gui(Frame):
         frame_status = Frame(parent)
         frame_status.grid(column=0, row=1, sticky="ew")
 
-        btn = Button(frame_status, text="settings")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="settings")
         btn["command"] = lambda: None
         btn["state"] = "disabled"
         btn.pack(side="left")
@@ -242,18 +239,15 @@ class Gui(Frame):
         frame_header = Frame(parent, relief="groove", borderwidth=4)
         frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
-        btn = Button(frame_header, text="RESET to started")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="RESET to started")
         btn["command"] = self.logic.ranges.ranges_reset_to_started
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="DISABLE all")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="DISABLE all")
         btn["command"] = lambda: self.logic.ranges.ranges_all_control(disable=True)
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="ENABLE all")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="ENABLE all")
         btn["command"] = lambda: self.logic.ranges.ranges_all_control(enable=True)
         btn.pack(side="left", fill="y")
 
@@ -275,52 +269,56 @@ class Gui(Frame):
         frame_status = Frame(parent)
         frame_status.grid(column=0, row=1, sticky="ew")
 
-        frame_status_status = Frame(frame_status)
-        frame_status_status.pack(fill="x")
-        frame_status_correct = Frame(frame_status)
-        frame_status_correct.pack(fill="x")
-
-        # STATUS-1 -------------------------
-        frame = frame_status_status
-
-        btn = Button(frame, text="CLEAR to started")
-        btn["bg"] = self.COLOR_BUTTONS
-        btn["command"] = self.range_restore_default
-        btn.pack(side="left")
-
-        btn = Button(frame, text="use ENABLE/DISABLE")
-        btn["bg"] = self.COLOR_BUTTONS
+        # ENTRY -------------------------
+        btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="use EN/DIS")
         btn["command"] = self.range_switch_use
         btn.pack(side="left")
 
-        self.status_ranges = ttk.Label(frame, text=self.TEXT_SELECT_ITEM, anchor="w")
-        self.status_ranges.pack(side="left")
-        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
-
-        self.ranges_fill_listbox()
-
-        # STATUS-2 -------------------------
-        frame = frame_status_correct
-
-        lbl = Label(frame)
+        lbl = Label(frame_status)
         lbl["text"] = "Range ("
         lbl.pack(side="left")
 
-        self.entry_start_ip = Entry(frame, width=16)
+        self.entry_start_ip = Entry(frame_status, width=13)
         self.entry_start_ip.insert(0, "")
         self.entry_start_ip.pack(side="left")
 
-        lbl = Label(frame)
+        lbl = Label(frame_status)
         lbl["text"] = " - "
         lbl.pack(side="left")
 
-        self.entry_finish_ip = Entry(frame, width=16)
+        self.entry_finish_ip = Entry(frame_status, width=13)
         self.entry_finish_ip.insert(0, "")
         self.entry_finish_ip.pack(side="left")
 
-        lbl = Label(frame)
+        lbl = Label(frame_status)
         lbl["text"] = ")"
         lbl.pack(side="left")
+
+        # BTN -------------------------
+        btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Apply")
+        btn["command"] = lambda: None
+        btn.pack(side="left")
+
+        btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Cancel")
+        btn["command"] = lambda: None
+        btn.pack(side="left")
+
+        sep = ttk.Separator(frame_status, orient="vertical")
+        sep.pack(side="left")
+
+        btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Add")
+        btn["command"] = lambda: None
+        btn.pack(side="left")
+
+        btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Delete")
+        btn["command"] = lambda: None
+        btn.pack(side="left")
+
+        self.status_ranges = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
+        # self.status_ranges.pack(side="left")
+        self.listbox_ranges.bind("<<ListboxSelect>>", self.ranges_change_status)
+
+        self.ranges_fill_listbox()
         return
 
     def ranges_fill_listbox(self):
@@ -347,16 +345,6 @@ class Gui(Frame):
                 the_listbox.itemconfig('end', bg="#FF9999")
             else:
                 the_listbox.itemconfig('end', bg="#55FF55")
-        return
-
-    def range_restore_default(self):
-        obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.instance_get_from_text)
-        if obj is not None:
-            obj.ip_start = obj.range_tuple[0]
-            obj.ip_finish = obj.range_tuple[-1]
-            obj.use = True
-
-            self.ranges_fill_listbox()
         return
 
     def range_switch_use(self):
@@ -389,23 +377,19 @@ class Gui(Frame):
         frame_header = Frame(parent, relief="groove", borderwidth=4)
         frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
-        btn = Button(frame_header, text="STOP")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="STOP")
         btn["command"] = self.logic.scan_stop
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="CLEAR all found data")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="CLEAR all found data")
         btn["command"] = self.logic.hosts.clear_all
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="SCAN ONES")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="SCAN ONES")
         btn["command"] = self.logic.scan_onсe_thread
         btn.pack(side="left", fill="y")
 
-        btn = Button(frame_header, text="SCAN LOOP")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="SCAN LOOP")
         btn["command"] = self.logic.scan_loop_thread
         btn.pack(side="left", fill="y")
 
@@ -427,8 +411,7 @@ class Gui(Frame):
         frame_status = Frame(parent)
         frame_status.grid(column=0, row=1, sticky="ew")
 
-        btn = Button(frame_status, text="Delete")
-        btn["bg"] = self.COLOR_BUTTONS
+        btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Delete")
         btn["command"] = self.ip_found_delete_line
         btn.pack(side="left")
 
