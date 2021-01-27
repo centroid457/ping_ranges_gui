@@ -270,8 +270,10 @@ class Ranges():
 
                 range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info="Adapter")
                 range_obj.adapter_net = net
-                range_obj.use = True if cls.use_adapters_bool and range_obj.use is not False else False
                 range_obj.active = True if adapter_obj.active else False
+
+                if range_obj.use is None:
+                    range_obj.use = True if cls.use_adapters_bool else False
 
         # check if some adapters was turned off
         for obj in cls.tuple_obj_dict.values():
