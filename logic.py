@@ -45,6 +45,7 @@ class Adapters:
 
             self.active = None
             self.was_lost = False
+            self.was_changed_ip = False
             self.mac = None
             self.ip = None
             self.mask = None
@@ -136,6 +137,8 @@ class Adapters:
                 adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
                 ip = ipaddress.ip_address(part_result.split("(")[0])
+                if adapter_obj.ip is not None and adapter_obj.ip != ip:
+                    adapter_obj.was_changed_ip = True
                 adapter_obj.ip = ip
                 adapter_obj.active = True
                 cls.ip_localhost_set.update({ip})
@@ -148,7 +151,6 @@ class Adapters:
         for adapter_obj in cls.name_obj_dict.values():
             if adapter_obj.active is False:
                 adapter_obj.was_lost = True
-                winsound.Beep(1000, 500)
 
             if adapter_obj.ip is not None:
                 ip = ipaddress.ip_address(adapter_obj.ip)

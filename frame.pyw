@@ -201,9 +201,13 @@ class Gui(Frame):
             was_lost = obj.was_lost
             was_lost_mark = "lost" if was_lost else ""
 
+            was_changed_ip = obj.was_changed_ip
+            was_changed_ip_mark = "*" if was_changed_ip else ""
+
             the_listbox.insert('end',
                                  active_mark.ljust(1, " ") +
-                                 was_lost_mark.ljust(5, " ") +
+                                 was_lost_mark.ljust(4, " ") +
+                                 was_changed_ip_mark.ljust(1, " ") +
                                  str(obj.mac).ljust(24, " ") +
                                  str(obj.ip).ljust(16, " ") +
                                  str(obj.mask).ljust(16, " ") +
