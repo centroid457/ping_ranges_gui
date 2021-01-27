@@ -429,7 +429,9 @@ class Gui(Frame):
 
                 the_listbox.insert('end',
                                      active_mark.ljust(1, " ") +
+                                     str(obj.count_response).ljust(2, " ") +
                                      was_lost_mark.ljust(4, " ") +
+                                     str(obj.count_lost).ljust(2, " ") +
                                      was_changed_ip_mark.ljust(1, " ") +
                                      str(time_response).ljust(4, " ") +
                                      str(ip).ljust(16, " ") +

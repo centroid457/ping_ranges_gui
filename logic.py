@@ -354,10 +354,9 @@ class Hosts():
                 self.vendor = None
                 self.os = None
                 self.time_response = None
-                self.count_ping = 0
+
                 self.count_lost = 0
                 self.count_response = 0
-
                 return self
         else:
             host_obj = Hosts.mac_obj_dict[mac]
@@ -503,6 +502,7 @@ class Hosts():
             # NOW IT IS REAL POINT THAT IP IS REAL ACTIVE!
             print(f"***************hit=[{ip}]")
             host_obj.active = True
+            host_obj.count_response += 1
 
             cls.ip_last_answered = ip
             cls._mark_nonactive_ip(ip=ip, mac_except=mac)
@@ -566,6 +566,7 @@ class Hosts():
                 obj.active = False
                 obj.was_lost = True
                 obj.time_response = "---"
+                obj.count_lost += 1
         return
 
     @classmethod
