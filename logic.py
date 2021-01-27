@@ -31,6 +31,7 @@ class Adapters:
     UPDATE_LISTBOX = lambda: None
     ip_localhost_set = set()
     ip_margin_set = set()
+    net_active_dir = {}          # {net: adapter_obj_active, }
     hostname = platform.node()
 
     # -----------------------------------------------------------
@@ -62,7 +63,8 @@ class Adapters:
 
     @classmethod
     def _clear(cls):
-        cls.name_obj_dict.clear()
+        cls.name_obj_dict = {}
+        cls.net_active_dir = {}
         cls.ip_localhost_set = set()
         cls.ip_margin_set = set()
         cls.UPDATE_LISTBOX()
@@ -162,6 +164,7 @@ class Adapters:
                 mask = adapter_obj.mask
                 net = ipaddress.ip_network((str(ip), mask), strict=False)
                 adapter_obj.net = net
+                cls.net_active_dir.update({net: adapter_obj.active})
                 cls.ip_margin_set.update({net[0], net[-1]})
 
         cls.UPDATE_LISTBOX()
@@ -194,8 +197,7 @@ class Ranges():
             self.use = None
             self.active = True
             self.info = info
-            self.ip_start_str = range_tuple[0]
-            self.ip_finish_str = range_tuple[-1]
+            self.adapter_net = None
 
             return self
         else:
@@ -207,7 +209,7 @@ class Ranges():
 
     @classmethod
     def _clear(cls):
-        cls.tuple_obj_dict.clear()
+        cls.tuple_obj_dict = {}
         cls._update_listbox()
 
     @classmethod
@@ -259,13 +261,23 @@ class Ranges():
     @classmethod
     def add_update_adapters_ranges(cls):
         Adapters._update()
+
+        # add new ranges from adapters
         for adapter_obj in Adapters.name_obj_dict.values():
             if adapter_obj.net not in (None, ""):
                 net = adapter_obj.net
                 range_tuple = (str(net[0]), str(net[-1]))
-                range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info=f"*Adapter*")
+
+                range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info="Adapter")
+                range_obj.adapter_net = net
                 range_obj.use = True if cls.use_adapters_bool and range_obj.use is not False else False
                 range_obj.active = True if adapter_obj.active else False
+
+        # check if some adapters was turned off
+        for obj in cls.tuple_obj_dict.values():
+            if "Adapter" in obj.info and obj.adapter_net not in Adapters.net_active_dir:
+                obj.active = False
+
         cls._update_listbox()
 
     @classmethod
@@ -387,7 +399,7 @@ class Hosts():
 
     @classmethod
     def clear_all(cls):
-        cls.mac_obj_dict.clear()
+        cls.mac_obj_dict = {}
         cls.ip_found_list = []
         cls.ip_last_scanned = None
         cls.ip_last_answered = None

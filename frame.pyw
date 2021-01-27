@@ -309,8 +309,7 @@ class Gui(Frame):
                                 active_mark.ljust(2, " ") +
                                 obj.range_str.ljust(37, " ") +
                                 str(obj.info).ljust(12, " ") +
-                                str(obj.ip_start_str).ljust(16, " ") +
-                                str(obj.ip_finish_str).ljust(16, " ")
+                                str(obj.adapter_net).ljust(16, " ")
                                )
             # change visual
             if not use or not active:
