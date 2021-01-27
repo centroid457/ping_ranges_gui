@@ -327,6 +327,7 @@ class Hosts():
 
                 self.active = True
                 self.was_lost = False
+                self.was_changed_ip = False
                 self.hostname = None
                 self.vendor = None
                 self.os = None
@@ -337,7 +338,11 @@ class Hosts():
 
                 return self
         else:
-            return Hosts.mac_obj_dict[mac]
+            host_obj = Hosts.mac_obj_dict[mac]
+            if host_obj.ip != ip:
+                host_obj.was_changed_ip = ip
+                Hosts.mac_obj_dict[mac].ip = ip    # need to update if host will change its IP!
+            return host_obj
 
     def _instance_del(self):
         Hosts.mac_obj_dict.pop(self.mac)
