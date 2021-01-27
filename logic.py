@@ -9,6 +9,7 @@ import subprocess
 import threading
 import time
 import platform
+import winsound
 
 access_this_module_as_import = True  # at first need true to correct assertions!
 ip_tuples_list_default = [
@@ -147,6 +148,7 @@ class Adapters:
         for adapter_obj in cls.name_obj_dict.values():
             if adapter_obj.active is False:
                 adapter_obj.was_lost = True
+                winsound.Beep(1000, 500)
 
             if adapter_obj.ip is not None:
                 ip = ipaddress.ip_address(adapter_obj.ip)
@@ -315,6 +317,7 @@ class Hosts():
     def _instance_add_if_not(self, ip, mac):
         # return instance new or existed!
         if mac not in Hosts.mac_obj_dict:
+            winsound.Beep(1000, 500)
             with lock:
                 Hosts.mac_obj_dict.update({mac: self})
                 Hosts.ip_found_list.append(ip)
@@ -512,8 +515,10 @@ class Hosts():
     @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
     def _mark_nonactive_ip(cls, ip, mac_except=None):
         for obj in cls.mac_obj_dict.values():
-            if obj.ip == ip:
-                obj.active = False if obj.mac != mac_except else True
+            if obj.ip == ip and obj.mac != mac_except:
+                obj.active = False
+                obj.was_lost = True
+                obj.time_response = "---"
         return
 
     @classmethod
