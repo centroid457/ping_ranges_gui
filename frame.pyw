@@ -297,7 +297,7 @@ class Gui(Frame):
 
         # BTN -------------------------
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Apply")
-        btn["command"] = self._ranges_update_entries
+        btn["command"] = self._entries_ranges_update
         btn.pack(side="left")
 
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Cancel")
@@ -308,7 +308,7 @@ class Gui(Frame):
         sep.pack(side="left")
 
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Add")
-        btn["command"] = lambda: None
+        btn["command"] = self.entries_range_add
         btn.pack(side="left")
 
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Delete")
@@ -352,9 +352,6 @@ class Gui(Frame):
         the_listbox.see(selected_item_list)
         the_listbox.activate(selected_item_list)
         the_listbox.selection_anchor(selected_item_list)
-
-        self.entry_ip_1["bg"] = "SystemWindow"
-        self.entry_ip_2["bg"] = "SystemWindow"
         return
 
     def range_switch_use(self):
@@ -378,7 +375,13 @@ class Gui(Frame):
             self.entry_ip_2["bg"] = "SystemWindow"
         return
 
-    def _ranges_update_entries(self):
+    # ENTRY BUTTONS -------------------------------------------------------------
+    def entries_range_add(self):
+        the_tuple = self._entries_ranges_get_tuple()
+        if the_tuple is not None:
+            self.logic.ranges.add_range_tuple(the_tuple)
+
+    def _entries_ranges_update(self):
         text_1 = self.entry_ip_1.get()
         text_2 = self.entry_ip_2.get()
 
@@ -391,15 +394,23 @@ class Gui(Frame):
         self.entry_ip_2.delete(0, "end")
         self.entry_ip_2.insert(0, text_2)
 
+    @contracts.contract(returns="None|tuple[1|2]")
+    def _entries_ranges_get_tuple(self):
+        self._entries_ranges_update()
+        correct = True
         try:
-            ipaddress.ip_address(text_1)
+            ipaddress.ip_address(self.entry_ip_1.get())
         except:
             self.entry_ip_1["bg"] = "#FF9999"
+            correct = False
 
         try:
-            ipaddress.ip_address(text_2)
+            ipaddress.ip_address(self.entry_ip_2.get())
         except:
             self.entry_ip_2["bg"] = "#FF9999"
+            correct = False
+
+        return (self.entry_ip_1.get(), self.entry_ip_2.get()) if correct else None
 
     # #################################################
     # frame FOUND IP
