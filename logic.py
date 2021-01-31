@@ -26,7 +26,7 @@ lock = threading.Lock()
 # ADAPTERS
 # #################################################
 class Adapters:
-    name_obj_dict = {}
+    name_obj_dict = {}          # {adapter_name: adapter_obj, }
 
     UPDATE_LISTBOX = lambda: None
     ip_localhost_set = set()
@@ -177,7 +177,7 @@ class Adapters:
 # RANGES
 # ###########################################################
 class Ranges():
-    tuple_obj_dict = {}
+    tuple_obj_dict = {}         # {range_tuple: range_obj, }
 
     UPDATE_LISTBOX = lambda: None
     use_adapters_bool = None
@@ -332,7 +332,7 @@ class Ranges():
 # HOSTS
 # ###########################################################
 class Hosts():
-    mac_obj_dict = {}
+    mac_obj_dict = {}               # {mac: host_obj, }
 
     UPDATE_LISTBOX = lambda: None
     ip_found_list = []      # use list! if found 2 mac with same ip - ok! let be 2 items with same ip!!!
