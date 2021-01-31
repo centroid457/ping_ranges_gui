@@ -31,7 +31,7 @@ class Adapters:
     UPDATE_LISTBOX = lambda: None
     ip_localhost_set = set()
     ip_margin_set = set()
-    net_active_dir = {}          # {net: adapter_obj_active, }
+    net_active_dir = {}          # {net: adapter_active, }
     hostname = platform.node()
 
     # -----------------------------------------------------------
