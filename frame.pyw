@@ -386,7 +386,7 @@ class Gui(Frame):
         if the_tuple is not None:
             range_obj = self.logic.ranges.tuple_obj_dict.get(the_tuple, None)
             if range_obj is not None:
-                if range_obj.adapter_net is None:
+                if range_obj.info != "Adapter":
                     range_obj._instance_del()
                 else:
                     range_obj.use = False
