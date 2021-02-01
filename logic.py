@@ -347,7 +347,10 @@ class Hosts():
     count_ip_scanned = 0
 
     # LIMITS
-    limit_ping_timewait_ms = 500  # BEST=100 - NO!
+    limit_ping_timewait_special_ms = 1000   # not yet used
+    limit_ping_timewait_special_step = 5    # not yet used
+
+    limit_ping_timewait_ms = 500  # BEST=100 - NO! because of this added The_special
     # many threads can lower the net quality by pollution! and especially on WiFi response can reach up to 900ms
     limit_ping_thread = 300  # BEST=300
     # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
