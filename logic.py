@@ -35,11 +35,10 @@ class Adapters:
     hostname = platform.node()
 
     # -----------------------------------------------------------
-    # INSTANCE
-    @contracts.contract(adapter_name=str)
-    def _instance_add_if_not(self, adapter_name):
-        # return instance new or existed!
-        if adapter_name not in Adapters.name_obj_dict:
+    # internal DATA CLASS
+    class Adapter:
+        @contracts.contract(adapter_name=str)
+        def __init__(self, adapter_name):
             Adapters.name_obj_dict.update({adapter_name: self})
 
             self.name = adapter_name
@@ -53,13 +52,25 @@ class Adapters:
             self.gateway = None
             self.net = None
 
-            return self
+        def instance_del(self):
+            Adapters.name_obj_dict.pop(self.name)
+            Adapters.UPDATE_LISTBOX()
+
+        def _instance_print(self):
+            for attr in dir(self):
+                if not attr.startswith("_") and not callable(getattr(self, attr)):
+                    print(f"{attr}=[{getattr(self, attr)}]")
+
+    # -----------------------------------------------------------
+    # INSTANCE
+    @staticmethod
+    @contracts.contract(adapter_name=str)
+    def _instance_add_if_not(adapter_name):
+        # return instance new or existed!
+        if adapter_name not in Adapters.name_obj_dict:
+            return Adapters.Adapter(adapter_name)
         else:
             return Adapters.name_obj_dict[adapter_name]
-
-    def instance_del(self):
-        Adapters.name_obj_dict.pop(self.name)
-        Adapters.UPDATE_LISTBOX()
 
     @classmethod
     def _clear(cls):
@@ -105,11 +116,6 @@ class Adapters:
         # attempt 3 -----------------
         return None
 
-    def _instance_print(self):
-        for attr in dir(self):
-            if not attr.startswith("_") and not callable(getattr(self, attr)):
-                print(f"{attr}=[{getattr(self, attr)}]")
-
     # -----------------------------------------------------------
     # GENERATE DATA
     @classmethod
@@ -140,7 +146,7 @@ class Adapters:
             # CREATION cls.data_dict
             if key_part in ["Описание."]:       # found new adapter
                 adapter_name = part_result
-                adapter_obj = cls()._instance_add_if_not(adapter_name)
+                adapter_obj = cls._instance_add_if_not(adapter_name)
             elif key_part in ["Физический"]:
                 adapter_obj.mac = part_result
             elif key_part in ["IPv4-адрес."]:
