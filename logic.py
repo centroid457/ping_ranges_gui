@@ -57,7 +57,7 @@ class Adapters:
         else:
             return Adapters.name_obj_dict[adapter_name]
 
-    def _instance_del(self):
+    def instance_del(self):
         Adapters.name_obj_dict.pop(self.name)
         Adapters.UPDATE_LISTBOX()
 
@@ -204,7 +204,7 @@ class Ranges():
         else:
             return Ranges.tuple_obj_dict[range_tuple]
 
-    def _instance_del(self):
+    def instance_del(self):
         Ranges.tuple_obj_dict.pop(self.range_tuple)
         Ranges._update_listbox()
 
@@ -387,7 +387,7 @@ class Hosts():
                 Hosts.mac_obj_dict[mac].ip = ip    # need to update if host will change its IP!
             return host_obj
 
-    def _instance_del(self):
+    def instance_del(self):
         Hosts.mac_obj_dict.pop(self.mac)
         Hosts.ip_found_list.remove(self.ip)
         Hosts._update_listbox()
@@ -395,7 +395,7 @@ class Hosts():
     @classmethod
     @contracts.contract(mac=str)
     def del_mac(cls, mac):
-        cls.mac_obj_dict[mac]._instance_del()
+        cls.mac_obj_dict[mac].instance_del()
 
     @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address)
@@ -405,7 +405,7 @@ class Hosts():
             if obj.ip == ip:
                 del_obj_list.append(obj)
         for obj in del_obj_list:
-                obj._instance_del()
+                obj.instance_del()
 
     @classmethod
     def clear_all(cls):

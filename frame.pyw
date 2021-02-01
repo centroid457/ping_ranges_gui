@@ -387,7 +387,7 @@ class Gui(Frame):
             range_obj = self.logic.ranges.tuple_obj_dict.get(the_tuple, None)
             if range_obj is not None:
                 if range_obj.info != "Adapter":
-                    range_obj._instance_del()
+                    range_obj.instance_del()
                 else:
                     range_obj.use = False
                 self.ranges_fill_listbox()
@@ -535,7 +535,7 @@ class Gui(Frame):
     def ip_found_delete_line(self):
         obj = self._listbox_get_selected_obj(self.listbox_ip_found, self.logic.hosts.instance_get_from_text)
         if obj is not None:
-            obj._instance_del()
+            obj.instance_del()
         return
 
     # #################################################
