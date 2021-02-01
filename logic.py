@@ -612,7 +612,7 @@ class Hosts():
         return None
 
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address, returns=dict)
+    @contracts.contract(ip=ipaddress.IPv4Address, returns="dict(str:str|None)")
     def _use_nmap(cls, ip):
         try:
             ip = str(ip)
