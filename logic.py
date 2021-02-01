@@ -440,7 +440,7 @@ class Hosts():
     # -----------------------------------------------------------
     # GENERATE DATA
     @classmethod
-    @contracts.contract(ip_range=tuple[1|2])
+    @contracts.contract(ip_range="tuple[1|2]")
     def ping_range(cls, ip_range):
         ip_start = ipaddress.ip_address(str(ip_range[0]))
         ip_finish = ipaddress.ip_address(str(ip_range[-1]))
