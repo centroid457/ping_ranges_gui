@@ -88,6 +88,7 @@ class Adapters:
         Ranges.add_update_adapters_ranges()
 
     @classmethod
+    @contracts.contract(text=str)
     def instance_get_from_text(cls, text):
         # attempt 1 -----------------
         # most correct finding
@@ -213,6 +214,7 @@ class Ranges():
         cls._update_listbox()
 
     @classmethod
+    @contracts.contract(text=str)
     def instance_get_from_text(cls, text):
         # attempt 1 -----------------
         # most correct finding
@@ -283,6 +285,7 @@ class Ranges():
         cls._update_listbox()
 
     @classmethod
+    @contracts.contract(range_tuple="tuple[1|2]")
     def add_range_tuple(cls, range_tuple):
         cls()._instance_add_if_not(range_tuple=range_tuple)
         cls._update_listbox()
@@ -294,6 +297,7 @@ class Ranges():
         cls.ranges_apply_clear(ranges_list=cls.input_tuple_list, use_adapters_bool=cls.use_adapters_bool)
 
     @classmethod
+    @contracts.contract(disable=bool, enable=bool)
     def ranges_all_control(cls, disable=False, enable=False):
         for range_obj in cls.tuple_obj_dict.values():
             range_obj.use = False if disable else True if enable else None
@@ -302,6 +306,7 @@ class Ranges():
         return
 
     @classmethod
+    @contracts.contract(range_tuple="tuple[1|2]", use=bool, active=bool)
     def range_control(cls, range_tuple, use=None, active=None):
         if range_tuple in cls.tuple_obj_dict:
             if use is not None:
@@ -345,7 +350,7 @@ class Hosts():
     limit_ping_timewait_ms = 100  # BEST=100
     limit_ping_thread = 300  # BEST=300
     # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
-    # but it can overload you CPU!
+    # but it can overload your CPU!
     # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
     # -----------------------------------------------------------
@@ -410,6 +415,7 @@ class Hosts():
         cls._update_listbox()
 
     @classmethod
+    @contracts.contract(text=str)
     def instance_get_from_text(cls, text):
         # attempt 1 -----------------
         # most correct finding
@@ -434,7 +440,7 @@ class Hosts():
     # -----------------------------------------------------------
     # GENERATE DATA
     @classmethod
-    @contracts.contract(ip_range=tuple)
+    @contracts.contract(ip_range=tuple[1|2])
     def ping_range(cls, ip_range):
         ip_start = ipaddress.ip_address(str(ip_range[0]))
         ip_finish = ipaddress.ip_address(str(ip_range[-1]))
