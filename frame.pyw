@@ -441,7 +441,7 @@ class Gui(Frame):
 
         lbl = Label(frame_header)
         lbl["text"] = "FOUND IP:\n" \
-                        "[active-countResponse-wasLost-countLost-wasChangedIp-timeResponse-ip-mac-hostname-vendorDev-osVer]"
+                        "[active-countResponse-wasLost-countLost-wasChangedIp-timeResponse-ip-KEYmac-hostname-vendorDev-osVer]"
         lbl.pack()
 
         # BODY --------------------------------------------------------------
