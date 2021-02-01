@@ -159,7 +159,7 @@ class Gui(Frame):
         lbl = Label(frame_header)
         lbl["text"] = f"Found ADAPTERS " \
                         f"on [{logic.Adapters.hostname}]-hostname:\n" \
-                        "[active-was_lost-mac-ip-mask-gateway-KEYname]"
+                        "[active-wasLost-wasChangedIp-mac-ip-mask-gateway-net-KEYname]"
         lbl.pack()
 
         # BODY --------------------------------------------------------------
@@ -254,7 +254,7 @@ class Gui(Frame):
 
         lbl = Label(frame_header)
         lbl["text"] = f"RANGES settings:\n" \
-                        "[use-active(adapter)-KEYtuple-info-ipStart-ipFinish]"
+                        "[use-active(adapter)-KEYtuple-info-net]"
         lbl.pack()
 
         # BODY --------------------------------------------------------------
@@ -441,7 +441,7 @@ class Gui(Frame):
 
         lbl = Label(frame_header)
         lbl["text"] = "FOUND IP:\n" \
-                        "[active-wasLost-timeResponse-ip-mac-hostname-vendorDev-osVer]"
+                        "[active-countResponse-wasLost-countLost-wasChangedIp-timeResponse-ip-mac-hostname-vendorDev-osVer]"
         lbl.pack()
 
         # BODY --------------------------------------------------------------
