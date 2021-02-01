@@ -62,7 +62,7 @@ class Adapters:
                     print(f"{attr}=[{getattr(self, attr)}]")
 
     # -----------------------------------------------------------
-    # INSTANCE
+    # INSTANCE manage
     @staticmethod
     @contracts.contract(adapter_name=str)
     def _instance_add_if_not(adapter_name):
@@ -191,11 +191,10 @@ class Ranges():
     input_tuple_list = []
 
     # -----------------------------------------------------------
-    # INSTANCE
-    @contracts.contract(range_tuple="tuple[1|2]", info=str)
-    def _instance_add_if_not(self, range_tuple=None, info="Input"):
-        # return instance new or existed!
-        if range_tuple not in Ranges.tuple_obj_dict:
+    # internal DATA CLASS
+    class Range:
+        @contracts.contract(range_tuple="tuple[1|2]", info=str)
+        def __init__(self, range_tuple, info):
             Ranges.tuple_obj_dict.update({range_tuple: self})
 
             self.range_tuple = range_tuple
@@ -206,13 +205,25 @@ class Ranges():
             self.active = True
             self.adapter_net = None
 
-            return self
+        def instance_del(self):
+            Ranges.tuple_obj_dict.pop(self.range_tuple)
+            Ranges._update_listbox()
+
+        def _instance_print(self):
+            for attr in dir(self):
+                if not attr.startswith("_") and not callable(getattr(self, attr)):
+                    print(f"{attr}=[{getattr(self, attr)}]")
+
+    # -----------------------------------------------------------
+    # INSTANCE manage
+    @staticmethod
+    @contracts.contract(range_tuple="tuple[1|2]", info=str)
+    def _instance_add_if_not(range_tuple, info):
+        # return instance new or existed!
+        if range_tuple not in Ranges.tuple_obj_dict:
+            return Ranges.Range(range_tuple, info)
         else:
             return Ranges.tuple_obj_dict[range_tuple]
-
-    def instance_del(self):
-        Ranges.tuple_obj_dict.pop(self.range_tuple)
-        Ranges._update_listbox()
 
     @classmethod
     def _clear(cls):
@@ -236,11 +247,6 @@ class Ranges():
 
         # attempt 3 -----------------
         return None
-
-    def _instance_print(self):
-        for attr in dir(self):
-            if not attr.startswith("_") and not callable(getattr(self, attr)):
-                print(f"{attr}=[{getattr(self, attr)}]")
 
     # -----------------------------------------------------------
     # GENERATE DATA
@@ -276,7 +282,7 @@ class Ranges():
                 net = adapter_obj.net
                 range_tuple = (str(net[0]), str(net[-1]))
 
-                range_obj = cls()._instance_add_if_not(range_tuple=range_tuple, info="Adapter")
+                range_obj = cls._instance_add_if_not(range_tuple=range_tuple, info="Adapter")
                 range_obj.adapter_net = net
                 range_obj.active = True if adapter_obj.active else False
 
@@ -293,7 +299,7 @@ class Ranges():
     @classmethod
     @contracts.contract(range_tuple="tuple[1|2]")
     def add_range_tuple(cls, range_tuple):
-        cls()._instance_add_if_not(range_tuple=range_tuple)
+        cls._instance_add_if_not(range_tuple=range_tuple, info="Input")
         cls._update_listbox()
 
     # -----------------------------------------------------------
@@ -364,7 +370,7 @@ class Hosts():
     # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
     # -----------------------------------------------------------
-    # INSTANCE
+    # INSTANCE manage
     @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
     def _instance_add_if_not(self, ip, mac):
         # return instance new or existed!
