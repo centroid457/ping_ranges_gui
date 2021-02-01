@@ -35,7 +35,7 @@ class Adapters:
     hostname = platform.node()
 
     # -----------------------------------------------------------
-    # internal DATA CLASS
+    # INSTANCE - internal DATA CLASS
     class Adapter:
         @contracts.contract(adapter_name=str)
         def __init__(self, adapter_name):
@@ -191,7 +191,7 @@ class Ranges():
     input_tuple_list = []
 
     # -----------------------------------------------------------
-    # internal DATA CLASS
+    # INSTANCE - internal DATA CLASS
     class Range:
         @contracts.contract(range_tuple="tuple[1|2]", info=str)
         def __init__(self, range_tuple, info):
@@ -370,40 +370,52 @@ class Hosts():
     # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
     # -----------------------------------------------------------
+    # INSTANCE - internal DATA CLASS
+    class Host:
+        @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
+        def __init__(self, ip, mac):
+            Hosts.mac_obj_dict.update({mac: self})
+            Hosts.ip_found_list.append(ip)
+
+            self.mac = mac
+            self.ip = ip
+
+            self.active = True
+            self.was_lost = False
+            self.was_changed_ip = False
+            self.hostname = None
+            self.vendor = None
+            self.os = None
+            self.time_response = None
+
+            self.count_lost = 0
+            self.count_response = 0
+
+        def instance_del(self):
+            Hosts.mac_obj_dict.pop(self.mac)
+            Hosts.ip_found_list.remove(self.ip)
+            Hosts._update_listbox()
+
+        def _instance_print(self):
+            for attr in dir(self):
+                if not attr.startswith("_") and not callable(getattr(self, attr)):
+                    print(f"{attr}=[{getattr(self, attr)}]")
+
+    # -----------------------------------------------------------
     # INSTANCE manage
+    @staticmethod
     @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
-    def _instance_add_if_not(self, ip, mac):
+    def _instance_add_if_not(ip, mac):
         # return instance new or existed!
         if mac not in Hosts.mac_obj_dict:
             with lock:
-                Hosts.mac_obj_dict.update({mac: self})
-                Hosts.ip_found_list.append(ip)
-
-                self.mac = mac
-                self.ip = ip
-
-                self.active = True
-                self.was_lost = False
-                self.was_changed_ip = False
-                self.hostname = None
-                self.vendor = None
-                self.os = None
-                self.time_response = None
-
-                self.count_lost = 0
-                self.count_response = 0
-                return self
+                return Hosts.Host(ip, mac)
         else:
             host_obj = Hosts.mac_obj_dict[mac]
             if host_obj.ip != ip:
-                host_obj.was_changed_ip = ip
+                host_obj.was_changed_ip = True
                 Hosts.mac_obj_dict[mac].ip = ip    # need to update if host will change its IP!
             return host_obj
-
-    def instance_del(self):
-        Hosts.mac_obj_dict.pop(self.mac)
-        Hosts.ip_found_list.remove(self.ip)
-        Hosts._update_listbox()
 
     @classmethod
     @contracts.contract(mac=str)
@@ -447,11 +459,6 @@ class Hosts():
 
         # attempt 3 -----------------
         return None
-
-    def _instance_print(self):
-        for attr in dir(self):
-            if not attr.startswith("_") and not callable(getattr(self, attr)):
-                print(f"{attr}=[{getattr(self, attr)}]")
 
     # -----------------------------------------------------------
     # GENERATE DATA
@@ -518,7 +525,7 @@ class Hosts():
             if mac is None:     # don't pay attention if have not mac! just an accident(ghost)!
                 return
             else:
-                host_obj = cls()._instance_add_if_not(ip=ip, mac=mac)
+                host_obj = cls._instance_add_if_not(ip=ip, mac=mac)
 
             # ---------------------------------------------------------------------
             # get TIME_RESPONSE in ms
