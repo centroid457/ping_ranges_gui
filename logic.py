@@ -718,6 +718,8 @@ class Scan:
         self.ranges._update_listbox()
         self.hosts._update_listbox()
 
+        winsound.Beep(3000, 50)
+
         print("*"*80)
         print("time_last_cycle", self.time_last_cycle)
         print("ip_found", [(obj.ip, obj.mac) for obj in self.hosts.mac_obj_dict.values()])
