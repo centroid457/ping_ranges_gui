@@ -194,10 +194,10 @@ class Ranges():
 
             self.range_tuple = range_tuple
             self.range_str = str(range_tuple)
-
-            self.use = True
-            self.active = True
             self.info = info
+
+            self.use = True if info == "Input" else None
+            self.active = True
             self.adapter_net = None
 
             return self
@@ -274,7 +274,8 @@ class Ranges():
                 range_obj.adapter_net = net
                 range_obj.active = True if adapter_obj.active else False
 
-                range_obj.use = True if cls.use_adapters_bool else False
+                if range_obj.use is None:
+                    range_obj.use = True if cls.use_adapters_bool else False
 
         # check if some adapters was turned off
         for obj in cls.tuple_obj_dict.values():
