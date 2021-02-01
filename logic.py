@@ -187,7 +187,7 @@ class Ranges():
     # -----------------------------------------------------------
     # INSTANCE
     @contracts.contract(range_tuple="tuple[1|2]", info=str)
-    def _instance_add_if_not(self, range_tuple=None, info="input"):
+    def _instance_add_if_not(self, range_tuple=None, info="Input"):
         # return instance new or existed!
         if range_tuple not in Ranges.tuple_obj_dict:
             Ranges.tuple_obj_dict.update({range_tuple: self})
@@ -195,7 +195,7 @@ class Ranges():
             self.range_tuple = range_tuple
             self.range_str = str(range_tuple)
 
-            self.use = None
+            self.use = True
             self.active = True
             self.info = info
             self.adapter_net = None
@@ -274,8 +274,7 @@ class Ranges():
                 range_obj.adapter_net = net
                 range_obj.active = True if adapter_obj.active else False
 
-                if range_obj.use is None:
-                    range_obj.use = True if cls.use_adapters_bool else False
+                range_obj.use = True if cls.use_adapters_bool else False
 
         # check if some adapters was turned off
         for obj in cls.tuple_obj_dict.values():
