@@ -536,7 +536,7 @@ class Hosts():
             # ---------------------------------------------------------------------
             # get HOSTNAME(+IP)
             if ip in Adapters.ip_localhost_set:
-                host_obj.hostname = f"*{Adapters.hostname}*"
+                host_obj.hostname = f"{Adapters.hostname}"
             else:
                 mask = r'.*\s(\S+)\s\[(\S+)\]\s.*'
                 match = False
@@ -548,7 +548,7 @@ class Hosts():
 
                 if not match:
                     # some devises don't have hostname! and "ping -a" can't resolve it!
-                    host_obj.hostname = "NoNameDevice"
+                    host_obj.hostname = "*NoNameDev*"
 
             # ---------------------------------------------------------------------
             # NMAP=get OS+VENDOR

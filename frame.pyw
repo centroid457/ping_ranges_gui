@@ -423,11 +423,7 @@ class Gui(Frame):
         frame_header = Frame(parent, relief="groove", borderwidth=4)
         frame_header.grid(column=0, row=0, columnspan=2, sticky="ew")
 
-        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="STOP")
-        btn["command"] = self.logic.scan_stop
-        btn.pack(side="left", fill="y")
-
-        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="CLEAR all found data")
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="CLEAR all")
         btn["command"] = self.logic.hosts.clear_all
         btn.pack(side="left", fill="y")
 
@@ -437,6 +433,10 @@ class Gui(Frame):
 
         btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="SCAN LOOP")
         btn["command"] = self.logic.scan_loop_thread
+        btn.pack(side="left", fill="y")
+
+        btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="STOP")
+        btn["command"] = self.logic.scan_stop
         btn.pack(side="left", fill="y")
 
         lbl = Label(frame_header)
