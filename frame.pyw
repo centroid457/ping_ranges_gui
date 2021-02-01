@@ -298,10 +298,12 @@ class Gui(Frame):
         # BTN -------------------------
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Apply")
         btn["command"] = self._entries_ranges_update
+        btn["state"] = "disabled"
         btn.pack(side="left")
 
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Cancel")
-        btn["command"] = lambda: None
+        btn["command"] = self.ranges_change_status
+        btn["state"] = "disabled"
         btn.pack(side="left")
 
         sep = ttk.Separator(frame_status, orient="vertical")
@@ -361,7 +363,7 @@ class Gui(Frame):
             self.ranges_fill_listbox()
         return
 
-    def ranges_change_status(self, event):
+    def ranges_change_status(self, event=None):
         obj = self._listbox_get_selected_obj(self.listbox_ranges, self.logic.ranges.instance_get_from_text)
         if obj is not None:
             self.status_ranges["text"] = obj.range_str
