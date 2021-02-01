@@ -312,7 +312,7 @@ class Gui(Frame):
         btn.pack(side="left")
 
         btn = Button(frame_status, bg=self.COLOR_BUTTONS, text="Delete")
-        btn["command"] = lambda: None
+        btn["command"] = self.entries_range_del
         btn.pack(side="left")
 
         self.status_ranges = ttk.Label(frame_status, text=self.TEXT_SELECT_ITEM, anchor="w")
@@ -381,6 +381,17 @@ class Gui(Frame):
         if the_tuple is not None:
             self.logic.ranges.add_range_tuple(the_tuple)
 
+    def entries_range_del(self):
+        the_tuple = self._entries_ranges_get_tuple()
+        if the_tuple is not None:
+            range_obj = self.logic.ranges.tuple_obj_dict.get(the_tuple, None)
+            if range_obj is not None:
+                if range_obj.adapter_net is None:
+                    range_obj._instance_del()
+                else:
+                    range_obj.use = False
+                self.ranges_fill_listbox()
+
     def _entries_ranges_update(self):
         text_1 = self.entry_ip_1.get()
         text_2 = self.entry_ip_2.get()
@@ -411,6 +422,7 @@ class Gui(Frame):
             correct = False
 
         return (self.entry_ip_1.get(), self.entry_ip_2.get()) if correct else None
+
 
     # #################################################
     # frame FOUND IP
