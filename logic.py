@@ -714,6 +714,10 @@ class Scan:
         self.flag_scan_is_finished = True
         self.time_last_cycle = round(time.time() - time_start, 3)
 
+        self.adapters.UPDATE_LISTBOX()
+        self.ranges._update_listbox()
+        self.hosts._update_listbox()
+
         print("*"*80)
         print("time_last_cycle", self.time_last_cycle)
         print("ip_found", [(obj.ip, obj.mac) for obj in self.hosts.mac_obj_dict.values()])
