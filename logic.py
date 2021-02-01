@@ -120,7 +120,7 @@ class Adapters:
                 obj.active = False
 
         # START work
-        sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, stdout=subprocess.PIPE, encoding="cp866")
+        sp_ipconfig = subprocess.Popen("ipconfig -all", text=True, shell=True, stdout=subprocess.PIPE, encoding="cp866")
 
         adapter_obj = None
         for line in sp_ipconfig.stdout.readlines():
@@ -488,7 +488,7 @@ class Hosts():
 
         cls.ip_last_scanned = ip
         cls.count_ip_scanned += 1
-        sp_ping = subprocess.Popen(cmd_list, text=True, stdout=subprocess.PIPE, encoding="cp866")
+        sp_ping = subprocess.Popen(cmd_list, text=True, shell=True, stdout=subprocess.PIPE, encoding="cp866")
         sp_ping.wait()
         ping_readlines = sp_ping.stdout.readlines()
         time.sleep(0.001)   # very necessary =0.001 was good! maybe not need)
@@ -597,7 +597,7 @@ class Hosts():
     @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
     def _get_mac(cls, ip):
         # attempt 1 -----------------
-        sp_mac = subprocess.Popen(f"arp -a {str(ip)}", text=True, stdout=subprocess.PIPE, encoding="cp866")
+        sp_mac = subprocess.Popen(f"arp -a {str(ip)}", text=True, shell=True, stdout=subprocess.PIPE, encoding="cp866")
         arp_readlines = sp_mac.stdout.readlines()
         mask = r"[0-9a-fA-F]{2}(?:[:-][0-9a-fA-F]{2}){5}"
         for line in arp_readlines:
