@@ -63,14 +63,14 @@ class Adapters:
 
     # -----------------------------------------------------------
     # INSTANCE manage
-    @staticmethod
+    @classmethod
     @contracts.contract(adapter_name=str)
-    def _instance_add_if_not(adapter_name):
+    def _instance_add_if_not(cls, adapter_name):
         # return instance new or existed!
-        if adapter_name not in Adapters.name_obj_dict:
-            return Adapters.Adapter(adapter_name)
+        if adapter_name not in cls.name_obj_dict:
+            return cls.Adapter(adapter_name)
         else:
-            return Adapters.name_obj_dict[adapter_name]
+            return cls.name_obj_dict[adapter_name]
 
     @classmethod
     def _clear(cls):
@@ -216,14 +216,14 @@ class Ranges():
 
     # -----------------------------------------------------------
     # INSTANCE manage
-    @staticmethod
+    @classmethod
     @contracts.contract(range_tuple="tuple[1|2]", info=str)
-    def _instance_add_if_not(range_tuple, info):
+    def _instance_add_if_not(cls, range_tuple, info):
         # return instance new or existed!
-        if range_tuple not in Ranges.tuple_obj_dict:
-            return Ranges.Range(range_tuple, info)
+        if range_tuple not in cls.tuple_obj_dict:
+            return cls.Range(range_tuple, info)
         else:
-            return Ranges.tuple_obj_dict[range_tuple]
+            return cls.tuple_obj_dict[range_tuple]
 
     @classmethod
     def _clear(cls):
@@ -403,18 +403,18 @@ class Hosts():
 
     # -----------------------------------------------------------
     # INSTANCE manage
-    @staticmethod
+    @classmethod
     @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
-    def _instance_add_if_not(ip, mac):
+    def _instance_add_if_not(cls, ip, mac):
         # return instance new or existed!
-        if mac not in Hosts.mac_obj_dict:
+        if mac not in cls.mac_obj_dict:
             with lock:
-                return Hosts.Host(ip, mac)
+                return cls.Host(ip, mac)
         else:
-            host_obj = Hosts.mac_obj_dict[mac]
+            host_obj = cls.mac_obj_dict[mac]
             if host_obj.ip != ip:
                 host_obj.was_changed_ip = True
-                Hosts.mac_obj_dict[mac].ip = ip    # need to update if host will change its IP!
+                cls.mac_obj_dict[mac].ip = ip    # need to update if host will change its IP!
             return host_obj
 
     @classmethod
