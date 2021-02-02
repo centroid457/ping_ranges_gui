@@ -359,10 +359,11 @@ class Hosts():
     count_ip_scanned = 0
 
     # LIMITS
-    limit_ping_timewait_special_ms = 1000   # not yet used
-    limit_ping_timewait_special_step = 5    # not yet used
+    # limit_ping_timewait_special_ms = 1000   # not yet used
+    # limit_ping_timewait_special_step = 5    # not yet used
 
-    limit_ping_timewait_ms = 500  # BEST=100 - NO! because of this added The_special
+    set_ping_timestap_sec = 0.01
+    limit_ping_timewait_ms = 1000  # BEST=100 - NO! because of this added The_special
     # many threads can lower the net quality by pollution! and especially on WiFi response can reach up to 900ms
     limit_ping_thread = 300  # BEST=300
     # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
@@ -486,8 +487,9 @@ class Hosts():
         thread_name_ping = "ping"
         if ip not in Adapters.ip_margin_set:
             while threading.active_count() > cls.limit_ping_thread:
-                time.sleep(0.1)    # USE=0.01
+                time.sleep(0.1)    # USE=0.1
             threading.Thread(target=cls._ping, args=(ip,), daemon=True, name=thread_name_ping).start()
+            time.sleep(cls.set_ping_timestap_sec)
         return
 
     @classmethod
@@ -510,7 +512,6 @@ class Hosts():
         sp_ping = subprocess.Popen(cmd_list, text=True, shell=True, stdout=subprocess.PIPE, encoding="cp866")
         sp_ping.wait()
         ping_readlines = sp_ping.stdout.readlines()
-        time.sleep(0.001)   # very necessary =0.001 was good! maybe not need)
 
         if sp_ping.returncode != 0 and ip in cls.ip_found_list:
             cls._mark_nonactive_ip(ip)
