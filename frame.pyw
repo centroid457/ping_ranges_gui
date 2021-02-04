@@ -258,7 +258,7 @@ class Gui(Frame):
         lbl.pack()
 
         # BODY --------------------------------------------------------------
-        self.listbox_ranges = Listbox(parent, height=5, bg="#55FF55", font=('Courier', 9))
+        self.listbox_ranges = Listbox(parent, height=3, bg="#55FF55", font=('Courier', 9))
         self.listbox_ranges.grid(column=0, row=2, sticky="snew")
 
         self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_ranges.yview)
