@@ -6,8 +6,9 @@ import ipaddress
 import time
 # import logic       # SEE THE END OF FILE
 import threading
-from tkinter import Tk, Frame, Button, Label, BOTH, Listbox, Scrollbar, filedialog, messagebox, font, Entry
+from tkinter import Tk, Frame, Button, Label, Listbox, Entry
 from tkinter import ttk
+
 
 def start_gui():
     root = Tk()
@@ -40,7 +41,7 @@ class Gui(Frame):
         self.logic.hosts.UPDATE_LISTBOX = self.ip_found_fill_listbox
 
         # start initial scan_once
-        self.logic.scan_onсe_thread()
+        self.logic.scan_once_thread()
 
         self.gui_root_configure()
         self.window_move_to_center()
@@ -53,7 +54,7 @@ class Gui(Frame):
         # ROOT_METHODS = many of them can named with WM! geometry=WM_geometry
         self.root.title("NET SCAN (PING)")
         # self.root.iconbitmap(r'ERROR.ico')    =ONLY FILENAME! NO fileobject
-        # self.root.protocol('WM_DELETE_WINDOW', self.program_exit)  # intersept gui exit()
+        # self.root.protocol('WM_DELETE_WINDOW', self.program_exit)  # intercept gui exit()
 
         # self.root.geometry("800x500+100+100")           #("WINXxWINY+ShiftX+ShiftY")
         # self.root.geometry("800x500")                 #("WINXxWINY")
@@ -425,7 +426,6 @@ class Gui(Frame):
 
         return (self.entry_ip_1.get(), self.entry_ip_2.get()) if correct else None
 
-
     # #################################################
     # frame FOUND IP
     def ip_found_fill_frame(self, parent):
@@ -442,7 +442,7 @@ class Gui(Frame):
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="SCAN ONES")
-        btn["command"] = self.logic.scan_onсe_thread
+        btn["command"] = self.logic.scan_once_thread
         btn.pack(side="left", fill="y")
 
         btn = Button(frame_header, bg=self.COLOR_BUTTONS, text="SCAN LOOP")
@@ -455,7 +455,7 @@ class Gui(Frame):
 
         lbl = Label(frame_header)
         lbl["text"] = "FOUND IP:\n" \
-                        "[active-countResponse-wasLost-countLost-wasChangedIp-timeResponse-ip-KEYmac-hostname-vendorDev-osVer]"
+            "[active-countResponse-wasLost-countLost-wasChangedIp-timeResponse-ip-KEYmac-hostname-vendorDev-osVer]"
         lbl.pack()
 
         # BODY --------------------------------------------------------------
@@ -546,7 +546,7 @@ class Gui(Frame):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure([0, 1], weight=0)  # HEADER + STATUS
 
-        self.main_status_lbl_dict = {}      # collect all itself lables
+        self.main_status_lbl_dict = {}      # collect all itself labels
         the_dict = self.logic.get_main_status_dict()
 
         # HEADER -------------------------------------------------------------
@@ -586,7 +586,8 @@ class Gui(Frame):
 
     # #################################################
     # rest
-    def _listbox_get_selected_obj(self, the_listbox, func_instance_get_from_text):
+    @staticmethod
+    def _listbox_get_selected_obj(the_listbox, func_instance_get_from_text):
         if the_listbox.curselection() != ():
             selected_list = the_listbox.curselection()
             selected_item_text = the_listbox.get(selected_list)
@@ -594,7 +595,8 @@ class Gui(Frame):
             return obj
         return None
 
-    def _listbox_clear_and_get_selected(self, the_listbox):
+    @staticmethod
+    def _listbox_clear_and_get_selected(the_listbox):
         selected_item_list = the_listbox.curselection()
         the_listbox.delete(0, the_listbox.size()-1)
         return (0,) if selected_item_list == () else selected_item_list

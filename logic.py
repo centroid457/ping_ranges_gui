@@ -1,6 +1,5 @@
 # print("file logic.py")
 
-import copy
 import contracts
 import ipaddress
 import nmap
@@ -132,12 +131,12 @@ class Adapters:
         for line in sp_ipconfig.stdout.readlines():
             # find out data = generate data
             line_striped = line.strip()
-            line_striped_splited = line_striped.split(":")
-            if len(line_striped_splited) == 1 or line_striped_splited[1] == "":   # exclude Blank or have no data lines
+            line_striped_splitted = line_striped.split(":")
+            if len(line_striped_splitted) == 1 or line_striped_splitted[1] == "":  # exclude Blank or have no data lines
                 continue
 
-            part_1 = line_striped_splited[0].strip()
-            part_2 = line_striped_splited[1].strip()
+            part_1 = line_striped_splitted[0].strip()
+            part_2 = line_striped_splitted[1].strip()
 
             key_part = part_1.split(" ", maxsplit=2)[0]
             part_result = part_2
@@ -183,7 +182,7 @@ class Adapters:
 # ###########################################################
 # RANGES
 # ###########################################################
-class Ranges():
+class Ranges:
     tuple_obj_dict = {}         # {range_tuple: range_obj, }
 
     UPDATE_LISTBOX = lambda: None
@@ -348,7 +347,7 @@ class Ranges():
 # ###########################################################
 # HOSTS
 # ###########################################################
-class Hosts():
+class Hosts:
     mac_obj_dict = {}               # {mac: host_obj, }
 
     UPDATE_LISTBOX = lambda: None
@@ -358,16 +357,11 @@ class Hosts():
     flag_scan_manual_stop = False
     count_ip_scanned = 0
 
-    # LIMITS
-    # limit_ping_timewait_special_ms = 1000   # not yet used
-    # limit_ping_timewait_special_step = 5    # not yet used
-
-    set_ping_timestap_sec = 0.01
-    limit_ping_timewait_ms = 1000  # BEST=100 - NO! because of this added The_special
-    # many threads can lower the net quality by pollution! and especially on WiFi response can reach up to 900ms
-    limit_ping_thread = 300  # BEST=300
-    # even 1000 is OK! but use sleep(0.001) after ping! it will not break your net
-    # but it can overload your CPU!
+    # SETTINGS
+    set_ping_timestep_sec = 0.01
+    limit_ping_timewait_ms = 1000  # BEST=1000 minimal!
+    limit_ping_thread = 300  # BEST=300 minimal! now you can use any upper! even 1000!
+    # even 1000 is OK! but it can overload your CPU!
     # 300 is ok for my notebook (i5-4200@1.60Ghz/16Gb) even for unlimited ranges
 
     # -----------------------------------------------------------
@@ -471,7 +465,8 @@ class Hosts():
 
         ip_current = ip_start
         while ip_current <= ip_finish and not cls.flag_scan_manual_stop:
-            if ip_current not in cls.ip_found_list:   # don't ping if found! it will ping at first in ping_found_hosts func!!!
+            # don't ping if found! it will ping at first in ping_found_hosts func!!!
+            if ip_current not in cls.ip_found_list:
                 cls.ping_start_thread(ip_current)
             ip_current = ip_current + 1
         return
@@ -489,7 +484,7 @@ class Hosts():
             while threading.active_count() > cls.limit_ping_thread:
                 time.sleep(0.1)    # USE=0.1
             threading.Thread(target=cls._ping, args=(ip,), daemon=True, name=thread_name_ping).start()
-            time.sleep(cls.set_ping_timestap_sec)
+            time.sleep(cls.set_ping_timestep_sec)
         return
 
     @classmethod
@@ -694,7 +689,7 @@ class Scan:
     def scan_stop(self):
         self.hosts.flag_scan_manual_stop = True
 
-    def scan_onсe_thread(self):
+    def scan_once_thread(self):
         thread_name_scan_once = "scan_once"
 
         # start only one ONCE-thread
@@ -702,7 +697,7 @@ class Scan:
             if thread.name.startswith(thread_name_scan_once):
                 return
 
-        threading.Thread(target=self._scan_onсe, daemon=True, name=thread_name_scan_once).start()
+        threading.Thread(target=self._scan_once, daemon=True, name=thread_name_scan_once).start()
         return
 
     def scan_loop_thread(self):
@@ -716,7 +711,7 @@ class Scan:
         threading.Thread(target=self._scan_loop, daemon=True, name=thread_name_scan_loop).start()
         return
 
-    def _scan_onсe(self):
+    def _scan_once(self):
         time_start = time.time()
 
         self.count_scan_cycles += 1
@@ -752,7 +747,7 @@ class Scan:
     def _scan_loop(self):
         self.hosts.flag_scan_manual_stop = False
         while not self.hosts.flag_scan_manual_stop:
-            self._scan_onсe()
+            self._scan_once()
             time.sleep(1)
 
 
@@ -762,6 +757,6 @@ class Scan:
 if __name__ == '__main__':
     access_this_module_as_import = False
     sample = Scan()
-    sample._scan_onсe()     # in mainStart use only noneThread scan!!!
+    sample._scan_once()     # in mainStart use only noneThread scan!!!
 else:
     access_this_module_as_import = True
