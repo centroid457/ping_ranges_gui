@@ -1,6 +1,5 @@
 # print("file frame.pyw")
 
-import contracts
 import re
 import ipaddress
 import time
@@ -8,7 +7,10 @@ import time
 import threading
 from tkinter import Tk, Frame, Button, Label, Listbox, Entry
 from tkinter import ttk
+from typing import *
 
+
+TypeRanges = Union[None, Tuple[Any], Tuple[Any, Any]]
 
 def start_gui():
     root = Tk()
@@ -164,7 +166,7 @@ class Gui(Frame):
         lbl.pack()
 
         # BODY --------------------------------------------------------------
-        self.listbox_adapters = Listbox(parent, height=7, bg=None, font=('Courier', 9))
+        self.listbox_adapters = Listbox(parent, height=7, font=('Courier', 9))
         self.listbox_adapters.grid(column=0, row=2, sticky="snew")
 
         self.scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.listbox_adapters.yview)
@@ -408,8 +410,8 @@ class Gui(Frame):
         self.entry_ip_2.delete(0, "end")
         self.entry_ip_2.insert(0, text_2)
 
-    @contracts.contract(returns="None|tuple[1|2]")
-    def _entries_ranges_get_tuple(self):
+    # @contracts.contract(returns="None|tuple[1|2]")
+    def _entries_ranges_get_tuple(self) -> TypeRanges:
         self._entries_ranges_update()
         correct = True
         try:
@@ -582,7 +584,6 @@ class Gui(Frame):
             self.lbl_main_status_total["text"] = str(mark_work_list[int(mark_work_step)]) +\
                                                  str([str(val) for val in the_dict.values()])
             time.sleep(1)
-        return
 
     # #################################################
     # rest

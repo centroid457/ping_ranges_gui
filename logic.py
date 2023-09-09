@@ -1,6 +1,5 @@
 # print("file logic.py")
 
-import contracts
 import ipaddress
 import nmap
 import re
@@ -9,6 +8,10 @@ import threading
 import time
 import platform
 import winsound
+from typing import *
+
+
+TypeRanges = Union[None, Tuple[Any], Tuple[Any, Any]]
 
 access_this_module_as_import = True  # at first need true to correct assertions!
 ip_tuples_list_default = [
@@ -36,8 +39,7 @@ class Adapters:
     # -----------------------------------------------------------
     # INSTANCE - internal DATA CLASS
     class Adapter:
-        @contracts.contract(adapter_name=str)
-        def __init__(self, adapter_name):
+        def __init__(self, adapter_name: str):
             Adapters.name_obj_dict.update({adapter_name: self})
 
             self.name = adapter_name
@@ -63,8 +65,7 @@ class Adapters:
     # -----------------------------------------------------------
     # INSTANCE manage
     @classmethod
-    @contracts.contract(adapter_name=str)
-    def _instance_add_if_not(cls, adapter_name):
+    def _instance_add_if_not(cls, adapter_name: str):
         # return instance new or existed!
         if adapter_name not in cls.name_obj_dict:
             return cls.Adapter(adapter_name)
@@ -98,8 +99,7 @@ class Adapters:
         Ranges.add_update_adapters_ranges()
 
     @classmethod
-    @contracts.contract(text=str)
-    def instance_get_from_text(cls, text):
+    def instance_get_from_text(cls, text: str):
         # attempt 1 -----------------
         # most correct finding
         for obj in cls.name_obj_dict.values():
@@ -192,8 +192,7 @@ class Ranges:
     # -----------------------------------------------------------
     # INSTANCE - internal DATA CLASS
     class Range:
-        @contracts.contract(range_tuple="tuple[1|2]", info=str)
-        def __init__(self, range_tuple, info):
+        def __init__(self, range_tuple: TypeRanges, info: str):
             Ranges.tuple_obj_dict.update({range_tuple: self})
 
             self.range_tuple = range_tuple
@@ -216,8 +215,7 @@ class Ranges:
     # -----------------------------------------------------------
     # INSTANCE manage
     @classmethod
-    @contracts.contract(range_tuple="tuple[1|2]", info=str)
-    def _instance_add_if_not(cls, range_tuple, info):
+    def _instance_add_if_not(cls, range_tuple: TypeRanges, info: str):
         # return instance new or existed!
         if range_tuple not in cls.tuple_obj_dict:
             return cls.Range(range_tuple, info)
@@ -230,8 +228,7 @@ class Ranges:
         cls._update_listbox()
 
     @classmethod
-    @contracts.contract(text=str)
-    def instance_get_from_text(cls, text):
+    def instance_get_from_text(cls, text: str):
         # attempt 1 -----------------
         # most correct finding
         for obj in cls.tuple_obj_dict.values():
@@ -250,8 +247,7 @@ class Ranges:
     # -----------------------------------------------------------
     # GENERATE DATA
     @classmethod
-    @contracts.contract(ranges_list="None|(list(tuple[1|2]))", use_adapters_bool=bool)
-    def ranges_apply_clear(cls, ranges_list=None, use_adapters_bool=True):
+    def ranges_apply_clear(cls, ranges_list: TypeRanges = None, use_adapters_bool: bool = True):
         cls.use_adapters_bool = use_adapters_bool
         cls._clear()
 
@@ -296,8 +292,7 @@ class Ranges:
         cls._update_listbox()
 
     @classmethod
-    @contracts.contract(range_tuple="tuple[1|2]")
-    def add_range_tuple(cls, range_tuple):
+    def add_range_tuple(cls, range_tuple: TypeRanges):
         cls._instance_add_if_not(range_tuple=range_tuple, info="Input")
         cls._update_listbox()
 
@@ -308,8 +303,7 @@ class Ranges:
         cls.ranges_apply_clear(ranges_list=cls.input_tuple_list, use_adapters_bool=cls.use_adapters_bool)
 
     @classmethod
-    @contracts.contract(disable=bool, enable=bool)
-    def ranges_all_control(cls, disable=False, enable=False):
+    def ranges_all_control(cls, disable: bool = False, enable: bool = False):
         for range_obj in cls.tuple_obj_dict.values():
             range_obj.use = False if disable else True if enable else None
 
@@ -317,8 +311,7 @@ class Ranges:
         return
 
     @classmethod
-    @contracts.contract(range_tuple="tuple[1|2]", use=bool, active=bool)
-    def range_control(cls, range_tuple, use=None, active=None):
+    def range_control(cls, range_tuple: TypeRanges, use: bool = None, active: bool = None):
         if range_tuple in cls.tuple_obj_dict:
             if use is not None:
                 cls.tuple_obj_dict[range_tuple].use = use
@@ -367,8 +360,7 @@ class Hosts:
     # -----------------------------------------------------------
     # INSTANCE - internal DATA CLASS
     class Host:
-        @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
-        def __init__(self, ip, mac):
+        def __init__(self, ip: ipaddress.IPv4Address, mac: str):
             Hosts.mac_obj_dict.update({mac: self})
             Hosts.ip_found_list.append(ip)
 
@@ -399,8 +391,7 @@ class Hosts:
     # -----------------------------------------------------------
     # INSTANCE manage
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address, mac=str)
-    def _instance_add_if_not(cls, ip, mac):
+    def _instance_add_if_not(cls, ip: ipaddress.IPv4Address, mac: str):
         # return instance new or existed!
         if mac not in cls.mac_obj_dict:
             with lock:
@@ -413,13 +404,11 @@ class Hosts:
             return host_obj
 
     @classmethod
-    @contracts.contract(mac=str)
-    def del_mac(cls, mac):
+    def del_mac(cls, mac: str):
         cls.mac_obj_dict[mac].instance_del()
 
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address)
-    def del_ip(cls, ip):
+    def del_ip(cls, ip: ipaddress.IPv4Address):
         del_obj_list = []
         for obj in cls.mac_obj_dict.values():
             if obj.ip == ip:
@@ -438,8 +427,7 @@ class Hosts:
         cls._update_listbox()
 
     @classmethod
-    @contracts.contract(text=str)
-    def instance_get_from_text(cls, text):
+    def instance_get_from_text(cls, text: str):
         # attempt 1 -----------------
         # most correct finding
         for obj in cls.mac_obj_dict.values():
@@ -458,8 +446,8 @@ class Hosts:
     # -----------------------------------------------------------
     # GENERATE DATA
     @classmethod
-    @contracts.contract(ip_range="tuple[1|2]")
-    def ping_range(cls, ip_range):
+    # @contracts.contract(ip_range="tuple[1|2]")
+    def ping_range(cls, ip_range: TypeRanges):
         ip_start = ipaddress.ip_address(str(ip_range[0]))
         ip_finish = ipaddress.ip_address(str(ip_range[-1]))
 
@@ -477,8 +465,7 @@ class Hosts:
             cls.ping_start_thread(obj.ip)
 
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address)
-    def ping_start_thread(cls, ip):
+    def ping_start_thread(cls, ip: ipaddress.IPv4Address):
         thread_name_ping = "ping"
         if ip not in Adapters.ip_margin_set:
             while threading.active_count() > cls.limit_ping_thread:
@@ -488,8 +475,7 @@ class Hosts:
         return
 
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address)
-    def _ping(cls, ip):
+    def _ping(cls, ip: ipaddress.IPv4Address):
         # DONT START DIRECTLY!!! USE ONLY THROUGH THREADING!
         cmd_list = ["ping", "-a", "-4", str(ip), "-n", "1", "-l", "0", "-w", str(cls.limit_ping_timewait_ms)]
         """
@@ -598,8 +584,7 @@ class Hosts:
         return
 
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address, mac_except="None|str")
-    def _mark_nonactive_ip(cls, ip, mac_except=None):
+    def _mark_nonactive_ip(cls, ip: ipaddress.IPv4Address, mac_except: Optional[str] = None):
         for obj in cls.mac_obj_dict.values():
             if obj.ip == ip and obj.mac != mac_except:
                 obj.active = False
@@ -609,8 +594,7 @@ class Hosts:
         return
 
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address, returns="None|str")
-    def _get_mac(cls, ip):
+    def _get_mac(cls, ip: ipaddress.IPv4Address) -> Optional[str]:
         # attempt 1 -----------------
         sp_mac = subprocess.Popen(f"arp -a {str(ip)}", text=True, shell=True, stdout=subprocess.PIPE, encoding="cp866")
         arp_readlines = sp_mac.stdout.readlines()
@@ -631,8 +615,8 @@ class Hosts:
         return None
 
     @classmethod
-    @contracts.contract(ip=ipaddress.IPv4Address, returns="dict(str:str|None)")
-    def _use_nmap(cls, ip):
+    # @contracts.contract(returns="dict(str:str|None)")
+    def _use_nmap(cls, ip: ipaddress.IPv4Address):
         try:
             ip = str(ip)
 
@@ -652,8 +636,8 @@ class Hosts:
 # SCAN = main class!
 # #################################################
 class Scan:
-    @contracts.contract(ip_tuples_list="None|(list(None|tuple))", ranges_use_adapters_bool=bool)
-    def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool=True):
+    # @contracts.contract(ip_tuples_list="None|(list(None|tuple))")
+    def __init__(self, ip_tuples_list=ip_tuples_list_default, ranges_use_adapters_bool: bool = True):
         self.flag_scan_is_finished = False
         self.count_scan_cycles = 0
         self.time_last_cycle = 0
