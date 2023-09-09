@@ -1,9 +1,7 @@
-# print("file frame.pyw")
-
 import re
 import ipaddress
 import time
-# import logic       # SEE THE END OF FILE
+import logic
 import threading
 from tkinter import Tk, Frame, Button, Label, Listbox, Entry
 from tkinter import ttk
@@ -11,6 +9,7 @@ from typing import *
 
 
 TypeRanges = Union[None, Tuple[Any], Tuple[Any, Any]]
+
 
 def start_gui():
     root = Tk()
@@ -604,9 +603,4 @@ class Gui(Frame):
 
 
 if __name__ == '__main__':
-    access_this_module_as_import = False
-    import logic
     start_gui()
-else:
-    from . import logic
-    access_this_module_as_import = True

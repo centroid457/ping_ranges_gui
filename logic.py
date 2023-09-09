@@ -13,7 +13,6 @@ from typing import *
 
 TypeRanges = Union[None, Tuple[Any], Tuple[Any, Any]]
 
-access_this_module_as_import = True  # at first need true to correct assertions!
 ip_tuples_list_default = [
         # ("192.1.1.0",),
         # ("192.168.1.10", "192.168.1.20"),
@@ -735,12 +734,6 @@ class Scan:
             time.sleep(1)
 
 
-# ###########################################################
-# MAIN CODE
-# ###########################################################
 if __name__ == '__main__':
-    access_this_module_as_import = False
     sample = Scan()
     sample._scan_once()     # in mainStart use only noneThread scan!!!
-else:
-    access_this_module_as_import = True
